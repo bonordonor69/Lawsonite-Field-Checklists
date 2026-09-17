@@ -496,7 +496,6 @@
     var tabs = [
       { href: '/', label: 'Library', icon: 'home', match: function (p) { return p === '/' || p.indexOf('/category/') === 0 || p.indexOf('/checklist/') === 0 || p.indexOf('/guides/') === 0; } },
       { href: '/refs', label: 'Refs', icon: 'calc', match: function (p) { return p === '/refs'; } },
-      { href: '/jobsheets', label: 'Jobs', icon: 'jobs', match: function (p) { return p.indexOf('/jobsheets') === 0; } },
       { href: '/portal', label: 'Company', icon: 'shop', match: function (p) { return p.indexOf('/portal') === 0; } }
     ];
     tabs.forEach(function (t) {
