@@ -563,12 +563,12 @@ body.fk-filter-tips .item-row:not(:has(.item-tip)) { display: none; }
 .app-main {
   padding-bottom: calc(5.8rem + env(safe-area-inset-bottom, 0px)) !important;
 }
-.app-footer { padding-bottom: calc(5.2rem + env(safe-area-inset-bottom, 0px)); }
+.app-footer { padding-bottom: calc(6.75rem + env(safe-area-inset-bottom, 0px)) !important; }
 
 @media (min-width: 861px) {
   .fk-tabbar { display: none; }
   .app-main { padding-bottom: calc(2.5rem + env(safe-area-inset-bottom, 0px)) !important; }
-  .app-footer { padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px)); }
+  .app-footer { padding-bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px)) !important; }
 }
 
 body.fk-kb .fk-tabbar { display: none; }
