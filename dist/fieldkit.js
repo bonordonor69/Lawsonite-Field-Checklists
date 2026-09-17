@@ -122,9 +122,15 @@
   function pathOf() {
     return location.pathname.replace(/\/+$/, '') || '/';
   }
-  function isHome() {
+  function isLanding() {
     var p = pathOf();
     return p === '/' || p === '';
+  }
+  function isLibrary() {
+    return pathOf() === '/library';
+  }
+  function isHome() {
+    return isLibrary();
   }
 
   function el(tag, cls, text) {
@@ -177,6 +183,8 @@
       var pageOk = true;
       if (want.indexOf('/checklist/') === 0 && !document.querySelector('.checklist-runner')) pageOk = false;
       if (want === '/refs' && !document.querySelector('.refs-page')) pageOk = false;
+      if (want === '/' && !document.querySelector('.start-page')) pageOk = false;
+      if (want === '/library' && !document.querySelector('.home-page')) pageOk = false;
       if (want.indexOf('/category/') === 0 && !document.querySelector('.page-header')) pageOk = false;
       if (want === '/field' || want.indexOf('/guides') === 0) {
         var g = document.querySelector('.gd-root');
@@ -395,6 +403,25 @@
     renderDash();
   }
 
+  function enhanceLanding() {
+    var page = document.querySelector('.start-page');
+    if (!page) return;
+    var q = document.getElementById('start-search');
+    var host = document.getElementById('start-root');
+    if (!host) return;
+    var query = (q && q.value ? q.value : '').trim();
+    page.classList.toggle('is-searching', !!query);
+    if (!query) {
+      host.textContent = '';
+      host.dataset.q = '';
+      return;
+    }
+    if (host.dataset.q === query && host.querySelector('.fk-hits')) return;
+    host.dataset.q = query;
+    host.textContent = '';
+    renderHomeHits(host, query);
+  }
+
   /* ---------------- checklist page ---------------- */
   function enhanceChecklist() {
     var page = document.querySelector('.checklist-runner');
@@ -494,7 +521,8 @@
     var nav = el('nav', 'fk-tabbar no-print');
     nav.setAttribute('aria-label', 'Field navigation');
     var tabs = [
-      { href: '/', label: 'Library', icon: 'home', match: function (p) { return p === '/' || p.indexOf('/category/') === 0 || p.indexOf('/checklist/') === 0 || p.indexOf('/guides/') === 0; } },
+      { href: '/', label: 'Home', icon: 'home', match: function (p) { return p === '/'; } },
+      { href: '/library', label: 'Library', icon: 'grid', match: function (p) { return p === '/library' || p.indexOf('/category/') === 0 || p.indexOf('/checklist/') === 0 || p.indexOf('/guides/') === 0; } },
       { href: '/refs', label: 'Refs', icon: 'calc', match: function (p) { return p === '/refs'; } },
       { href: '/portal', label: 'Company', icon: 'shop', match: function (p) { return p.indexOf('/portal') === 0; } }
     ];
@@ -698,7 +726,8 @@
     ensureFieldNav();
     ensureTabbar();
     markTabs();
-    if (isHome()) enhanceHome();
+    if (isLanding()) enhanceLanding();
+    if (isLibrary()) enhanceHome();
     enhanceChecklist();
     syncStars();
   }
@@ -747,6 +776,7 @@
 
   document.addEventListener('input', function (e) {
     if (e.target && e.target.id === 'library-search') enhanceHome();
+    if (e.target && e.target.id === 'start-search') enhanceLanding();
   });
 
   window.addEventListener('popstate', function () { setTimeout(enhance, 0); });
