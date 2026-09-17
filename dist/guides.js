@@ -373,7 +373,7 @@
     var wrap = el('div', 'gd-page');
     var q = el('input', 'gd-search');
     q.type = 'search';
-    q.placeholder = 'Find a product — Vista 128, Salto, DSX, INVID, 4100ES…';
+    q.placeholder = 'Find a product — Verkada, Bosch, Vista 128, Salto, DSX…';
     var pre = '';
     try { pre = new URLSearchParams(location.search).get('q') || ''; } catch (e) { pre = ''; }
     q.value = pre;

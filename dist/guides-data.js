@@ -556,7 +556,7 @@ window.__LAWSONITE_GUIDES__ = {
     title: 'Common product cards & official docs',
     hub: 'Gotchas we actually hit, plus the manufacturer sheet',
     lede: 'We do not host copyrighted manuals. Each card is original field notes plus a link to the manufacturer’s own documentation. Search their site by exact model if the landing page moved.',
-    tags: ['manual', 'HID', 'Altronix', 'Vista', 'vista 128', '128bpt', 'DSC', 'Neo', 'HES', 'Axis', '6160', 'docs', 'Notifier', 'Simplex', 'Lenel', 'Genetec', 'Avigilon', 'Hikvision', 'Kantech', 'Salto', 'DSX', 'INVID', 'iSTAR', 'WIN-PAK'],
+    tags: ['manual', 'HID', 'Altronix', 'Vista', 'vista 128', '128bpt', 'DSC', 'Neo', 'HES', 'Axis', '6160', 'docs', 'Notifier', 'Simplex', 'Lenel', 'Genetec', 'Avigilon', 'Hikvision', 'Kantech', 'Salto', 'DSX', 'INVID', 'iSTAR', 'WIN-PAK', 'Verkada', 'Bosch'],
     related: [{ href: '/guides/pinouts', label: 'Pinouts' }, { href: '/guides/meter', label: 'Meter' }],
     sections: [
       { type: 'note', text: 'Authorized work only. Factory default codes belong in the official installer guide and should already have been changed. We do not publish backdoor lists.' },
@@ -2344,6 +2344,95 @@ window.__LAWSONITE_GUIDES__ = {
             linkLabel: 'Alula BAT-Fire / Connect+',
             linkSub: 'alula.com — BAT-Fire, Connect+, takeovers',
             tags: ['alula', 'bat-fire', 'batfire', 'connect+', 'communicator', 'fire communicator']
+          },
+          {
+            brand: 'Verkada', title: 'Command + cameras (CD / CM / CF / D / I series)',
+            use: 'Cloud cameras. The camera IS the NVR — onboard storage plus Command in the browser. No local client to “fix.” CD/CM/CF/D/I SKUs, fisheye, PTZ, and Command Connector for non-Verkada ONVIF.',
+            look: 'Model on the belly. PoE class (many want at). Serial / claim QR. Status LED. MicroSD / onboard SSD is inside — you do not service it like a HDD bay.',
+            gotchas: [
+              'Claim the camera to Command BEFORE you hang it on a VLAN that cannot reach the internet. Footage recorded before claim is gone.',
+              'A “dead” Verkada with link and PoE is usually license, site permission, or claim — not a bad imager. Org Admin vs Site Admin vs Site Viewer is the whole ticket.',
+              'IR + analytics + cold start can want PoE+. An af-only switch = night reboot, same as everyone else. help.verkada.com for the exact CD/CM SKU.'
+            ],
+            href: 'https://help.verkada.com/verkada-cameras/getting-started/get-started-with-verkada-security-cameras',
+            linkLabel: 'Verkada camera getting started',
+            linkSub: 'help.verkada.com — Command claim, PoE, licensing',
+            tags: ['verkada', 'command', 'cd52', 'cm41', 'cf81', 'd80', 'cloud camera', 'camera', 'commercial camera']
+          },
+          {
+            brand: 'Verkada', title: 'Access controllers AC12 / AC41 / AC42 / AD readers',
+            use: 'Cloud access. PoE controllers in the can, AD-series readers, doors configured in Command. AC12 is one door. AC41/AC42/AC62 are the multi-door cassettes.',
+            look: 'Controller SKU. Cassette / door ports (lock, reader, DPI, REX). PoE class. Claim serial. AD32 / AD33 / AD34 readers.',
+            gotchas: [
+              'No WAN = no live admin. Cached credentials should still work until you prove they do not. Do not swap a controller because Command would not load on guest Wi-Fi.',
+              'Lock outputs are a real current number. A maglock on a PoE door port brownouts the controller. Use listed lock power where the sheet says so.',
+              'Fire-alarm release and free egress are still copper and listings. Command schedules do not replace a fire drop on a maglock opening.',
+              'help.verkada.com — Access, configure a door, AC-series.'
+            ],
+            href: 'https://help.verkada.com/access-control/configuration/configure-a-door-in-command',
+            linkLabel: 'Verkada Access — configure a door',
+            linkSub: 'help.verkada.com — AC12, AC41, AC42, AD readers',
+            tags: ['verkada access', 'ac12', 'ac41', 'ac42', 'ac62', 'ad32', 'ad34', 'cloud access', 'commercial access']
+          },
+          {
+            brand: 'Verkada', title: 'Alarms / BP panels / wireless sensors + TD intercom',
+            use: 'Verkada Alarms (BP-series style hubs, wireless contacts/PIRs) and TD-series intercoms. Same Command org as the cameras. Cellular backup on many alarm kits.',
+            look: 'Alarm panel / hub SKU. Cell vs ethernet. Sensor enrollment in Command. TD53-class intercom PoE.',
+            gotchas: [
+              'Monitoring is Command + a monitoring partner, not AlarmNet. A “failed to test” is license, cell path, or site config — not a VISTA communicator harness.',
+              'Wireless sensors are Verkada RF, not 5800 and not PowerG. Do not enroll a 5816 here.',
+              'Intercom: PoE class, door release output current, and Command permissions. A “dead station” with PoE is often claim / site role.',
+              'help.verkada.com — Alarms and Intercom sections.'
+            ],
+            href: 'https://help.verkada.com',
+            linkLabel: 'Verkada Help (Alarms / Intercom)',
+            linkSub: 'help.verkada.com — Alarms, BP hubs, TD intercoms',
+            tags: ['verkada alarms', 'verkada intercom', 'td53', 'bp52', 'command alarms', 'intercom', 'intrusion']
+          },
+          {
+            brand: 'Bosch', title: 'FPA-1000 / FPA-5000 / Modular fire',
+            use: 'Bosch addressable fire. FPA-1000 is the smaller US panel. FPA-5000 / Modular is the big networked one (FPA-5000, AVENAR in some markets). Not a B-series burglar can.',
+            look: 'FPA-1000 vs 5000 on the door. LSN / LSN improved loop. NAC. Battery size. Remote keypad / panel controllers.',
+            gotchas: [
+              'Impairment / fire watch may be required before you disable LSN or NAC. Photograph, then follow site process.',
+              'LSN devices are Bosch protocol. A System Sensor CLIP head will not poll. Do not megger the loop.',
+              'RPS / FSP-5000-RPS is the tool. A laptop with “a Bosch program” is not automatically the fire one.',
+              'boschsecurity.com datasheets for the exact FPA CPU. This app is orientation, not the panel manual.'
+            ],
+            href: 'https://www.boschsecurity.com/us/en/support/datasheets-and-documents/',
+            linkLabel: 'Bosch FPA fire docs',
+            linkSub: 'boschsecurity.com — FPA-1000, FPA-5000, Modular, LSN',
+            tags: ['fpa-1000', 'fpa-5000', 'fpa1000', 'bosch fire', 'lsn', 'avenar', 'facp', 'commercial fire']
+          },
+          {
+            brand: 'Bosch', title: 'BVMS / DIVAR IP / DIVAR recorders',
+            use: 'Bosch video software and recorders. BVMS is the enterprise VMS. DIVAR IP is the NVR appliance. DIVAR analog / hybrid still in closets. Configuration Manager / Project Assistant for cameras.',
+            look: 'DIVAR SKU on the face. BVMS operator vs config client. Camera CPP generation. License dongle / software license.',
+            gotchas: [
+              'Operator Client vs Config Client. The guard PC with Operator will not let you add a camera.',
+              'License after a motherboard swap: the box looks empty until you re-host. Photograph the license before you image a drive.',
+              'Camera firmware vs BVMS version — an old CPP4 on a new BVMS can sit “offline” with a green link.',
+              'boschsecurity.com — BVMS, DIVAR IP, Configuration Manager.'
+            ],
+            href: 'https://www.boschsecurity.com/us/en/support/datasheets-and-documents/',
+            linkLabel: 'Bosch BVMS / DIVAR docs',
+            linkSub: 'boschsecurity.com — BVMS, DIVAR IP, DIVAR, Configuration Manager',
+            tags: ['bvms', 'divar', 'divar ip', 'bosch vms', 'configuration manager', 'nvr', 'camera', 'commercial camera']
+          },
+          {
+            brand: 'Bosch', title: 'RADION wireless / B810 receivers',
+            use: 'Bosch wireless for B-series and some GV4. RADION devices, B810 / B810i receivers. Not 5800, not PowerG, not DSC.',
+            look: 'B810 on the bus (SDI2). RADION PIR / contact / smoke. RF LED. House code / enrollment.',
+            gotchas: [
+              'Receiver inside the metal can = supervision fail on every point. Same rule as a 5881. Mount it.',
+              'SDI2 vs legacy SDI. A GV4 RADION story is not a B8512 story. Bring the right receiver.',
+              'Jam / RF noise next to a 2.4 GHz AP. Move one of them.',
+              'boschsecurity.com — RADION, B810 install.'
+            ],
+            href: 'https://www.boschsecurity.com/us/en/support/datasheets-and-documents/',
+            linkLabel: 'Bosch RADION / B810 docs',
+            linkSub: 'boschsecurity.com — RADION wireless, B810 receiver',
+            tags: ['radion', 'b810', 'bosch wireless', 'sdi2', 'intrusion']
           }
         ]
       }
