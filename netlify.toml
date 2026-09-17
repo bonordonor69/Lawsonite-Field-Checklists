@@ -1,5 +1,5 @@
 [build]
-  command = "node -e \"console.log('static publish')\""
+  command = "node -e "console.log('static publish')""
   publish = "."
 
 [[redirects]]

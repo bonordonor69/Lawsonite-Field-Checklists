@@ -415,13 +415,16 @@
         if (p.href) {
           var a = el('a', 'gd-link');
           a.href = p.href;
-          a.target = '_blank';
-          a.rel = 'noopener noreferrer';
+          var external = /^https?:/i.test(p.href);
+          if (external) {
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+          }
           var left = el('span');
-          left.appendChild(el('strong', null, p.linkLabel || 'Manufacturer docs'));
+          left.appendChild(el('strong', null, p.linkLabel || (external ? 'Manufacturer docs' : 'Open')));
           if (p.linkSub) left.appendChild(el('em', null, p.linkSub));
           a.appendChild(left);
-          a.appendChild(el('span', 'gd-ext', 'Official'));
+          a.appendChild(el('span', 'gd-ext', external ? 'Official' : 'Open'));
           card.appendChild(a);
         }
         host.appendChild(card);

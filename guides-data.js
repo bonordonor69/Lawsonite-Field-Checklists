@@ -556,7 +556,7 @@ window.__LAWSONITE_GUIDES__ = {
     title: 'Common product cards & official docs',
     hub: 'Gotchas we actually hit, plus the manufacturer sheet',
     lede: 'We do not host copyrighted manuals. Each card is original field notes plus a link to the manufacturer’s own documentation. Search their site by exact model if the landing page moved.',
-    tags: ['manual', 'HID', 'Altronix', 'Vista', 'vista 128', '128bpt', 'DSC', 'Neo', 'HES', 'Axis', '6160', 'docs'],
+    tags: ['manual', 'HID', 'Altronix', 'Vista', 'vista 128', '128bpt', 'DSC', 'Neo', 'HES', 'Axis', '6160', 'docs', 'Notifier', 'Simplex', 'Lenel', 'Genetec', 'Avigilon', 'Hikvision', 'Kantech'],
     related: [{ href: '/guides/pinouts', label: 'Pinouts' }, { href: '/guides/meter', label: 'Meter' }],
     sections: [
       { type: 'note', text: 'Authorized work only. Factory default codes belong in the official installer guide and should already have been changed. We do not publish backdoor lists.' },
@@ -673,9 +673,9 @@ window.__LAWSONITE_GUIDES__ = {
               'Communicator (LTE/IP) has its own power and antenna story. “Failed to test” is often the radio, not the VISTA board.',
               'Programming and defaults: use the official installer guide for the revision on the board. Do not assume a code from a forum.'
             ],
-            href: 'https://www.resideo.com',
-            linkLabel: 'Resideo / Honeywell Home support',
-            linkSub: 'Search “VISTA-20P installation and setup” on Resideo — use the guide that matches the board revision (K5305-1…)',
+            href: 'https://www.resideo.com/us/en/pro/products/security/intrusion-panels-systems/hybrid-systems/vista-20p-vistar-control-panel-vista-20p/',
+            linkLabel: 'VISTA-20P product + literature',
+            linkSub: 'resideo.com Pro — grab the install/setup that matches the board revision (K5305-1…)',
             tags: ['Vista', 'vista 20p', 'vista 15p', '21ip', 'intrusion']
           },
           {
@@ -704,9 +704,9 @@ window.__LAWSONITE_GUIDES__ = {
               'Keypad addressing still 1+3 at power-up, but commercial fire listings limit which pads you can use.',
               'Hunt install R800-27641 / 800-09617 class docs and the fire programming addendum that matches the board date.'
             ],
-            href: 'https://www.resideo.com/us/en/pro/products/security/intrusion-panels-systems/combination-fire-burglary-systems/v128fbpt24kt-vistar-residential-security-control-panel-v128fbpt24kt/',
+            href: 'https://www.resideo.com/us/en/pro/products/security/intrusion-panels-systems/combination-fire-burglary-systems/v128fbpt-vistar-light-commercial-fire-and-partitioned-alarm-control-panel-v128fbpt/',
             linkLabel: 'VISTA-128FBPT product + datasheets',
-            linkSub: 'resideo.com — 32FBPT / 128FBPT / 250FBPT literature',
+            linkSub: 'resideo.com Pro — 32FBPT / 128FBPT / 250FBPT literature',
             tags: ['vista 128', '128fbpt', '32fbpt', '250fbpt', 'vista fire', 'commercial fire']
           },
           {
@@ -719,9 +719,9 @@ window.__LAWSONITE_GUIDES__ = {
               'ECP run length vs gauge matters on a 128 with 15 pads. Voltage at the last keypad, not at the board.',
               '6160V voice pad is restricted on some SIA / commercial fire jobs. Read the listing.'
             ],
-            href: 'https://www.resideo.com/us/en/pro/products/security/intrusion-panels-systems/keypads-accessories/',
-            linkLabel: 'Resideo keypads & accessories',
-            linkSub: 'resideo.com — 6160 / 6160RF install sheet',
+            href: 'https://www.resideo.com/us/en/pro/products/security/vista/user-interfaces/hardwired-keypads/',
+            linkLabel: 'VISTA hardwired keypads (6160 family)',
+            linkSub: 'resideo.com Pro — 6160 / 6160V / 6150 listing; grab the exact pad sheet',
             tags: ['6160', '6160rf', '6160v', 'keypad', 'alpha', 'vista keypad']
           },
           {
@@ -734,9 +734,9 @@ window.__LAWSONITE_GUIDES__ = {
               '5816 is two loops. People program loop 1 and leave the reed unused — or the opposite.',
               'Jam / supervision troubles after a Wi-Fi 2.4 GHz AP was taped to the same closet. Move one of them.'
             ],
-            href: 'https://www.resideo.com/us/en/pro/products/security/intrusion-panels-systems/keypads-accessories/',
-            linkLabel: 'Resideo RF receivers & 5800 accessories',
-            linkSub: 'Search 5881ENHC / 5883H on Resideo Pro',
+            href: 'https://www.resideo.com/us/en/pro/products/security/receivers/wireless-receivers/5881enhc-maximum-zone-commercial-5800-series-receiver-5881enhc/',
+            linkLabel: '5881ENHC RF receiver product + docs',
+            linkSub: 'resideo.com Pro — 5881ENL/M/H/HC family',
             tags: ['5881', '5883', '5800', '5816', 'wireless', 'rf']
           },
           {
@@ -748,9 +748,9 @@ window.__LAWSONITE_GUIDES__ = {
               '4229 relays are not 4204 relays in programming. Use the right device type in #93.',
               'Aux power: every expander drinks. Add a listed supply before the pads go dim.'
             ],
-            href: 'https://www.resideo.com/us/en/pro/products/security/intrusion-panels-systems/keypads-accessories/',
-            linkLabel: 'Resideo expanders & relays',
-            linkSub: '4204 / 4219 / 4229 install sheets on Resideo Pro',
+            href: 'https://www.resideo.com/us/en/pro/products/security/vista/zone-expanders/4204-intelligent-relay-board-4204/',
+            linkLabel: '4204 relay module product + docs',
+            linkSub: 'resideo.com Pro — also 4219 wired expander',
             tags: ['4204', '4219', '4229', 'expander', 'relay']
           },
           {
@@ -763,9 +763,9 @@ window.__LAWSONITE_GUIDES__ = {
               'Antenna in a steel closet = one bar and a failed fire signal. RSSI on the unit, photo it.',
               'After a board swap the communicator is a new account until you program it. Do a tester-initiated test with monitoring on the phone.'
             ],
-            href: 'https://www.resideo.com/us/en/pro/products/security/alarmnet-communication/',
-            linkLabel: 'AlarmNet communicators',
-            linkSub: 'resideo.com — LTEM-PA / LTEM-PV / 7847i docs',
+            href: 'https://www.resideo.com/us/en/pro/products/security/communicators/ltem-pa-advanced-modular-communicator-att-ltem-pa/',
+            linkLabel: 'LTEM-PA communicator product + docs',
+            linkSub: 'resideo.com Pro — LTEM-PA / LTEM-PV family; 7847i is under VISTA communicators',
             tags: ['ltem', 'ltem-pa', 'ltem-pv', '7847i', 'alarmnet', 'lte', 'communicator']
           },
           {
@@ -927,9 +927,9 @@ window.__LAWSONITE_GUIDES__ = {
               'Ground fault: sectionalize. Do not shotgun devices.',
               'Use the official Notifier document for that exact NFS/NFS2 panel. This app is not that document.'
             ],
-            href: 'https://www.notifier.com',
-            linkLabel: 'Notifier documentation',
-            linkSub: 'notifier.com — authorized manuals for the panel on the door',
+            href: 'https://buildings.honeywell.com/us/en/brands/our-brands/notifier',
+            linkLabel: 'Notifier (Honeywell Buildings) docs',
+            linkSub: 'buildings.honeywell.com/notifier — NFS / NFS2 manuals for the panel on the door',
             tags: ['fire', 'Notifier', 'NFS', 'NFS2']
           },
           {
@@ -1206,10 +1206,374 @@ window.__LAWSONITE_GUIDES__ = {
               'VOIP ATAs and fiber ONTs break seizure. “No comms” on POTS after an ISP swap is often this, not the panel.',
               'See the RJ31X field card in Field brain for the pin story.'
             ],
-            href: 'https://www.resideo.com',
-            linkLabel: 'Use the panel’s install guide (RJ31X section)',
-            linkSub: 'Also the Lawsonite RJ31X cheat in Field brain',
+            href: '/guides/rj31x',
+            linkLabel: 'Lawsonite RJ31X field card',
+            linkSub: 'Pin story, shorting bar, VOIP gotchas — then the panel’s own install guide',
             tags: ['rj31x', 'rj38x', 'seizure', 'pots', 'phone jack', 'dact']
+          },
+          {
+            brand: 'Notifier / Honeywell Fire', title: 'NFS2-640 / NFS2-3030 FACP',
+            use: 'The red can in a lot of mid-to-large commercial. NFS2-640 is one SLC loop (expandable). NFS2-3030 is the bigger networked cousin. CLIP vs FlashScan is the whole job.',
+            look: 'CPU type on the door. SLC class A/B. NAC circuits. Disable keys. Battery size in the can. Network nodes if 3030.',
+            gotchas: [
+              'Impairment / fire watch may be required before you disable SLC or NAC. Photograph the panel, then follow site process.',
+              'FlashScan heads on a CLIP loop (or reverse) will not poll. Match protocol to the devices that are actually on the wire.',
+              'Ground fault: sectionalize. Do not shotgun devices. This app is orientation, not the NFS2 programming manual.'
+            ],
+            href: 'https://buildings.honeywell.com/us/en/brands/our-brands/notifier',
+            linkLabel: 'Notifier (Honeywell Buildings) docs',
+            linkSub: 'buildings.honeywell.com/notifier — NFS2-640 / NFS2-3030 authorized docs',
+            tags: ['nfs2-640', 'nfs2-3030', 'nfs2', 'notifier', 'flashscan', 'clip', 'facp', 'commercial fire']
+          },
+          {
+            brand: 'Fire-Lite / Honeywell Fire', title: 'ES-200X / ES-50X / MS-9200UDLS',
+            use: 'The small-commercial addressable FACP you trip over in retail, churches, and strip malls. ES-200X replaced a pile of MS-9200UDLS jobs. LiteSpeed vs CLIP vs SS protocol is not mix-and-match.',
+            look: 'Model on the door. SLC device count. Built-in IPOTS / DACT. NAC sync jumper (System Sensor / Wheelock / Gentex).',
+            gotchas: [
+              'Protocol cannot be split on one loop. A leftover CLIP head on a LiteSpeed panel is a trouble, not a “bad detector.”',
+              'ES-series auto-learn is not a license to skip a map. Address collisions still happen.',
+              'Impairment process still applies. Official Fire-Lite sheet for that exact ES/MS model.'
+            ],
+            href: 'https://www.firelite.com',
+            linkLabel: 'Fire-Lite manuals & datasheets',
+            linkSub: 'firelite.com — ES-200X, ES-50X, MS-9200UDLS',
+            tags: ['es-200x', 'es-50x', 'ms-9200udls', 'ms9200', 'fire-lite', 'firelite', 'litespeed', 'facp', 'commercial fire']
+          },
+          {
+            brand: 'Simplex / Johnson Controls', title: '4100ES / 4010ES FACP',
+            use: 'Campus and high-rise fire. TrueAlarm sensors, TrueAlert ES NACs, optional voice and firefighter phones. 4100ES networks; 4010ES is the smaller sibling.',
+            look: 'ES-PS power supply. InfoAlarm / touchscreen vs 2x40. IDNet / MAPNET channel cards. ES Net vs 4120 network vintage.',
+            gotchas: [
+              'You do not factory-default a 4100ES because a printer is offline. This is a networked life-safety system.',
+              'TrueAlarm drift compensation and dirty-detector reports live in the panel. A “bad smoke” is often a maintenance report.',
+              'Voice / firefighter phone is its own career. Official Simplex / JCI docs only.'
+            ],
+            href: 'https://www.simplexfire.com/resources',
+            linkLabel: 'Simplex 4100ES literature',
+            linkSub: 'simplexfire.com/resources — 4100ES / 4010ES datasheets',
+            tags: ['4100es', '4010es', 'simplex', 'truealarm', 'truealert', 'idnet', 'es net', 'facp', 'commercial fire']
+          },
+          {
+            brand: 'Gamewell-FCI / Honeywell Fire', title: 'E3 Series FACP',
+            use: 'Networked addressable fire with ILI-MB-E3 / NGA nodes. Common in schools, hospitals, and municipal buildings that are not Notifier or Simplex.',
+            look: 'Node type on the door. SLC style. NGA graphic annunciator. Network fiber vs copper.',
+            gotchas: [
+              'E3 networking is its own drawing. Do not unplug a node “to clear a trouble.”',
+              'Velociti vs CLIP-class devices depend on the loop card. Bring the loop inventory, not a guess.',
+              'gamewell-fci.com / Honeywell Buildings for the exact E3 CPU.'
+            ],
+            href: 'https://www.gamewell-fci.com',
+            linkLabel: 'Gamewell-FCI documentation',
+            linkSub: 'gamewell-fci.com — E3 Series, ILI, NGA',
+            tags: ['e3', 'gamewell', 'fci', 'gamewell-fci', 'ili', 'nga', 'facp', 'commercial fire']
+          },
+          {
+            brand: 'Mircom', title: 'FX-2000 / FX-3500 / Flex-Net',
+            use: 'Canadian and US commercial FACP. Addressable SLC, NAC, optional voice. Flex-Net is the networked platform.',
+            look: 'CPU / node. SLC class. NAC voltage. Battery calc on the door.',
+            gotchas: [
+              'Mircom software and job files are not Notifier files. Bring the right config tool.',
+              'Ground fault: sectionalize. Same as any addressable fire panel.',
+              'Impairment process still applies. mircom.com for the exact FX/Flex-Net model.'
+            ],
+            href: 'https://www.mircom.com',
+            linkLabel: 'Mircom fire manuals',
+            linkSub: 'mircom.com — FX-2000, FX-3500, Flex-Net',
+            tags: ['mircom', 'fx-2000', 'fx-3500', 'flex-net', 'flexnet', 'facp', 'commercial fire']
+          },
+          {
+            brand: 'Gentex', title: 'Commander 3 / horns & strobes',
+            use: 'The third strobe protocol after System Sensor and Wheelock. Candela tap, horn/strobe split, Gentex sync.',
+            look: 'Candela setting. Wall vs ceiling. Sync module vs “plain” NAC.',
+            gotchas: [
+              'Gentex sync on a System Sensor or Wheelock NAC (or the reverse) is a disco that will not pass.',
+              'Same last-device voltage-in-alarm rule as any NAC. Measure it.',
+              'Ceiling vs wall marking still fails visual even if it flashes.'
+            ],
+            href: 'https://fireprotection.gentex.com/products',
+            linkLabel: 'Gentex fire-protection products',
+            linkSub: 'fireprotection.gentex.com — Commander, horns, strobes, sync',
+            tags: ['gentex', 'commander', 'strobe', 'horn', 'NAC', 'sync', 'commercial fire']
+          },
+          {
+            brand: 'Fire-Lite / Honeywell Fire', title: 'FCPS-24S6 / FCPS-24S8 NAC booster',
+            use: 'Remote NAC power. Sync in, NAC out, battery standby. The can that is quietly carrying the corridor strobes.',
+            look: 'AC LED. DC output. Battery leads. Sync input from the FACP. Per-circuit fuses.',
+            gotchas: [
+              'Sync protocol has to match the FACP and the appliances. A Wheelock booster on System Sensor heads is a fail.',
+              'EOL is at the last device on the booster circuit, not back at the FACP.',
+              'Batteries and the calc on the door are not optional. An untested booster is strobes that die in minute two.'
+            ],
+            href: 'https://www.firelite.com',
+            linkLabel: 'Fire-Lite FCPS booster docs',
+            linkSub: 'firelite.com — FCPS-24S6 / FCPS-24S8',
+            tags: ['fcps', 'fcps-24s6', 'fcps-24s8', 'nac booster', 'booster', 'fire-lite', 'commercial fire']
+          },
+          {
+            brand: 'LenelS2', title: 'OnGuard / S2 NetBox',
+            use: 'Enterprise access. OnGuard is the thick-client Lenel stack (Mercury/HID boards in the can). S2 NetBox is the appliance / web UI cousin after the merger.',
+            look: 'Software brand on the login. Mercury LP/MR or S2 nodes in the enclosure. Reader ports 12/24. RS-485 IO bus.',
+            gotchas: [
+              'The login page does not change RS-485 rules. Twisted pair, single-end shield, unique addresses.',
+              'OnGuard vs NetBox programming is different software. Do not assume a Lenel download works on S2.',
+              'Official LenelS2 docs for that exact panel/node. This app is field orientation.'
+            ],
+            href: 'https://www.lenels2.com',
+            linkLabel: 'LenelS2 product / support',
+            linkSub: 'lenels2.com — OnGuard, S2 NetBox, Mercury hardware',
+            tags: ['lenel', 'lenels2', 'onguard', 's2', 'netbox', 'mercury', 'access', 'commercial access']
+          },
+          {
+            brand: 'Genetec', title: 'Security Center / Synergis',
+            use: 'VMS + access on one platform. Synergis is the access appliance; Security Center is the software. Mercury/HID or HID VertX-class hardware underneath on many jobs.',
+            look: 'Synergis Cloud Link / unit in the can. Mercury boards. OSDP vs Wiegand per reader port.',
+            gotchas: [
+              'A Genetec login does not make OSDP A/B swap go away. Same bus rules as any Mercury job.',
+              'Cloud Link offline ≠ “readers dead” until you check local cache / fail-mode jumpers.',
+              'genetec.com support for the exact Synergis unit and Security Center version.'
+            ],
+            href: 'https://www.genetec.com',
+            linkLabel: 'Genetec Security Center / Synergis',
+            linkSub: 'genetec.com — Synergis, Security Center, Cloud Link',
+            tags: ['genetec', 'synergis', 'security center', 'cloud link', 'vms', 'access', 'commercial access']
+          },
+          {
+            brand: 'Software House / JCI', title: 'C-CURE 9000 / iSTAR',
+            use: 'Enterprise access. iSTAR controllers in the can, C-CURE software upstairs. Not Mercury — different board, different bus.',
+            look: 'iSTAR Ultra / Edge / Apex in the enclosure. Reader ports. Input/output boards. Network drop to the server.',
+            gotchas: [
+              'iSTAR is not a Mercury LP1502. Do not land it like one. Bring the Software House install sheet.',
+              'Cluster / encryption / host-offline behavior is programming. A “dead reader” after a server reboot may be fail-mode.',
+              'swhouse.com / JCI for C-CURE and iSTAR docs.'
+            ],
+            href: 'https://docs.johnsoncontrols.com/softwarehouse/',
+            linkLabel: 'Software House C-CURE / iSTAR docs',
+            linkSub: 'docs.johnsoncontrols.com/softwarehouse — C-CURE 9000, iSTAR',
+            tags: ['ccure', 'c-cure', 'istar', 'software house', 'swhouse', 'access', 'commercial access']
+          },
+          {
+            brand: 'Kantech / JCI', title: 'KT-400 / KT-1 / EntraPass',
+            use: 'Mid-market access. KT-400 is the four-door controller. EntraPass is the software (Special / Corporate / Global). ioSmart readers are the current Kantech credential story.',
+            look: 'KT-400 in the can. 12 V. RS-485 to downstream. Reader ports. Combus vs Ethernet.',
+            gotchas: [
+              'EntraPass edition (Special vs Corporate vs Global) changes how many controllers and what features you actually have.',
+              'ioSmart vs old ioProx vs third-party Wiegand is a credential/format problem, not a “bad reader,” if badges were swapped.',
+              'kantech.com for KT-400 / KT-1 install sheets.'
+            ],
+            href: 'https://www.kantech.com',
+            linkLabel: 'Kantech KT-400 / EntraPass docs',
+            linkSub: 'kantech.com — KT-400, KT-1, EntraPass, ioSmart',
+            tags: ['kantech', 'kt-400', 'kt400', 'kt-1', 'entrapass', 'iosmart', 'access', 'commercial access']
+          },
+          {
+            brand: 'RS2 / Genetec', title: 'Access It! / Mercury hardware',
+            use: 'Access It! software on Mercury LP/MR boards. A huge installed base in schools and commercial. Genetec acquired RS2 — the boards did not change.',
+            look: 'LP1501/1502 + MR52 in an Altronix/Trove can. 12 V. RS-485 IO bus.',
+            gotchas: [
+              'Software brand on the PC does not change RS-485, addressing, or reader-port voltage jumpers.',
+              'After a power cycle wait for a full boot before you declare a downstream MR dead.',
+              'rs2tech.com / Genetec for Access It! docs; HID for the Mercury board sheet.'
+            ],
+            href: 'https://www.rs2tech.com',
+            linkLabel: 'RS2 Access It! / Genetec',
+            linkSub: 'rs2tech.com — Access It! Universal; Mercury hardware is HID',
+            tags: ['rs2', 'access it', 'accessit', 'mercury', 'lp1502', 'mr52', 'commercial access']
+          },
+          {
+            brand: 'SDC', title: '1511 / 1581 Exit Check delayed egress',
+            use: 'Delayed-egress maglock / controller. 15-second nuisance delay (or listed alternative) with audible, then release. Fire alarm must drop it immediately.',
+            look: 'Exit Check controller. Maglock. Nuisance delay jumper. Fire-alarm trigger. Signage required by code.',
+            gotchas: [
+              'Fire alarm release is immediate — not after 15 seconds. If the mag holds on fire, you landed status, not the drop.',
+              'Signage and the listed delay are AHJ items. Do not invent a 30-second delay because someone asked.',
+              'Free egress on the listed opening still has to work if electronics fail. Read the SDC sheet and the adopted IBC/NFPA language.'
+            ],
+            href: 'https://www.sdcsecurity.com',
+            linkLabel: 'SDC Exit Check / 1511 docs',
+            linkSub: 'sdcsecurity.com — 1511, 1581, Exit Check',
+            tags: ['sdc', '1511', '1581', 'exit check', 'delayed egress', 'maglock', 'commercial access']
+          },
+          {
+            brand: 'Alarm Lock / NAPCO', title: 'Trilogy / Networx DL2700 / DL4100',
+            use: 'Standalone and networked cylindrical locksets. Audit trail in the lock. Networx adds radio to a gateway. Very common on interior offices and storage.',
+            look: 'Model on the inside housing. Battery pack. Key override. Networx antenna / gateway if present.',
+            gotchas: [
+              'Dead lock is usually batteries. Change them before you condemn the board. Photograph the audit if you can.',
+              'Handing and latch length are hardware, not programming. A bound latch looks like “it won’t unlock.”',
+              'Networx gateway offline ≠ lock dead. The lock still runs locally on its schedule until you need a download.'
+            ],
+            href: 'https://www.alarmlock.com',
+            linkLabel: 'Alarm Lock Trilogy / Networx',
+            linkSub: 'alarmlock.com — DL2700, DL4100, Networx',
+            tags: ['trilogy', 'networx', 'dl2700', 'dl4100', 'alarm lock', 'alarmlock', 'standalone lock', 'commercial access']
+          },
+          {
+            brand: 'Schlage / Allegion', title: 'AD-400 / NDE / LE wireless locks',
+            use: 'Wireless locksets on ENGAGE or older AD-Series PIM400. Battery in the lock, hub in the closet. Interior openings everywhere.',
+            look: 'Model on the inside escutcheon. ENGAGE vs AD-400 radio. PIM400 / ENGAGE gateway. Battery door.',
+            gotchas: [
+              'AD-400 is not NDE. Different radio, different software, different gateway. Do not mix them on one story.',
+              'Dead lock: batteries first, then handing, then whether the hub actually sees it.',
+              'Fire-rated doors need listed wireless mortise + listed hardware. Random cylindrical on a rated stair is an AHJ fail.'
+            ],
+            href: 'https://us.allegion.com/en/home/products/brands/schlage.html',
+            linkLabel: 'Schlage AD-400 / NDE / LE docs',
+            linkSub: 'allegion.com — AD-400, NDE, LE, ENGAGE',
+            tags: ['ad-400', 'ad400', 'nde', 'le', 'engage', 'schlage wireless', 'pim400', 'commercial access']
+          },
+          {
+            brand: 'Farpointe Data', title: 'Delta / Pyramid / Ranger readers',
+            use: 'The other credential reader. Pyramid (125 kHz), Delta (13.56), Ranger (UHF long-range). Wiegand or OSDP pigtail.',
+            look: 'Model on the back. 5–16 VDC typical. Drain. Tamper.',
+            gotchas: [
+              'Pyramid vs Delta vs Ranger is a credential frequency problem. A Prox badge will not read a Delta-only head.',
+              'Metal-mount spacer still applies. Long-range Ranger wants a clean view, not a reader stuffed in a mullion.',
+              'farpointe.com for the exact SKU install sheet.'
+            ],
+            href: 'https://www.farpointedata.com/',
+            linkLabel: 'Farpointe reader docs',
+            linkSub: 'farpointedata.com — Delta, Pyramid, Ranger',
+            tags: ['farpointe', 'delta', 'delta3', 'pyramid', 'ranger', 'reader', 'prox', 'commercial access']
+          },
+          {
+            brand: 'Identiv / Hirsch', title: 'Velocity / MX controllers',
+            use: 'Hirsch/Identiv access. MX controllers, SNIB comms, DIGI*TRAC vintage still in the field. Velocity is the software.',
+            look: 'MX / Mx-1 in the can. SNIB3 network board. Reader ports. MATCH / RS-485 depending on vintage.',
+            gotchas: [
+              'Hirsch is not Mercury. Addressing, termination, and reader power are on the Hirsch sheet.',
+              'SNIB vs SNIB2 vs SNIB3 is a comms generation. Mixing them without the note is a silent bus.',
+              'identiv.com for Velocity / MX docs.'
+            ],
+            href: 'https://www.identiv.com',
+            linkLabel: 'Identiv Hirsch Velocity / MX',
+            linkSub: 'identiv.com — Velocity, MX, SNIB',
+            tags: ['hirsch', 'identiv', 'velocity', 'mx', 'snib', 'digitrac', 'access', 'commercial access']
+          },
+          {
+            brand: 'Avigilon / Motorola', title: 'H5 / H6 cameras + Unity / ACC',
+            use: 'Commercial cameras plus ACC / Unity VMS. Analytics on the camera. PoE class matters on H5A/H6A with IR and heater.',
+            look: 'Part number on the belly. PoE class. SD behind a gasket. ACC server vs Unity cloud/hybrid.',
+            gotchas: [
+              'H6 analytics + IR + cold start can want at/PoE+. An af-only switch = night reboot.',
+              'Factory default is a button sequence with power applied — photograph the IP first.',
+              'ACC vs Unity is a software generation. A replaced server looks like “every camera died.”'
+            ],
+            href: 'https://www.avigilon.com',
+            linkLabel: 'Avigilon support & manuals',
+            linkSub: 'avigilon.com — H5, H6, ACC, Unity',
+            tags: ['avigilon', 'h5', 'h6', 'h5a', 'acc', 'unity', 'camera', 'vms', 'commercial camera']
+          },
+          {
+            brand: 'Hikvision', title: 'AcuSense / DS-2CD cameras + iVMS / Hik-Connect',
+            use: 'A huge installed base. AcuSense is the current analytics line. iVMS-4200 / Hik-Connect / HikCentral depending on the job.',
+            look: 'Model on the gimbal. PoE class. Reset recessed. SADP discovery tool.',
+            gotchas: [
+              'Activation / password is mandatory on current firmware. A “dead” camera is often not activated yet.',
+              'SADP on the right VLAN finds it. Wrong VLAN still wins.',
+              'PoE class vs IR. Same night-reboot story as everyone else. hikvision.com for the exact DS-2CD sheet.'
+            ],
+            href: 'https://www.hikvision.com',
+            linkLabel: 'Hikvision support / downloads',
+            linkSub: 'hikvision.com — DS-2CD, AcuSense, iVMS-4200',
+            tags: ['hikvision', 'acusense', 'ds-2cd', 'ivms', 'hik-connect', 'camera', 'commercial camera']
+          },
+          {
+            brand: 'Bosch', title: 'FLEXIDOME / AUTODOME cameras',
+            use: 'Commercial Bosch video. FLEXIDOME is the turret/dome. AUTODOME is the PTZ. CPP-era firmware and Project Assistant matter.',
+            look: 'Model on the belly. PoE vs 24 VAC on older AUTODOME. Reset. SD.',
+            gotchas: [
+              'AUTODOME heaters and PTZ motors are a PoE+ / midspan conversation. Do not feed a PTZ like a 4 W spy cam.',
+              'Project Assistant / Configuration Manager beat a random YouTube reset.',
+              'boschsecurity.com for the exact FLEXIDOME / AUTODOME datasheet.'
+            ],
+            href: 'https://www.boschsecurity.com/us/en/support/datasheets-and-documents/',
+            linkLabel: 'Bosch FLEXIDOME / AUTODOME docs',
+            linkSub: 'boschsecurity.com — FLEXIDOME, AUTODOME, Configuration Manager',
+            tags: ['flexidome', 'autodome', 'bosch camera', 'ptz', 'camera', 'commercial camera']
+          },
+          {
+            brand: 'Pelco / Motorola', title: 'Spectra / Sarix cameras',
+            use: 'Spectra is the PTZ in gyms and parking lots. Sarix is the fixed/bullet line. Huge legacy install base.',
+            look: 'Model in the bubble or on the belly. 24 VAC vs PoE. Heater. UTP vs coax on older Spectra.',
+            gotchas: [
+              'Legacy Spectra on 24 VAC is not a PoE camera. A midspan will not wake a 24 VAC PTZ.',
+              'Heater + blower + cold start will fold an undersized transformer. Measure VAC under load at the unit.',
+              'pelco.com for the exact Spectra / Sarix sheet.'
+            ],
+            href: 'https://www.pelco.com',
+            linkLabel: 'Pelco Spectra / Sarix support',
+            linkSub: 'pelco.com — Spectra, Sarix',
+            tags: ['pelco', 'spectra', 'sarix', 'ptz', 'camera', 'commercial camera']
+          },
+          {
+            brand: 'Milestone', title: 'XProtect VMS',
+            use: 'The VMS on a lot of commercial NVRs that are actually PCs. Essential / Express / Professional / Expert / Corporate SKUs change device count and features.',
+            look: 'XProtect version on the Management Client. Recording server vs management server. Device pack version.',
+            gotchas: [
+              'A camera that “died” after a Windows update is often the recording server service, not the camera.',
+              'Device pack has to support that camera firmware. Out-of-date pack = no stream, not a bad cam.',
+              'milestonesys.com for XProtect admin docs. Hardware still has its own OEM sheet.'
+            ],
+            href: 'https://www.milestonesys.com',
+            linkLabel: 'Milestone XProtect support',
+            linkSub: 'milestonesys.com — XProtect, device packs',
+            tags: ['milestone', 'xprotect', 'vms', 'nvr', 'device pack', 'commercial camera']
+          },
+          {
+            brand: 'Exacq / JCI', title: 'exacqVision VMS / recorders',
+            use: 'The other common commercial VMS. Hybrid and IP servers. EasyConnect / Enterprise clients.',
+            look: 'Server SKU. Client version vs server version. Camera licenses.',
+            gotchas: [
+              'Client newer than server (or reverse) is a “won’t connect” ticket, not a dead NVR.',
+              'License / MAC after a motherboard swap: the box looks empty until you re-host licenses.',
+              'exacq.com for server/client compatibility and camera support lists.'
+            ],
+            href: 'https://www.exacq.com',
+            linkLabel: 'exacqVision support',
+            linkSub: 'exacq.com — exacqVision servers and clients',
+            tags: ['exacq', 'exacqvision', 'vms', 'nvr', 'johnson controls', 'commercial camera']
+          },
+          {
+            brand: 'Panasonic i-PRO', title: 'i-PRO cameras / WV series',
+            use: 'Former Panasonic Security. i-PRO is the current brand. WV-S / WV-U series, AI analytics, PoE.',
+            look: 'Model on the belly. PoE class. SD. Reset.',
+            gotchas: [
+              'i-PRO vs old Panasonic firmware tools are not the same installer. Use i-PRO Config / the current tool.',
+              'PoE class vs IR + heater. Same night-reboot story.',
+              'i-pro.com for the exact WV-S / WV-U datasheet.'
+            ],
+            href: 'https://i-pro.com',
+            linkLabel: 'i-PRO support & manuals',
+            linkSub: 'i-pro.com — WV-S, WV-U, i-PRO cameras',
+            tags: ['i-pro', 'ipro', 'panasonic', 'wv-s', 'wv-u', 'camera', 'commercial camera']
+          },
+          {
+            brand: 'Open Options', title: 'DNA Fusion / Mercury hardware',
+            use: 'DNA Fusion software on Mercury boards. Common in education and commercial. Same LP/MR hardware story as RS2/Lenel.',
+            look: 'LP1502 + MR52. 12 V. RS-485. Software on a workstation, not in the can.',
+            gotchas: [
+              'DNA Fusion version vs Mercury firmware: a mismatch looks like a dead downstream MR.',
+              'Same RS-485 and reader-port jumper rules as every other Mercury white-label.',
+              'openoptions.com for DNA Fusion; HID for the board sheet.'
+            ],
+            href: 'https://www.openoptions.com',
+            linkLabel: 'Open Options DNA Fusion',
+            linkSub: 'openoptions.com — DNA Fusion; Mercury hardware is HID',
+            tags: ['open options', 'dna fusion', 'dnafusion', 'mercury', 'access', 'commercial access']
+          },
+          {
+            brand: 'Bosch', title: 'AMC2 access controller',
+            use: 'Bosch Access Modular Controller. RS-485 to readers and extensions. Access Professional Edition / BIS / AMS software depending on vintage.',
+            look: 'AMC2-4W / 4WE in the can. 12/24. Reader ports. Extension boards.',
+            gotchas: [
+              'AMC2 is not a Mercury board. Addressing and bus termination are on the Bosch sheet.',
+              'APE vs BIS vs AMS is different software. Do not assume a laptop “Bosch tool” talks to every vintage.',
+              'boschsecurity.com — AMC2 install / AMS docs.'
+            ],
+            href: 'https://www.boschsecurity.com/us/en/support/datasheets-and-documents/',
+            linkLabel: 'Bosch AMC2 / access control docs',
+            linkSub: 'boschsecurity.com — AMC2, AMS, Access Professional Edition',
+            tags: ['amc2', 'bosch access', 'ams', 'ape', 'bis', 'access', 'commercial access']
           }
         ]
       }
