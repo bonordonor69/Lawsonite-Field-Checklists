@@ -42,6 +42,29 @@
     if (!p) return '';
     return [p.title, p.brand, p.use, p.look, (p.gotchas || []).join(' '), (p.tags || []).join(' ')].join(' ');
   }
+  var TRADES = [
+    { key: 'all', label: 'All' },
+    { key: 'fire', label: 'Fire' },
+    { key: 'access', label: 'Access' },
+    { key: 'cameras', label: 'Cameras' },
+    { key: 'intrusion', label: 'Intrusion' },
+    { key: 'power', label: 'Power' }
+  ];
+  function productTrade(p) {
+    var hay = [p.brand, p.title, (p.tags || []).join(' '), p.use].join(' ').toLowerCase();
+    if (/\b(facp|commercial fire|nac booster|strobe|smoke|suppression|vesda|litespeed|flashscan|truealarm|notifier|fire-lite|firelite|simplex|silent knight|edward|est3|est4|potter|kidde|fenwal|siemens|cerberus|hochiki|fike|gentex|wheelock|system sensor|gamewell|mircom|fcps|stopper|nbg|pull station)\b/.test(hay)) return 'fire';
+    if (/\b(commercial camera|nvr|vms|ptz|thermal|megapix|flexidome|autodome|spectrum|xprotect|videoedge|command \+ cameras)\b/.test(hay)) return 'cameras';
+    if (/\bcamera\b/.test(hay) && !/\b(doorbell|intercom)\b/.test(hay)) return 'cameras';
+    if (/\b(altronix|lifesafety|lock power|acm8|acm4|fpo|maximal|trove|802\.3af|802\.3at|unifi switch poe)\b/.test(hay)) return 'power';
+    if (/\b(commercial access|maglock|strike|osdp|wiegand|mercury|exit device|wireless lock|cloud access|lenel|salto|dsx|kantech|brivo|gallagher|paxton|doorking|istar|win-pak|netaxs|pro-watch)\b/.test(hay)) return 'access';
+    if (/\b(hid |hes |securitron|von duprin|schlage|lcn |detex|camden|liftmaster|rutherford|command access|farpointe|identiv|amag|feenics|cdvi|isonas|iei |essex|bea )\b/.test(hay)) return 'access';
+    if (/\b(intercom|aiphone|2n )\b/.test(hay)) return 'access';
+    if (/\b(vista|intrusion|dsc|neo|communicator|alarmnet|qolsys|2gig|galaxy|paradox|ltem|proa7|interlogix|napco|radion|telguard|alula|elk m1|m1 gold|rj31x|rj38x|seizure)\b/.test(hay)) return 'intrusion';
+    if (/\b(dmp |bosch)\b/.test(hay) && /\b(b-series|d9412|b8512|b5512|gv4|radion|solution)\b/.test(hay)) return 'intrusion';
+    if (/\b(poe)\b/.test(hay)) return 'power';
+    if (/\b(dmp|bosch|napco|honeywell|resideo)\b/.test(hay)) return 'intrusion';
+    return 'other';
+  }
   function allProducts() {
     if (G && G.products && G.products.length) return G.products;
     var p = pageOf('manuals');
@@ -371,27 +394,83 @@
 
   function renderProducts(sec) {
     var wrap = el('div', 'gd-page');
+    var bar = el('div', 'gd-toolbar');
     var q = el('input', 'gd-search');
     q.type = 'search';
     q.placeholder = 'Find a product — Verkada, Bosch, Vista 128, Salto, DSX…';
+    q.setAttribute('aria-label', 'Search product cards');
+    q.setAttribute('enterkeyhint', 'search');
     var pre = '';
-    try { pre = new URLSearchParams(location.search).get('q') || ''; } catch (e) { pre = ''; }
+    var tradeKey = 'all';
+    try {
+      var sp = new URLSearchParams(location.search);
+      pre = sp.get('q') || '';
+      tradeKey = sp.get('trade') || 'all';
+    } catch (e) { pre = ''; }
+    if (!TRADES.some(function (t) { return t.key === tradeKey; }) && tradeKey !== 'other') tradeKey = 'all';
     q.value = pre;
-    wrap.appendChild(q);
+    bar.appendChild(q);
+
+    var chipRow = el('div', 'gd-chips gd-filters');
+    chipRow.setAttribute('role', 'tablist');
+    chipRow.setAttribute('aria-label', 'Trade');
+    var chipBtns = [];
+    var allItems = (sec.items && sec.items.length) ? sec.items : allProducts();
+    var hasOther = allItems.some(function (p) { return productTrade(p) === 'other'; });
+    var trades = TRADES.slice();
+    if (hasOther) trades.push({ key: 'other', label: 'Other' });
+    trades.forEach(function (t) {
+      var b = el('button', 'gd-chip' + (t.key === tradeKey ? ' is-on' : ''), t.label);
+      b.type = 'button';
+      b.setAttribute('aria-pressed', t.key === tradeKey ? 'true' : 'false');
+      b.addEventListener('click', function () {
+        tradeKey = t.key;
+        chipBtns.forEach(function (x) {
+          var on = x === b;
+          x.classList.toggle('is-on', on);
+          x.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        syncQuery();
+        paint();
+      });
+      chipBtns.push(b);
+      chipRow.appendChild(b);
+    });
+    bar.appendChild(chipRow);
+    wrap.appendChild(bar);
+
     var meta = el('p', 'gd-meta');
     wrap.appendChild(meta);
     var host = el('div', 'gd-product-list');
     wrap.appendChild(host);
-    function paint(f) {
+
+    function syncQuery() {
+      var params = [];
+      if (tradeKey && tradeKey !== 'all') params.push('trade=' + encodeURIComponent(tradeKey));
+      var f = (q.value || '').trim();
+      if (f) params.push('q=' + encodeURIComponent(f));
+      var next = '/guides/manuals' + (params.length ? ('?' + params.join('&')) : '');
+      if ((location.pathname + location.search) !== next) {
+        try { history.replaceState({}, '', next); } catch (e) {}
+      }
+    }
+
+    function paint() {
       host.textContent = '';
-      var list = (sec.items && sec.items.length) ? sec.items : allProducts();
+      var f = (q.value || '').trim();
       var shown = 0;
-      list.forEach(function (p) {
+      allItems.forEach(function (p) {
+        var trade = productTrade(p);
+        if (tradeKey !== 'all' && trade !== tradeKey) return;
         if (f && !hayMatch(productHay(p), f)) return;
         shown++;
         var card = el('article', 'gd-product');
         var top = el('div', 'gd-product-top');
-        if (p.brand) top.appendChild(el('span', 'gd-tag', p.brand));
+        var tags = el('div', 'gd-product-tags');
+        if (p.brand) tags.appendChild(el('span', 'gd-tag', p.brand));
+        var tradeLabel = (TRADES.concat([{ key: 'other', label: 'Other' }]).filter(function (t) { return t.key === trade; })[0] || {}).label;
+        if (tradeLabel) tags.appendChild(el('span', 'gd-tag gd-tag-trade', tradeLabel));
+        top.appendChild(tags);
         top.appendChild(el('h3', null, p.title));
         card.appendChild(top);
         if (p.use) card.appendChild(el('p', 'gd-product-use', p.use));
@@ -429,11 +508,17 @@
         }
         host.appendChild(card);
       });
-      meta.textContent = shown ? (shown + ' of ' + list.length) : '';
-      if (!host.childNodes.length) host.appendChild(el('p', 'gd-empty', 'No product matched. Try 128BPT, Neo, HID, or Altronix.'));
+      var tradeName = tradeKey === 'all' ? '' : (' · ' + (tradeKey.charAt(0).toUpperCase() + tradeKey.slice(1)));
+      if (shown) meta.textContent = shown + ' of ' + allItems.length + tradeName;
+      else meta.textContent = '';
+      if (!host.childNodes.length) {
+        host.appendChild(el('p', 'gd-empty', f
+          ? 'No product matched. Try Verkada, Vista 128, Salto, or a trade chip.'
+          : 'Nothing in that trade yet. Pick All or search a model.'));
+      }
     }
-    q.addEventListener('input', function () { paint(q.value); });
-    paint(pre);
+    q.addEventListener('input', paint);
+    paint();
     return wrap;
   }
 

@@ -111,12 +111,46 @@
     renderDash(true);
     enhanceChecklist();
   }
-  function recordVisit(id) {
+  function recordVisit(id, extra) {
     if (!id) return;
-    state.recents = state.recents.filter(function (r) { return r.id !== id; });
-    state.recents.unshift({ id: id, title: titleFor(id), ts: Date.now() });
+    extra = extra || {};
+    var href = extra.href || '/checklist/' + id;
+    var title = extra.title || titleFor(id);
+    state.recents = state.recents.filter(function (r) { return r.id !== id && r.href !== href; });
+    state.recents.unshift({ id: id, title: title, href: href, ts: Date.now() });
     state.recents = state.recents.slice(0, MAX_RECENTS);
     persist();
+  }
+
+  function maybeRecordVisit() {
+    var p = pathOf();
+    var key = p + location.search;
+    if (key === maybeRecordVisit._last) return;
+    maybeRecordVisit._last = key;
+    if (p.indexOf('/checklist/') === 0) {
+      var cid = p.split('/')[2];
+      if (cid) recordVisit(cid, { href: p, title: titleFor(cid) });
+      return;
+    }
+    if (p.indexOf('/guides/') !== 0) return;
+    var gid = p.split('/')[2];
+    if (!gid) return;
+    if (gid === 'manuals') {
+      var trade = '';
+      var q = '';
+      try {
+        var sp = new URLSearchParams(location.search);
+        trade = sp.get('trade') || '';
+        q = sp.get('q') || '';
+      } catch (e) {}
+      var title = 'Product cards';
+      if (q) title = q;
+      else if (trade) title = trade.charAt(0).toUpperCase() + trade.slice(1) + ' products';
+      recordVisit('manuals:' + (q || trade || 'all'), { href: p + location.search, title: title });
+      return;
+    }
+    var g = window.__LAWSONITE_GUIDES__ && window.__LAWSONITE_GUIDES__.pages && window.__LAWSONITE_GUIDES__.pages[gid];
+    recordVisit('guide:' + gid, { href: p, title: (g && g.title) || gid });
   }
 
   function pathOf() {
@@ -322,7 +356,7 @@
       state.recents.forEach(function (r) {
         var li = el('li');
         var a = el('a', 'fk-link', r.title || r.id);
-        a.href = '/checklist/' + r.id;
+        a.href = r.href || ('/checklist/' + r.id);
         li.appendChild(a);
         li.appendChild(el('span', 'fk-meta', fmtWhen(r.ts)));
         rl.appendChild(li);
@@ -403,6 +437,61 @@
     renderDash();
   }
 
+  function landingDashSig() {
+    return state.recents.map(function (r) { return r.id; }).join(',') + '|' +
+      state.favs.map(function (f) { return f.id; }).join(',');
+  }
+
+  function renderLandingDash(host) {
+    var dash = el('div', 'fk-dash start-dash');
+
+    dash.appendChild(block('Or pick a trade', 'Product cards'));
+    var row = el('div', 'fk-chip-row start-trades');
+    [
+      { trade: 'fire', label: 'Fire' },
+      { trade: 'access', label: 'Access' },
+      { trade: 'cameras', label: 'Cameras' },
+      { trade: 'intrusion', label: 'Intrusion' },
+      { trade: 'power', label: 'Power' }
+    ].forEach(function (t) {
+      var a = el('a', 'fk-text-chip fk-link', t.label);
+      a.href = '/guides/manuals?trade=' + t.trade;
+      row.appendChild(a);
+    });
+    dash.appendChild(row);
+
+    if (state.recents.length) {
+      dash.appendChild(block('Recent', null));
+      var rl = el('ul', 'fk-list');
+      state.recents.forEach(function (r) {
+        var li = el('li');
+        var a = el('a', 'fk-link', r.title || r.id);
+        a.href = r.href || ('/checklist/' + r.id);
+        li.appendChild(a);
+        if (r.ts) li.appendChild(el('span', 'fk-meta', fmtWhen(r.ts)));
+        rl.appendChild(li);
+      });
+      dash.appendChild(rl);
+    }
+
+    if (state.favs.length) {
+      dash.appendChild(block('Starred', state.favs.length + ' saved'));
+      var fl = el('ul', 'fk-list');
+      state.favs.forEach(function (f) {
+        var c = checklist(f.id);
+        var li = el('li');
+        var a = el('a', 'fk-link', (c && c.title) || f.title || f.id);
+        a.href = f.href || ('/checklist/' + f.id);
+        li.appendChild(a);
+        li.appendChild(el('span', 'fk-meta', c ? catLabel(c) : ''));
+        fl.appendChild(li);
+      });
+      dash.appendChild(fl);
+    }
+
+    host.appendChild(dash);
+  }
+
   function enhanceLanding() {
     var page = document.querySelector('.start-page');
     if (!page) return;
@@ -411,13 +500,19 @@
     if (!host) return;
     var query = (q && q.value ? q.value : '').trim();
     page.classList.toggle('is-searching', !!query);
+    page.classList.toggle('has-dash', !query);
     if (!query) {
-      host.textContent = '';
+      var sig = landingDashSig();
+      if (host.dataset.q === '' && host.dataset.sig === sig && host.querySelector('.fk-dash')) return;
       host.dataset.q = '';
+      host.dataset.sig = sig;
+      host.textContent = '';
+      renderLandingDash(host);
       return;
     }
     if (host.dataset.q === query && host.querySelector('.fk-hits')) return;
     host.dataset.q = query;
+    host.dataset.sig = '';
     host.textContent = '';
     renderHomeHits(host, query);
   }
@@ -428,7 +523,6 @@
     if (!page) return;
 
     var m = location.pathname.match(/^\/checklist\/([a-z0-9-]+)/i);
-    if (m) recordVisit(m[1]);
 
     var toolbar = page.querySelector('.runner-toolbar');
     if (toolbar && !toolbar.querySelector('.fk-filters')) {
@@ -729,6 +823,7 @@
     if (isLanding()) enhanceLanding();
     if (isLibrary()) enhanceHome();
     enhanceChecklist();
+    maybeRecordVisit();
     syncStars();
   }
 

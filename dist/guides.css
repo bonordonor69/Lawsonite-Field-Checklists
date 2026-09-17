@@ -429,6 +429,11 @@ body.fk-guides .disclaimer-banner { display: none !important; }
   color: var(--brand-deep);
 }
 .gd-more .gd-steps { margin: 0.2rem 0 0.4rem; padding-left: 1.1rem; }
+.gd-product-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
 .gd-tag {
   display: inline-flex;
   background: var(--brand-soft);
@@ -439,6 +444,12 @@ body.fk-guides .disclaimer-banner { display: none !important; }
   font-weight: 800;
   letter-spacing: 0.04em;
   text-transform: uppercase;
+}
+.gd-tag-trade {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  font-weight: 700;
 }
 
 .gd-search {
