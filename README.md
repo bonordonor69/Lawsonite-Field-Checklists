@@ -1,5 +1,7 @@
 # Lawsonite Field Checklists
 
-Tomcat Studios — production static build (`index-7L9lG8PJ.js`).
+Production static site for **https://lawsonite.tomcatstudios.com** (Netlify).
 
-Connect to Netlify with publish directory = repo root.
+No build step. Publish directory is the **repo root** (must include `index.html` **and** `assets/index-7L9lG8PJ.js`).
+
+If the live site is a blank white page, the JS bundle is missing and the SPA fallback is serving HTML instead of JavaScript.
