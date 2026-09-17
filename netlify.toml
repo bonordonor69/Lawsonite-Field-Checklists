@@ -1,8 +1,7 @@
-[build]
+﻿[build]
   command = ""
   publish = "."
 
-# Deep links boot the SPA. Existing files (JS/CSS) are served as-is.
 [[redirects]]
   from = "/*"
   to = "/index.html"
@@ -23,8 +22,3 @@
   for = "/manifest.webmanifest"
   [headers.values]
     Content-Type = "application/manifest+json; charset=utf-8"
-
-[[headers]]
-  for = "/assets/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
