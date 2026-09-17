@@ -1,0 +1,7 @@
+﻿{
+  "name": "lawsonite",
+  "private": true,
+  "scripts": {
+    "build": "node -e \"console.log('static publish; no compile')\""
+  }
+}

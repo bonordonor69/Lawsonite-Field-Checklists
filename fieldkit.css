@@ -532,7 +532,7 @@ body.fk-filter-tips .item-row:not(:has(.item-tip)) { display: none; }
   left: 0; right: 0; bottom: 0;
   z-index: 40;
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0;
   background: #0a0a0af2;
   color: #c4bfba;

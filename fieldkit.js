@@ -469,15 +469,7 @@
 
   /* ---------------- header search + tab bar ---------------- */
   function ensureFieldNav() {
-    var nav = document.querySelector('.main-nav');
-    if (!nav || nav.querySelector('a[href="/field"]')) return;
-    var a = document.createElement('a');
-    a.href = '/field';
-    a.className = 'fk-link';
-    a.textContent = 'Field';
-    var home = nav.querySelector('a[href="/"]');
-    if (home && home.nextSibling) nav.insertBefore(a, home.nextSibling);
-    else nav.insertBefore(a, nav.firstChild);
+    /* Field tab retired — content lives on Library and Quick Refs. */
   }
 
   function ensureHeaderSearch() {
@@ -502,11 +494,10 @@
     var nav = el('nav', 'fk-tabbar no-print');
     nav.setAttribute('aria-label', 'Field navigation');
     var tabs = [
-      { href: '/', label: 'Home', icon: 'home', match: function (p) { return p === '/'; } },
-      { href: '/refs', label: 'Calcs', icon: 'calc', match: function (p) { return p === '/refs'; } },
-      { href: '/field', label: 'Field', icon: 'calls', match: function (p) { return p === '/field' || p.indexOf('/guides') === 0 || p.indexOf('/category/troubleshoot') === 0 || p.indexOf('/checklist/false-alarm') === 0 || p.indexOf('/checklist/strobe') === 0 || p.indexOf('/checklist/poe-night') === 0 || p.indexOf('/checklist/door-forced') === 0 || p.indexOf('/checklist/fire-alarm-ground') === 0 || p.indexOf('/checklist/device-class') === 0; } },
+      { href: '/', label: 'Library', icon: 'home', match: function (p) { return p === '/' || p.indexOf('/category/') === 0 || p.indexOf('/checklist/') === 0 || p.indexOf('/guides/') === 0; } },
+      { href: '/refs', label: 'Refs', icon: 'calc', match: function (p) { return p === '/refs'; } },
       { href: '/jobsheets', label: 'Jobs', icon: 'jobs', match: function (p) { return p.indexOf('/jobsheets') === 0; } },
-      { href: '/portal', label: 'Shop', icon: 'shop', match: function (p) { return p.indexOf('/portal') === 0; } }
+      { href: '/portal', label: 'Company', icon: 'shop', match: function (p) { return p.indexOf('/portal') === 0; } }
     ];
     tabs.forEach(function (t) {
       var a = el('a', 'fk-link');
