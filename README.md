@@ -1,2 +1,5 @@
-# Lawsonite-Field-Checklists
-Lawsonite field checklists PWA by Tomcat Studios — production static site for Netlify
+# Lawsonite Field Checklists
+
+Tomcat Studios — production static build (`index-7L9lG8PJ.js`).
+
+Connect to Netlify with publish directory = repo root.
