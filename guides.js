@@ -154,7 +154,8 @@
     mark.textContent = 'L';
     return mark;
   }
-  function printLetterhead(docTitle) {
+  function printLetterhead(docTitle, opts) {
+    opts = opts || {};
     var shop = shopBrand();
     var box = el('div', 'gd-letterhead');
     var row = el('div', 'gd-letterhead-row');
@@ -180,17 +181,26 @@
       text.appendChild(el('p', 'gd-letterhead-sub', 'by Tomcat Studios'));
     }
     if (docTitle) text.appendChild(el('p', 'gd-letterhead-doc', docTitle));
+    if (opts.jobName) text.appendChild(el('p', 'gd-letterhead-job', opts.jobName));
     row.appendChild(text);
     box.appendChild(row);
+    if (opts.qrUrl) {
+      var qr = qrBox(opts.qrUrl, opts.qrCap || 'Scan', 96);
+      qr.classList.add('gd-qr-head');
+      if (opts.qrPrintOnly) qr.classList.add('only-print');
+      box.appendChild(qr);
+      box.classList.add('gd-letterhead-with-qr');
+    }
     return box;
   }
-  function qrBox(url, cap) {
+  function qrBox(url, cap, cssPx) {
     var wrap = el('div', 'gd-qr');
+    cssPx = cssPx || 252;
     try {
       if (window.LAWSONITE_QR && window.LAWSONITE_QR.mount) {
-        wrap.appendChild(window.LAWSONITE_QR.mount(url, 252));
+        wrap.appendChild(window.LAWSONITE_QR.mount(url, cssPx));
       } else if (window.LAWSONITE_QR && window.LAWSONITE_QR.svg) {
-        wrap.innerHTML = window.LAWSONITE_QR.svg(url, 252);
+        wrap.innerHTML = window.LAWSONITE_QR.svg(url, cssPx);
       } else {
         wrap.appendChild(el('p', 'gd-qr-fallback', url));
       }
@@ -902,43 +912,75 @@
       title: 'Zone list',
       sub: 'Fire / intrusion zones',
       icon: 'bell',
-      lede: 'Fill on the phone, print for the can. Free pages get the Lawsonite mark. Pro swaps in your logo.',
+      lede: 'Fill on the phone, print for the can. Ghost text is examples — it does not print.',
       cols: [
-        { key: 'n', label: '#', ph: '' },
-        { key: 'type', label: 'Type', ph: 'Smoke / motion / door' },
-        { key: 'loc', label: 'Location', ph: 'Hall west' },
-        { key: 'device', label: 'Device', ph: 'SD-123' },
-        { key: 'notes', label: 'Notes', ph: '' }
+        { key: 'n', label: '#' },
+        { key: 'type', label: 'Type' },
+        { key: 'loc', label: 'Location' },
+        { key: 'device', label: 'Device' },
+        { key: 'notes', label: 'Notes' }
       ],
-      rows: 16
+      rows: 16,
+      examples: [
+        { type: 'Smoke', loc: 'Hall west', device: 'SD-123', notes: 'NAC 1' },
+        { type: 'Heat', loc: 'Mech closet', device: 'HD-4', notes: 'Rate-of-rise' },
+        { type: 'Pull', loc: 'Stair 2', device: 'NBG-12LX', notes: 'Dual-action' },
+        { type: 'Motion', loc: 'Lobby', device: 'PIR-DT', notes: 'Pet immune' },
+        { type: 'Door', loc: 'Overhead', device: '9514', notes: '24hr' },
+        { type: 'Glass', loc: 'Storefront', device: 'FG-1625', notes: 'Break' },
+        { type: 'Duct', loc: 'AHU-1', device: 'DH100LP', notes: 'Supply' },
+        { type: 'Waterflow', loc: 'Riser A', device: 'VSR-F', notes: 'Fire' },
+        { type: 'Tamper', loc: 'PIV', device: 'OS&Y', notes: 'Supervisory' },
+        { type: 'Keyswitch', loc: 'IT closet', device: 'Shunt', notes: '24hr' }
+      ]
     },
     doors: {
       title: 'Door programming',
       sub: 'Reader, lock, REX, contact',
       icon: 'door',
-      lede: 'One row per opening. Walk the doors with this and the laptop.',
+      lede: 'One row per opening. Ghost text is examples — it does not print.',
       cols: [
-        { key: 'name', label: 'Door', ph: 'Stair 2' },
-        { key: 'reader', label: 'Reader', ph: 'HID / OSDP addr' },
-        { key: 'lock', label: 'Lock', ph: 'Strike / mag / EL' },
-        { key: 'rex', label: 'REX / contact', ph: 'PIR · locked status' },
-        { key: 'notes', label: 'Access / notes', ph: 'Unlock sched' }
+        { key: 'name', label: 'Door' },
+        { key: 'reader', label: 'Reader' },
+        { key: 'lock', label: 'Lock' },
+        { key: 'rex', label: 'REX / contact' },
+        { key: 'notes', label: 'Access / notes' }
       ],
-      rows: 12
+      rows: 12,
+      examples: [
+        { name: 'Stair 2', reader: 'Signo 40 / OSDP 2', lock: 'HES 9600', rex: 'PIR · DSM', notes: 'Fail secure' },
+        { name: 'Main lobby', reader: 'iCLASS SE / addr 3', lock: 'Mag M380', rex: 'Push to exit', notes: 'Unlock 7–6' },
+        { name: 'Server room', reader: 'Pivot 45', lock: 'Strike 5000C', rex: 'No REX · 24hr', notes: 'Two-man rule' },
+        { name: 'Loading dock', reader: 'MiniProx', lock: 'EL panic', rex: 'Crash bar · contact', notes: 'REX only out' },
+        { name: 'HR suite', reader: 'Salto XS4', lock: 'Wireless mortise', rex: 'Privacy', notes: 'Office hours' },
+        { name: 'Roof hatch', reader: 'Mullion', lock: 'Mag + BLS', rex: 'Delayed egress', notes: 'NFPA 101' },
+        { name: 'Stair 1 discharge', reader: 'Wall reader', lock: 'Rim 98/99', rex: 'Bar · latch bolt', notes: 'Fail safe fire' },
+        { name: 'Pharmacy', reader: 'Keypad + fob', lock: 'Storeroom', rex: 'REX PIR', notes: 'Audit trail' }
+      ]
     },
     cameras: {
       title: 'Camera directory',
       sub: 'Name, channel, switch port',
       icon: 'cam',
-      lede: 'Channel map for the NVR and the switch. Tape a copy in the closet.',
+      lede: 'Channel map for the NVR and the switch. Ghost text is examples — it does not print.',
       cols: [
-        { key: 'n', label: '#', ph: '' },
-        { key: 'name', label: 'Name', ph: 'Lobby PTZ' },
-        { key: 'ch', label: 'Ch / IP', ph: '12 / .41' },
-        { key: 'loc', label: 'Location', ph: 'SE corner' },
-        { key: 'sw', label: 'Switch · port', ph: 'IDF-2 PoE 7' }
+        { key: 'n', label: '#' },
+        { key: 'name', label: 'Name' },
+        { key: 'ch', label: 'Ch / IP' },
+        { key: 'loc', label: 'Location' },
+        { key: 'sw', label: 'Switch · port' }
       ],
-      rows: 16
+      rows: 16,
+      examples: [
+        { name: 'Lobby PTZ', ch: '12 / 10.20.4.41', loc: 'SE corner', sw: 'IDF-2 PoE 7' },
+        { name: 'Parking N', ch: '4 / .18', loc: 'Pole 3', sw: 'IDF-1 PoE 11' },
+        { name: 'Hall 2W', ch: '9 / ch9', loc: 'Facing stair', sw: 'Closet A · 3' },
+        { name: 'Dock', ch: '15 / .55', loc: 'Overhead', sw: 'Cam SW PoE 2' },
+        { name: 'Reception', ch: '1 / .10', loc: 'Over desk', sw: 'Core SW 24' },
+        { name: 'Stair roof', ch: '22 / .72', loc: 'Looking down', sw: 'IDF-3 PoE 5' },
+        { name: 'Cash office', ch: '8 / .33', loc: 'Inside door', sw: 'IDF-2 PoE 14' },
+        { name: 'Rear alley', ch: '3 / .19', loc: 'NW wall', sw: 'IDF-1 PoE 8' }
+      ]
     }
   };
   var PAPER_IDS = ['zones', 'doors', 'cameras'];
@@ -988,16 +1030,25 @@
     var pack = loadPack();
     var page = el('div', 'page gd-page gd-sheet-page');
     page.appendChild(backLink('/field', 'Field'));
-    page.appendChild(printLetterhead(spec.title));
-    var head = el('header', 'gd-hero');
+    var origin = location.origin && location.origin !== 'null'
+      ? location.origin
+      : 'https://lawsonite.tomcatstudios.com';
+    var qUrl = pack.ids.length ? packQrUrl(pack.ids, pack.title) : (origin + '/guides/' + kind);
+    var jobName = pack.title && pack.title !== 'Job pack' ? pack.title : '';
+    page.appendChild(printLetterhead(spec.title, {
+      qrUrl: qUrl,
+      qrCap: pack.ids.length ? 'Job pack' : 'Open sheet',
+      jobName: jobName
+    }));
+    var head = el('header', 'gd-hero no-print');
     head.appendChild(el('p', 'gd-kicker', 'Leave-behind'));
     head.appendChild(el('h1', null, spec.title));
-    head.appendChild(el('p', 'gd-lede no-print', spec.lede));
+    head.appendChild(el('p', 'gd-lede', spec.lede));
     page.appendChild(head);
 
     var jobInput = document.createElement('input');
     jobInput.className = 'gd-search no-print';
-    jobInput.value = pack.title && pack.title !== 'Job pack' ? pack.title : '';
+    jobInput.value = jobName;
     jobInput.placeholder = 'Job name — prints on the sheet';
     jobInput.setAttribute('aria-label', 'Job name');
     jobInput.addEventListener('change', function () {
@@ -1005,13 +1056,17 @@
       pack = loadPack();
       pack.title = next;
       savePack(pack);
-      var printName = page.querySelector('.gd-sheet-job');
-      if (printName) printName.textContent = next === 'Job pack' ? '' : next;
+      var jobEl = page.querySelector('.gd-letterhead-job');
+      if (next === 'Job pack') {
+        if (jobEl) jobEl.textContent = '';
+      } else if (jobEl) {
+        jobEl.textContent = next;
+      } else {
+        var host = page.querySelector('.gd-letterhead-text');
+        if (host) host.appendChild(el('p', 'gd-letterhead-job', next));
+      }
     });
     page.appendChild(jobInput);
-    var printName = el('p', 'gd-sheet-job only-print',
-      pack.title && pack.title !== 'Job pack' ? pack.title : '');
-    page.appendChild(printName);
 
     var tools = el('div', 'gd-pack-tools no-print');
     var printBtn = el('button', 'gd-chip is-on', 'Print sheet');
@@ -1029,20 +1084,6 @@
     tools.appendChild(clearBtn);
     page.appendChild(tools);
     page.appendChild(paperLinks(kind));
-
-    var ident = el('div', 'gd-pack-ident gd-sheet-ident');
-    var origin = location.origin && location.origin !== 'null'
-      ? location.origin
-      : 'https://lawsonite.tomcatstudios.com';
-    var qUrl = pack.ids.length ? packQrUrl(pack.ids, pack.title) : (origin + '/guides/' + kind);
-    ident.appendChild(qrBox(qUrl, pack.ids.length ? 'Scan for this job pack' : 'Scan for this sheet'));
-    var identText = el('div', 'gd-pack-ident-text');
-    identText.appendChild(el('p', 'muted',
-      pack.ids.length
-        ? 'QR opens the pinned product pack for this job.'
-        : 'Pin product cards, then this QR opens that pack.'));
-    ident.appendChild(identText);
-    page.appendChild(ident);
 
     var wrap = el('div', 'gd-sheet-wrap');
     var table = el('table', 'gd-sheet');
@@ -1069,7 +1110,8 @@
           var td = document.createElement('td');
           var inp = document.createElement('input');
           inp.value = row[c.key] != null ? String(row[c.key]) : '';
-          inp.placeholder = c.ph || '';
+          var ex = (spec.examples && spec.examples[idx % spec.examples.length]) || {};
+          inp.placeholder = c.key === 'n' ? '' : (ex[c.key] || c.ph || '');
           inp.setAttribute('aria-label', c.label + ' ' + (idx + 1));
           inp.addEventListener('input', function () {
             rows[idx][c.key] = inp.value;
@@ -1120,7 +1162,12 @@
 
     var page = el('div', 'page gd-page gd-pack');
     page.appendChild(backLink('/guides/manuals', 'Product cards'));
-    page.appendChild(printLetterhead(title));
+    var url = packQrUrl(ids, title);
+    page.appendChild(printLetterhead(title, {
+      qrUrl: url,
+      qrCap: 'Job pack',
+      qrPrintOnly: true
+    }));
 
     var head = el('header', 'gd-hero');
     head.appendChild(el('p', 'gd-kicker', 'Job pack'));
@@ -1135,7 +1182,6 @@
       'Pin cards on the manuals page, name the job, print the pack or a panel QR. Free prints get the Lawsonite mark. Pro adds your company logo.'));
     page.appendChild(head);
 
-    var url = packQrUrl(ids, title);
     var tools = el('div', 'gd-pack-tools no-print');
     var printBtn = el('button', 'gd-chip is-on', 'Print pack');
     printBtn.type = 'button';
@@ -1198,13 +1244,22 @@
       title = next;
       try { history.replaceState({}, '', packHref(ids, next)); } catch (e) {}
       var abs = packAbs(ids, next);
-      var qr = ident.querySelector('.gd-qr');
-      if (qr) {
-        var fresh = qrBox(packQrUrl(ids, next));
+      var nextUrl = packQrUrl(ids, next);
+      page.querySelectorAll('.gd-qr').forEach(function (qr) {
+        var headQr = qr.classList.contains('gd-qr-head');
+        var fresh = qrBox(nextUrl, headQr ? 'Job pack' : 'Scan for this job pack', headQr ? 96 : 252);
+        if (headQr) {
+          fresh.classList.add('gd-qr-head');
+          if (qr.classList.contains('only-print')) fresh.classList.add('only-print');
+        }
         qr.replaceWith(fresh);
-      }
+      });
       var urlEl = ident.querySelector('.gd-pack-url');
       if (urlEl) urlEl.textContent = abs;
+      var docEl = page.querySelector('.gd-letterhead-doc');
+      if (docEl) docEl.textContent = next;
+      var h1 = page.querySelector('.gd-hero h1');
+      if (h1) h1.textContent = next;
     });
 
     var list = el('div', 'gd-product-list gd-pack-cards');

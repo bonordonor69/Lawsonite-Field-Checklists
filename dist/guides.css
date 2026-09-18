@@ -507,10 +507,17 @@ a.gd-chip {
   border-bottom: 1px solid var(--line);
   margin-bottom: 0.15rem;
 }
+.gd-letterhead-with-qr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
 .gd-letterhead-row {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
 }
 .gd-lmark,
 .gd-letterhead-logo {
@@ -542,6 +549,25 @@ a.gd-chip {
   margin-top: 0.12rem;
 }
 .gd-letterhead-doc { font-weight: 700; }
+.gd-letterhead-job {
+  margin-top: 0.1rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--brand-deep);
+}
+.gd-qr-head {
+  padding: 0.2rem;
+  flex: none;
+}
+.gd-qr-head svg,
+.gd-qr-head canvas {
+  width: 88px;
+  height: 88px;
+}
+.gd-qr-head .gd-qr-cap {
+  font-size: 0.58rem;
+  letter-spacing: 0.03em;
+}
 
 .gd-pack-ident {
   display: grid;
@@ -644,24 +670,49 @@ a.gd-chip {
 
 @media print {
   .gd-back, .fk-tabbar, .fk-search-btn, .gd-studio-foot, .no-print, .gd-pack-tools,
-  .gd-toolbar, .gd-meta { display: none !important; }
+  .gd-toolbar, .gd-meta, .gd-foot { display: none !important; }
   .only-print { display: block !important; }
-  .gd-root { width: 100%; padding: 0.4in; }
+  .gd-root { width: 100%; padding: 0.28in 0.32in; }
+  .gd-page { gap: 0.45rem; }
   .gd-card, .gd-tile, .gd-product { box-shadow: none; break-inside: avoid; }
-  .gd-letterhead { border-bottom: 2px solid #111; }
-  .gd-letterhead-company { color: #111; }
+  .gd-letterhead {
+    padding: 0 0 0.28rem;
+    margin: 0 0 0.3rem;
+    border-bottom: 1.5px solid #111;
+  }
+  .gd-letterhead-sub { display: none !important; }
+  .gd-letterhead-company { color: #111; font-size: 0.88rem; }
+  .gd-letterhead-doc,
+  .gd-letterhead-job { font-size: 0.72rem; color: #111; }
+  .gd-lmark, .gd-letterhead-logo {
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
+    border-radius: 8px;
+  }
   .gd-lmark { display: grid !important; }
   .gd-pin { display: none !important; }
   .gd-more summary { display: none; }
   .gd-more { border: 0; padding-top: 0; }
+  .gd-qr-head { padding: 0; }
+  .gd-qr-head svg,
+  .gd-qr-head canvas { width: 0.85in !important; height: 0.85in !important; }
+  .gd-qr-head .gd-qr-cap { font-size: 0.5rem; color: #111; }
+  body:not(.gd-sticker-print) .gd-pack-ident { display: none !important; }
+  body:not(.gd-sticker-print) .gd-pack .gd-hero { display: none !important; }
   .gd-qr svg, .gd-qr canvas { width: 2.4in; height: 2.4in; }
-  .gd-pack-sign { display: block !important; }
+  .gd-pack-sign {
+    display: block !important;
+    margin-top: 0.45rem;
+    font-size: 0.78rem;
+  }
   body.gd-sticker-print .gd-pack-cards,
   body.gd-sticker-print .gd-foot,
   body.gd-sticker-print .gd-pack-sign,
   body.gd-sticker-print .gd-hero .gd-lede,
   body.gd-sticker-print .gd-kicker,
-  body.gd-sticker-print .gd-pack-ident-text { display: none !important; }
+  body.gd-sticker-print .gd-pack-ident-text,
+  body.gd-sticker-print .gd-qr-head { display: none !important; }
   body.gd-sticker-print .gd-pack-ident {
     border: 0;
     justify-items: center;
@@ -717,6 +768,14 @@ a.gd-chip {
   font-weight: 650;
   padding: 0.25rem 0.3rem;
 }
+.gd-sheet input::placeholder {
+  color: #9a948c;
+  opacity: 1;
+  font-weight: 500;
+}
+@media (prefers-color-scheme: dark) {
+  .gd-sheet input::placeholder { color: #8d8780; }
+}
 .gd-sheet input:focus {
   outline: 2px solid var(--brand);
   outline-offset: -2px;
@@ -725,13 +784,23 @@ a.gd-chip {
 .gd-sheet-ident { margin-bottom: 0.2rem; }
 @media print {
   .gd-sheet-wrap { border: 0; overflow: visible; }
+  .gd-sheet th {
+    font-size: 0.62rem;
+    padding: 0.12rem 0.15rem 0.18rem;
+  }
   .gd-sheet th, .gd-sheet td {
     border-bottom: 1px solid #111;
-    padding: 0.22rem 0.2rem;
+    padding: 0.12rem 0.15rem;
   }
   .gd-sheet input {
     min-height: 0;
     color: #111;
-    padding: 0.1rem 0;
+    padding: 0.06rem 0;
+  }
+  .gd-sheet input::placeholder,
+  .gd-sheet input::-webkit-input-placeholder {
+    color: transparent !important;
+    opacity: 0 !important;
+    -webkit-text-fill-color: transparent !important;
   }
 }
