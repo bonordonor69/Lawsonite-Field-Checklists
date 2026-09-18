@@ -556,7 +556,7 @@ window.__LAWSONITE_GUIDES__ = {
     title: 'Common product cards & official docs',
     hub: 'Gotchas we actually hit, plus the manufacturer sheet',
     lede: 'We do not host copyrighted manuals. Each card is original field notes plus a link to the manufacturer’s own documentation. Search their site by exact model if the landing page moved.',
-    tags: ['manual', 'HID', 'Altronix', 'Vista', 'vista 128', '128bpt', 'DSC', 'Neo', 'HES', 'Axis', '6160', 'docs', 'Notifier', 'Simplex', 'Lenel', 'Genetec', 'Avigilon', 'Hikvision', 'Kantech', 'Salto', 'DSX', 'INVID', 'iSTAR', 'WIN-PAK', 'Verkada', 'Bosch'],
+    tags: ['manual', 'HID', 'Altronix', 'Vista', 'vista 128', '128bpt', 'DSC', 'Neo', 'HES', 'Axis', '6160', 'docs', 'Notifier', 'Simplex', 'Lenel', 'Genetec', 'Avigilon', 'Hikvision', 'Kantech', 'Salto', 'DSX', 'INVID', 'iSTAR', 'WIN-PAK', 'Verkada', 'Bosch', 'Openpath', 'Rhombus', 'ButterflyMX', 'StarLink'],
     related: [{ href: '/guides/pinouts', label: 'Pinouts' }, { href: '/guides/meter', label: 'Meter' }],
     sections: [
       { type: 'note', text: 'Authorized work only. Factory default codes belong in the official installer guide and should already have been changed. We do not publish backdoor lists.' },
@@ -2433,6 +2433,496 @@ window.__LAWSONITE_GUIDES__ = {
             linkLabel: 'Bosch RADION / B810 docs',
             linkSub: 'boschsecurity.com — RADION wireless, B810 receiver',
             tags: ['radion', 'b810', 'bosch wireless', 'sdi2', 'intrusion']
+          },
+          {
+            brand: 'Notifier / Honeywell Fire', title: 'NBG-12LX / NBG-12 pull stations',
+            use: 'The dual-action pull on half the commercial buildings in the country. Addressable LX vs conventional. Stopper II often over it.',
+            look: 'NBG-12 vs 12LX on the inside. Address (LX). Glass / plastic break rod. Key reset vs hex.',
+            gotchas: [
+              'Addressable LX is an SLC device. A leftover conventional 12 on a FlashScan loop will not poll.',
+              'Key reset vs hex. The wrong key on a truck is a second trip.',
+              'A Stopper that does not latch will false the pull. Hinge pins and weather kits matter.'
+            ],
+            href: 'https://buildings.honeywell.com/us/en/brands/our-brands/notifier',
+            linkLabel: 'Notifier pull-station docs',
+            linkSub: 'buildings.honeywell.com/notifier — NBG-12, NBG-12LX',
+            tags: ['nbg-12', 'nbg-12lx', 'pull', 'pull station', 'notifier', 'commercial fire']
+          },
+          {
+            brand: 'System Sensor', title: 'DNR / DNRW duct detectors',
+            use: 'In-duct smoke. Sampling tubes, remote test, shutdown relay. The unit in the RTU that is always in trouble after a filter change.',
+            look: 'DNR vs conventional duct. Tube length vs duct width. Exhaust vs supply orientation. Remote test station.',
+            gotchas: [
+              'Tubes have to match the duct width and face the airflow the sheet says. A 4-foot tube in an 8-foot duct is a trouble, not a new head.',
+              'Shutdown relay vs supervisory. HVAC techs land it as a status and then nobody understands why the unit will not start.',
+              'Cover gasket after a filter job. An unseated cover is a dirty / trouble in two weeks.'
+            ],
+            href: 'https://www.systemsensor.com',
+            linkLabel: 'System Sensor DNR docs',
+            linkSub: 'systemsensor.com — DNR, DNRW, sampling tubes',
+            tags: ['dnr', 'dnrw', 'duct detector', 'system sensor', 'hvac shutdown', 'commercial fire']
+          },
+          {
+            brand: 'Simplex / Johnson Controls', title: 'TrueAlert ES / 4906 / 49AV notification',
+            use: 'Addressable NAC appliances on IDNAC. Candela and tone live in the panel, not a tap on the device the way a conventional Wheelock does.',
+            look: '49xx model on the back. IDNAC vs conventional NAC. Candela set in software. Wall vs ceiling.',
+            gotchas: [
+              'You do not tap candela with a screwdriver on TrueAlert ES. The panel owns it. A “wrong candela” is programming.',
+              'IDNAC polarity and Class A/B are on the 4100ES card. A conventional RSS on IDNAC will not play.',
+              'Last-device voltage still matters. Addressable does not repeal Ohm.'
+            ],
+            href: 'https://www.simplexfire.com/resources',
+            linkLabel: 'Simplex TrueAlert literature',
+            linkSub: 'simplexfire.com/resources — TrueAlert ES, 4906, 49AV',
+            tags: ['truealert', '4906', '49av', 'idnac', 'simplex', 'strobe', 'commercial fire']
+          },
+          {
+            brand: 'Edwards / EST', title: 'SIGA / Signature detectors & modules',
+            use: 'Signature analog heads and SIGA modules on EST3 / EST4 / iO. Mapping, personality, and the programmer are the job.',
+            look: 'SIGA-PHS / HFS / IB on the head. Module personality. Loop card type. Mapping vs QuickStart vintage.',
+            gotchas: [
+              'Personality on a SIGA module is not a CLIP address. Wrong personality = wrong device type, not a bad module.',
+              'Do not mix Signature and conventional on one loop and hope.',
+              'SDU / FireWorks / the current EST tool — a leftover laptop from EST2 will not talk EST4.'
+            ],
+            href: 'https://www.edwardsfiresafety.com',
+            linkLabel: 'Edwards Signature / SIGA docs',
+            linkSub: 'edwardsfiresafety.com — SIGA, Signature, EST3/4',
+            tags: ['siga', 'signature', 'est', 'edwards', 'siga-phs', 'commercial fire']
+          },
+          {
+            brand: 'Potter', title: 'PAD100 / addressable modules',
+            use: 'Potter addressable monitor / relay / isolator modules on IPA / AFC / PFC loops. The little beige boxes on the sprinkler riser.',
+            look: 'PAD100-PD / RM / ZM. Address. EOL. Class A/B jumper.',
+            gotchas: [
+              'Flow / tampers on a PAD100 want the listed EOL at the device, not in the can.',
+              'Address collisions after a “quick add.” Walk the map.',
+              'pottersignal.com for the exact PAD100 sheet.'
+            ],
+            href: 'https://www.pottersignal.com',
+            linkLabel: 'Potter PAD100 docs',
+            linkSub: 'pottersignal.com — PAD100, IPA, AFC',
+            tags: ['pad100', 'potter', 'addressable module', 'flow', 'tamper', 'commercial fire']
+          },
+          {
+            brand: 'Space Age Electronics', title: 'SSU / elevator lobby / fan shutdown',
+            use: 'The other beige can: elevator recall, hatch, shunt, fan shutdown. Relays and LEDs that the fire panel talks to and the elevator guy swears at.',
+            look: 'SSU-series. 24 V. Fire-alarm inputs vs elevator outputs. LED legend on the door.',
+            gotchas: [
+              'Recall vs shunt vs hatch are different circuits. Landing “fire” on the wrong one is a failed inspection, not a bad relay.',
+              'Elevator contractors will jumper it for a test. Look before you condemn the FACP.',
+              '1sae.com for the exact SSU drawing.'
+            ],
+            href: 'https://www.1sae.com',
+            linkLabel: 'Space Age Electronics docs',
+            linkSub: '1sae.com — SSU, elevator lobby, fan shutdown',
+            tags: ['space age', 'ssu', 'elevator recall', 'shunt', 'fan shutdown', 'commercial fire']
+          },
+          {
+            brand: 'Avigilon / Motorola', title: 'ACM / Unity Access',
+            use: 'Avigilon access (the ACM appliance / Unity Access). Often in the same closet as ACC / Unity video. Mercury-class or Avigilon boards depending on vintage.',
+            look: 'ACM appliance vs Unity Access. Controller SKU. Reader ports. Video integration license.',
+            gotchas: [
+              'ACM vs Unity Access are generations. A laptop with the wrong client looks like every door died.',
+              'Video-verified access is a license and a camera pair, not a reader swap.',
+              'avigilon.com for ACM / Unity Access docs.'
+            ],
+            href: 'https://www.avigilon.com',
+            linkLabel: 'Avigilon ACM / Unity Access',
+            linkSub: 'avigilon.com — ACM, Unity Access',
+            tags: ['avigilon acm', 'unity access', 'acm', 'access', 'commercial access']
+          },
+          {
+            brand: 'Avigilon Alta / Openpath', title: 'Smart Reader / Core / Alta Cloud',
+            use: 'Cloud access that used to say Openpath. Smart Readers, Core / Hub, mobile credentials. Now Avigilon Alta. The reader is the door controller.',
+            look: 'Smart Reader on the mullion. PoE or 12 V. Cloud LED. Core in the closet on older jobs.',
+            gotchas: [
+              'No WAN = no live admin. Cached mobiles / cards should still work until you prove they do not.',
+              'A maglock on reader power is a brownout. Use listed lock power.',
+              'Alta vs Openpath apps. A rebranded site looks like “the app broke.” alta.avigilon.com / help.'
+            ],
+            href: 'https://www.avigilon.com/alta',
+            linkLabel: 'Avigilon Alta / Openpath',
+            linkSub: 'avigilon.com/alta — Smart Reader, Core, cloud',
+            tags: ['openpath', 'alta', 'avigilon alta', 'smart reader', 'cloud access', 'commercial access']
+          },
+          {
+            brand: 'Adams Rite / ASSA ABLOY', title: '7100 / 7400 / 6500 electric strikes & exit',
+            use: 'Aluminum-storefront strikes and latches. 7100/7400 in the frame, 6500-class latches in the stile. The glass door that never latches after a summer of sun.',
+            look: 'Faceplate. 12/24. Fail-safe vs fail-secure kit. Latch vs strike in the stile.',
+            gotchas: [
+              'Preload from a warped aluminum door will buzz a healthy 7100 to death. Fix the door.',
+              'Centerline vs offset. A 7100 in a 7400 hole is not a flex.',
+              'adamsrite.com for the exact 7100 / 7400 sheet.'
+            ],
+            href: 'https://www.adamsrite.com',
+            linkLabel: 'Adams Rite strike / latch docs',
+            linkSub: 'adamsrite.com — 7100, 7400, 6500',
+            tags: ['adams rite', '7100', '7400', '6500', 'storefront', 'strike', 'commercial access']
+          },
+          {
+            brand: 'SARGENT / ASSA ABLOY', title: '80-series electrified exit / mortise',
+            use: 'SARGENT 80-series panic and 8200 mortise. EL/EU, RX, motor kits. The other rail when it is not Von Duprin.',
+            look: '80 vs 90 on the rail. 12/24. RX vs LX. Power transfer.',
+            gotchas: [
+              'EL vs EU is fail-secure vs fail-safe. Same trap as Schlage. Read the solenoid.',
+              'Inrush on motorized 80-series is not a 500 mA ACM output.',
+              'sargentlock.com / ASSA for the exact 80-series sheet.'
+            ],
+            href: 'https://www.sargentlock.com',
+            linkLabel: 'SARGENT 80-series docs',
+            linkSub: 'sargentlock.com — 80-series, 8200, EL/EU',
+            tags: ['sargent', '80 series', '8200', 'electrified exit', 'mortise', 'commercial access']
+          },
+          {
+            brand: 'Yale / ASSA ABLOY', title: 'nexTouch / 6100 / 7100 electrified',
+            use: 'Yale cylindrical and mortise electrified, plus nexTouch keypad cylindricals. Interior offices and multi-family.',
+            look: 'nexTouch vs 6100 mortise. Battery vs hardwired. 12/24. Handing.',
+            gotchas: [
+              'nexTouch dead is batteries until proven otherwise. Same as Trilogy.',
+              'Handing and latch length are hardware. A bound latch looks like “it will not unlock.”',
+              'yalehome.com / commercial Yale docs for nexTouch / 6100.'
+            ],
+            href: 'https://www.yalehome.com',
+            linkLabel: 'Yale nexTouch / electrified docs',
+            linkSub: 'yalehome.com — nexTouch, 6100, 7100',
+            tags: ['yale', 'nextouch', '6100', '7100', 'cylindrical', 'commercial access']
+          },
+          {
+            brand: 'DynaLock', title: '3000 / 2011 maglocks & delays',
+            use: 'The other maglock house. 3000-series mags, delayed egress, 2011-class. Common when the spec was not Securitron or RCI.',
+            look: 'Voltage on the pigtail. Bond sensor. Delayed-egress board. 12/24.',
+            gotchas: [
+              'Same 12 vs 24 trap. Check the pigtail before the ACM.',
+              'Delayed egress: fire drop is immediate. Signage is an AHJ item.',
+              'dynalock.com for the exact 3000 / 2011 sheet.'
+            ],
+            href: 'https://www.dynalock.com',
+            linkLabel: 'DynaLock maglock docs',
+            linkSub: 'dynalock.com — 3000, 2011, delayed egress',
+            tags: ['dynalock', '3000', '2011', 'maglock', 'delayed egress', 'commercial access']
+          },
+          {
+            brand: 'Trine', title: '3478 / 3234 / 4100 electric strikes',
+            use: 'The value strike in a lot of aluminum and wood frames. 3478 is the workhorse. Dual voltage, fail-safe / fail-secure kits.',
+            look: 'Faceplate. 12/24. Keeper orientation. Lip length.',
+            gotchas: [
+              'Preload kills these just like a 1006. Fix the door.',
+              'Lip length vs frame. A 3478 in a deep frame that needed a 4100 will never latch clean.',
+              'trineonline.com for the exact 3478 / 3234 sheet.'
+            ],
+            href: 'https://www.trineonline.com',
+            linkLabel: 'Trine strike docs',
+            linkSub: 'trineonline.com — 3478, 3234, 4100',
+            tags: ['trine', '3478', '3234', '4100', 'strike', 'commercial access']
+          },
+          {
+            brand: 'Securitron / ASSA ABLOY', title: 'BPS / AQD power + TSB Touch Sense',
+            use: 'BPS-24 / AQD lock power, and the TSB Touch Sense Bar that is a REX without a PIR. Very common on maglock openings.',
+            look: 'BPS voltage select. Fire-alarm trigger. TSB on the rail, 12/24, output to the controller REX.',
+            gotchas: [
+              'TSB is a REX, not lock power. Wire it to the controller REX input, not across the mag coil, unless the drawing says so.',
+              'AQD / BPS fire trigger polarity. Wrong and the doors never drop — or they never lock.',
+              'securitron.com — BPS, AQD, TSB.'
+            ],
+            href: 'https://www.securitron.com',
+            linkLabel: 'Securitron BPS / TSB docs',
+            linkSub: 'securitron.com — BPS-24, AQD, TSB Touch Sense',
+            tags: ['bps', 'aqd', 'tsb', 'touch sense', 'securitron', 'rex', 'lock power', 'commercial access']
+          },
+          {
+            brand: 'Von Duprin / Allegion', title: 'EPT-2 / EPT-10 power transfer',
+            use: 'The hinge-side transfer that feeds QEL / EL without a door loop. EPT-2 vs EPT-10 current. Fire-listed when the opening is.',
+            look: 'EPT in the frame/hinge edge. Wire count. 24 V typical. Fire label.',
+            gotchas: [
+              'EPT-2 is not an EPT-10. QEL inrush on an EPT-2 is a melted transfer and a callback.',
+              'Door loops vs EPT: loops fail on fire-listed openings that required an EPT. Look at the listing.',
+              'allegion.com Von Duprin — EPT-2, EPT-10.'
+            ],
+            href: 'https://us.allegion.com/en/home/products/brands/von-duprin.html',
+            linkLabel: 'Von Duprin EPT docs',
+            linkSub: 'allegion.com — EPT-2, EPT-10 power transfer',
+            tags: ['ept', 'ept-10', 'ept-2', 'power transfer', 'von duprin', 'qel', 'commercial access']
+          },
+          {
+            brand: 'Inner Range', title: 'Integriti / Inception / Concept',
+            use: 'Australian-origin access / intrusion that shows up in US industrial and campuses. Integriti is current. Concept is the old one. Inception is the smaller web panel.',
+            look: 'LAN modules. Reader ports. RS-485. Integriti software vs Inception web.',
+            gotchas: [
+              'Concept vs Integriti are not the same download. Bring the right tool.',
+              'LAN module addressing. Two modules on one address is a haunted bus.',
+              'innerrange.com for Integriti / Inception docs.'
+            ],
+            href: 'https://www.innerrange.com',
+            linkLabel: 'Inner Range Integriti / Inception',
+            linkSub: 'innerrange.com — Integriti, Inception, Concept',
+            tags: ['inner range', 'integriti', 'inception', 'concept', 'access', 'commercial access']
+          },
+          {
+            brand: 'ZKTeco', title: 'inBio / Atlas / BioPro',
+            use: 'Biometric and card panels. inBio in the can, Atlas cloud/web, BioPro software. Common on small commercial and multi-tenant.',
+            look: 'inBio 160/260/460. 12 V. Reader ports vs onboard FP. Network.',
+            gotchas: [
+              'Default IP / password on the label. Change them.',
+              'Fingerprint vs card vs both is programming. A “dead reader” is often a matching-threshold, not a new sensor.',
+              'zkteco.com for inBio / Atlas install.'
+            ],
+            href: 'https://www.zkteco.com',
+            linkLabel: 'ZKTeco inBio / Atlas docs',
+            linkSub: 'zkteco.com — inBio, Atlas, BioPro',
+            tags: ['zkteco', 'inbio', 'atlas', 'biopro', 'fingerprint', 'access', 'commercial access']
+          },
+          {
+            brand: 'Keri Systems', title: 'NXT / Doors.NET / NXT-4x4',
+            use: 'Keri access. NXT controllers, Doors.NET software. Still in a lot of schools and offices that never left it.',
+            look: 'NXT-4x4 / 2x2 in the can. 12 V. Reader ports. Network vs old serial.',
+            gotchas: [
+              'Doors.NET vs old Doors32. A replaced PC with the wrong generation looks like every badge died.',
+              'NXT addressing and downstream. Same RS-485 rules as everyone else.',
+              'kerisys.com for NXT / Doors.NET.'
+            ],
+            href: 'https://www.kerisys.com',
+            linkLabel: 'Keri NXT / Doors.NET docs',
+            linkSub: 'kerisys.com — NXT-4x4, Doors.NET',
+            tags: ['keri', 'nxt', 'doors.net', 'nxt-4x4', 'access', 'commercial access']
+          },
+          {
+            brand: 'AWID', title: 'KP-6840 / LR-2000 / proximity readers',
+            use: 'The other Prox. KP-6840 keypad/reader, LR-2000 long-range. Wiegand. Common where HID was “too much money this week.”',
+            look: 'Model on the back. 5–16 V. Wiegand pigtail. Range jumper on LR.',
+            gotchas: [
+              'AWID Prox is not HID Prox. A corporate badge that works on Signo will not read an AWID head unless it is dual-tech.',
+              'LR-2000 wants a clean view and a listed mount. A reader stuffed in a mullion is not long-range.',
+              'awid.com for KP-6840 / LR-2000 sheets.'
+            ],
+            href: 'https://www.awid.com',
+            linkLabel: 'AWID reader docs',
+            linkSub: 'awid.com — KP-6840, LR-2000, Prox',
+            tags: ['awid', 'kp-6840', 'lr-2000', 'prox', 'reader', 'commercial access']
+          },
+          {
+            brand: 'ButterflyMX', title: 'Video intercom / cloud access',
+            use: 'Cloud video intercom on multi-family. Panel on the entry, app for residents, door release on a relay. Contractors hit it on takeovers constantly.',
+            look: 'Panel SKU. PoE. Relay to the strike / mag. Cloud LED. Tenant app vs property app.',
+            gotchas: [
+              'No WAN = no directory. Cached unlocks vary by firmware. Prove the path before you swap the panel.',
+              'Strike power is not the panel. Brownout on a mag hung off PoE is the same story as everyone else.',
+              'butterflymx.com support for the exact panel.'
+            ],
+            href: 'https://www.butterflymx.com',
+            linkLabel: 'ButterflyMX support',
+            linkSub: 'butterflymx.com — video intercom, cloud access',
+            tags: ['butterflymx', 'butterfly mx', 'intercom', 'multifamily', 'cloud access', 'commercial access']
+          },
+          {
+            brand: 'Rhombus', title: 'R-series cameras / Console',
+            use: 'Cloud cameras. Console in the browser, onboard storage, similar pitch to Verkada/Meraki. PoE, claim, license.',
+            look: 'R-series model. PoE class. Serial / claim. Console org.',
+            gotchas: [
+              'Claim / license / org permissions — same order as Verkada. A healthy PoE light is not “it is recording for you.”',
+              'PoE class vs IR. Night reboot on af-only switches.',
+              'rhombus.com / console help for the exact R-series sheet.'
+            ],
+            href: 'https://www.rhombus.com',
+            linkLabel: 'Rhombus camera / Console',
+            linkSub: 'rhombus.com — R-series, Console',
+            tags: ['rhombus', 'r-series', 'cloud camera', 'console', 'camera', 'commercial camera']
+          },
+          {
+            brand: 'Eagle Eye Networks', title: 'Cloud VMS / bridges',
+            use: 'Cloud VMS. A bridge / CMVR on site talks to Eagle Eye cloud. Cameras can be almost anything ONVIF. The “NVR” is not a local client.',
+            look: 'Bridge SKU. WAN. Camera list in Eagle Eye. ONVIF credentials.',
+            gotchas: [
+              'Bridge offline = no history in the cloud, local buffer depending on SKU. Do not format a camera SD because the cloud tab spun.',
+              'ONVIF user on the camera has to match what the bridge was given. A password rotation on 40 cams looks like a mass death.',
+              'een.com for bridge / cloud docs.'
+            ],
+            href: 'https://www.een.com',
+            linkLabel: 'Eagle Eye Networks docs',
+            linkSub: 'een.com — cloud VMS, bridges, CMVR',
+            tags: ['eagle eye', 'een', 'cmvr', 'bridge', 'cloud vms', 'nvr', 'commercial camera']
+          },
+          {
+            brand: 'LTS', title: 'CMIP / PTIP cameras + NVRs',
+            use: 'Contractor IP line (LTS / LT Security). NVRs with PoE, CMIP turrets, PTIP PTZ. Lots of small commercial.',
+            look: 'CMIP / PTIP on the gimbal. NVR PoE ports vs channels. Default IP.',
+            gotchas: [
+              'Activation / password on current firmware. A “dead” camera is often not activated.',
+              'Channel count is not PoE-port count. Same as INVID.',
+              'ltsecurityinc.com for the exact CMIP / NVR sheet.'
+            ],
+            href: 'https://www.ltsecurityinc.com',
+            linkLabel: 'LTS support / downloads',
+            linkSub: 'ltsecurityinc.com — CMIP, PTIP, NVRs',
+            tags: ['lts', 'cmip', 'ptip', 'lt security', 'camera', 'nvr', 'commercial camera']
+          },
+          {
+            brand: 'Hanwha Vision', title: 'Wisenet WAVE NVR / SSM',
+            use: 'WAVE is the Nx-based VMS Hanwha ships. SSM is the older Hanwha VMS. Cameras are P/Q/X; the server is a different animal.',
+            look: 'WAVE vs SSM on the desktop. Server vs client version. Camera plugin.',
+            gotchas: [
+              'WAVE client newer than server (or reverse) is a “won’t connect” ticket. Same as DW Spectrum.',
+              'SSM vs WAVE are not interchangeable. A replaced NVR with the other client looks empty.',
+              'hanwhavision.com — Wisenet WAVE, SSM.'
+            ],
+            href: 'https://www.hanwhavision.com',
+            linkLabel: 'Hanwha WAVE / SSM docs',
+            linkSub: 'hanwhavision.com — Wisenet WAVE, SSM',
+            tags: ['wisenet wave', 'wave', 'ssm', 'hanwha', 'nvr', 'vms', 'commercial camera']
+          },
+          {
+            brand: 'Genetec', title: 'Security Center video / Omnicast',
+            use: 'The video half of Security Center. Omnicast is the old name still on buildings. Archiver vs Directory vs Auxiliary. Not just Synergis.',
+            look: 'Security Center vs Omnicast client. Archiver server. Camera connection (unit vs archiver).',
+            gotchas: [
+              'Directory vs Archiver. A camera “offline” with ping is often the Archiver service, not the cam.',
+              'License / MAC after a motherboard swap. Photograph it before you image a drive.',
+              'genetec.com — Security Center, Omnicast, Archiver.'
+            ],
+            href: 'https://www.genetec.com',
+            linkLabel: 'Genetec Security Center video',
+            linkSub: 'genetec.com — Security Center, Omnicast, Archiver',
+            tags: ['genetec video', 'omnicast', 'security center', 'archiver', 'vms', 'commercial camera']
+          },
+          {
+            brand: 'Alarm.com', title: 'ADC modules / takeovers / cameras',
+            use: 'The cloud behind a pile of Qolsys, 2GIG, DSC, and Interlogix jobs. ADC communicator, ADC cameras, emPower Z-Wave. The panel is local; the path is Alarm.com.',
+            look: 'Module SKU (ADC-SEM, image sensor, etc.). Cell vs broadband. Panel type. Alarm.com dealer site.',
+            gotchas: [
+              'A panel with bars and no path is a SIM / registration / dealer-site job, not a new board, until you look.',
+              'Image sensors and ADC cameras are Alarm.com, not the panel brand. Wrong VLAN still wins.',
+              'alarm.com / dealer support for the exact module. We do not publish dealer credentials.'
+            ],
+            href: 'https://www.alarm.com',
+            linkLabel: 'Alarm.com support',
+            linkSub: 'alarm.com — ADC modules, takeovers, cameras',
+            tags: ['alarm.com', 'alarmcom', 'adc', 'qolsys', '2gig', 'takeover', 'communicator']
+          },
+          {
+            brand: 'Napco', title: 'StarLink communicators',
+            use: 'Napco’s radio. StarLink fire vs burg. Sits next to Gemini / NAPCO panels and also takeover jobs. Own supply, own antenna.',
+            look: 'StarLink fire vs burg listing on the door. Antenna. DC in. Dialer vs bus.',
+            gotchas: [
+              'Fire-listed StarLink on a FACP. A burg radio on fire is an AHJ fail.',
+              'Antenna in the can = failed test. RSSI, photograph, move it.',
+              'napcosecurity.com — StarLink fire / burg.'
+            ],
+            href: 'https://www.napcosecurity.com',
+            linkLabel: 'Napco StarLink docs',
+            linkSub: 'napcosecurity.com — StarLink communicators',
+            tags: ['starlink', 'napco starlink', 'communicator', 'fire communicator']
+          },
+          {
+            brand: 'Uplink', title: 'LTE communicators / takeovers',
+            use: 'Uplink radios on takeovers and FACPs. Dialer capture and panel-bus flavors. Another can in the copper closet with its own antenna.',
+            look: 'Model / listing (fire vs burg). Antenna. Own DC. Capture vs bus.',
+            gotchas: [
+              'Listing on the door vs the panel it is talking to. Same fire/burg trap as Telguard.',
+              'Capture polarity and ring voltage. Confirm the sheet before you declare the DACT dead.',
+              'uplink.com for the exact LTE sheet.'
+            ],
+            href: 'https://www.uplink.com',
+            linkLabel: 'Uplink communicator docs',
+            linkSub: 'uplink.com — LTE, takeovers, fire communicators',
+            tags: ['uplink', 'lte', 'communicator', 'takeover', 'fire communicator']
+          },
+          {
+            brand: 'RISCO', title: 'LightSYS / ProSYS / Agility',
+            use: 'European-origin intrusion that shows up on US integrator and import jobs. LightSYS 2 is the common one. Wireless + bus.',
+            look: 'LightSYS vs ProSYS vs Agility. Bus expanders. Wireless receiver. Configuration software.',
+            gotchas: [
+              'Configuration software is not *20. Bring the RISCO tool.',
+              'Bus length and star wiring. Same keypad-bus ghosts as everyone else.',
+              'riscogroup.com for LightSYS / ProSYS manuals.'
+            ],
+            href: 'https://www.riscogroup.com',
+            linkLabel: 'RISCO LightSYS / ProSYS docs',
+            linkSub: 'riscogroup.com — LightSYS, ProSYS, Agility',
+            tags: ['risco', 'lightsys', 'prosys', 'agility', 'intrusion']
+          },
+          {
+            brand: 'Vanderbilt', title: 'SPC / ACT365 / ACTpro',
+            use: 'Vanderbilt (ex-Siemens / PAC / Inner Range-adjacent in some markets). SPC intrusion, ACT365 / ACTpro access. Common on export and some US campuses.',
+            look: 'SPC panel vs ACT access. Keypads. Expanders. Ethernet.',
+            gotchas: [
+              'SPC is not a VISTA and not a B-series. Bring Vanderbilt / SPC docs.',
+              'ACT365 cloud vs ACTpro on-prem. A replaced PC with the other client looks empty.',
+              'vanderbiltindustries.com for SPC / ACT.'
+            ],
+            href: 'https://www.vanderbiltindustries.com',
+            linkLabel: 'Vanderbilt SPC / ACT docs',
+            linkSub: 'vanderbiltindustries.com — SPC, ACT365, ACTpro',
+            tags: ['vanderbilt', 'spc', 'act365', 'actpro', 'intrusion', 'access']
+          },
+          {
+            brand: 'Horton / Record', title: 'Automatic sliding / swinging doors',
+            use: 'The header over the vestibule. Horton, Record, Stanley, Besam-class operators. 120 VAC, sensors, breakout, fire-alarm disable.',
+            look: 'Operator sticker in the header. 120 VAC. BEA / MS Sedco sensors. Fire-alarm input. Breakout.',
+            gotchas: [
+              'A door that “will not stay open” is often the presence sensor seeing the floor, not a dead motor.',
+              'Fire-alarm disable and guide rails are listed. Random PIR over an ADA operator is not a Horton.',
+              'hortondoors.com / record-usa.com for the exact operator. Bring the header sticker.'
+            ],
+            href: 'https://www.hortondoors.com',
+            linkLabel: 'Horton automatic door docs',
+            linkSub: 'hortondoors.com — also Record, Stanley, Besam headers',
+            tags: ['horton', 'record', 'stanley', 'besam', 'auto door', 'sliding', 'ada', 'commercial access']
+          },
+          {
+            brand: 'Alvarado / Fastlane', title: 'Turnstiles / SU / optical lanes',
+            use: 'Optical turnstiles and waist-high. Alvarado SU-series, Fastlane, Boon Edam-class. Access control is an input; the lane has its own brain.',
+            look: 'Lane controller in the pedestal. 24 V. Access-granted input vs fire-alarm drop. IR beams.',
+            gotchas: [
+              'Fire-alarm drop on a lane is life-safety. Do not jumper it for a “test.”',
+              'Access-granted pulse width. A 50 ms reader pulse into a lane that wanted 1 s looks like “badge does nothing.”',
+              'alvaradomfg.com / Fastlane docs for the exact lane.'
+            ],
+            href: 'https://www.alvaradomfg.com',
+            linkLabel: 'Alvarado turnstile docs',
+            linkSub: 'alvaradomfg.com — SU, optical lanes; Fastlane is a related optical product',
+            tags: ['alvarado', 'fastlane', 'turnstile', 'optical lane', 'su-5000', 'commercial access']
+          },
+          {
+            brand: 'MS Sedco', title: 'D96 / microwave / presence sensors',
+            use: 'The other overhead sensor on auto doors (next to BEA). Microwave motion vs presence. Knowing-style actuators on some packages.',
+            look: 'D96 / D99 in the header. 12/24. Width / sensitivity pots. Presence vs motion.',
+            gotchas: [
+              'Motion seeing the street = door that never rests. Presence seeing the floor = door that will not stay open. Aim it.',
+              'ANSI / BHMA swing-door sensors are a listing. Random PIR is not an MS Sedco.',
+              'mssedco.com for the exact D-series sheet.'
+            ],
+            href: 'https://www.mssedco.com',
+            linkLabel: 'MS Sedco sensor docs',
+            linkSub: 'mssedco.com — D96, microwave, presence',
+            tags: ['ms sedco', 'sedco', 'd96', 'microwave', 'presence', 'auto door', 'commercial access']
+          },
+          {
+            brand: 'Altronix', title: 'eFlow / VertiLine power',
+            use: 'eFlow is the current Altronix access/fire-power platform. VertiLine is the rack. Fire-alarm disconnect, battery, PTC outputs.',
+            look: 'eFlow SKU. Voltage select. FACP trigger. Battery leads. PTC vs fuse outputs.',
+            gotchas: [
+              'Measure the output before you land locks. Same 12/24 trap as AL400.',
+              'FACP trigger polarity and NO/NC. Wrong and the doors never drop.',
+              'altronix.com — eFlow, VertiLine install sheets.'
+            ],
+            href: 'https://www.altronix.com',
+            linkLabel: 'Altronix eFlow docs',
+            linkSub: 'altronix.com — eFlow, VertiLine',
+            tags: ['eflow', 'vertiline', 'altronix', 'lock power', 'power']
+          },
+          {
+            brand: 'DSC / JCI', title: 'PowerSeries Pro (HS3xxx)',
+            use: 'The current DSC “Pro” panel above Neo. HS3128 / HS3032 class. Encrypted wireless, different modules than PC1864 and not the same as Neo HS2.',
+            look: 'HS3 on the board. Corbus. HSM modules. Keypads. PowerSeries Pro installer manual — not a Neo memory.',
+            gotchas: [
+              'Pro is not Neo is not PowerSeries. Module part numbers and enrollment are different. Bring the Pro manual.',
+              'Two pads on one address = haunted keys. Unique addresses.',
+              'dsc.com — PowerSeries Pro install / programming.'
+            ],
+            href: 'https://www.dsc.com',
+            linkLabel: 'DSC PowerSeries Pro docs',
+            linkSub: 'dsc.com — HS3128, HS3032, PowerSeries Pro',
+            tags: ['powerseries pro', 'hs3128', 'hs3032', 'dsc pro', 'neo', 'intrusion']
           }
         ]
       }
