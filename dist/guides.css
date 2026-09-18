@@ -562,10 +562,14 @@ a.gd-chip {
   justify-items: center;
   gap: 0.3rem;
 }
-.gd-qr svg {
-  width: 160px;
-  height: 160px;
+.gd-qr svg,
+.gd-qr canvas {
+  width: 252px;
+  height: 252px;
   display: block;
+  background: #fff;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
 }
 .gd-qr-cap {
   margin: 0;
@@ -650,7 +654,7 @@ a.gd-chip {
   .gd-pin { display: none !important; }
   .gd-more summary { display: none; }
   .gd-more { border: 0; padding-top: 0; }
-  .gd-qr svg { width: 1.8in; height: 1.8in; }
+  .gd-qr svg, .gd-qr canvas { width: 2.4in; height: 2.4in; }
   .gd-pack-sign { display: block !important; }
   body.gd-sticker-print .gd-pack-cards,
   body.gd-sticker-print .gd-foot,
@@ -666,5 +670,68 @@ a.gd-chip {
   }
   body.gd-sticker-print .gd-letterhead-row { justify-content: center; }
   body.gd-sticker-print .gd-hero h1 { text-align: center; }
-  body.gd-sticker-print .gd-qr svg { width: 2.6in; height: 2.6in; }
+  body.gd-sticker-print .gd-qr svg,
+  body.gd-sticker-print .gd-qr canvas { width: 2.8in; height: 2.8in; }
+}
+
+.gd-sheet-job {
+  margin: 0;
+  font-weight: 800;
+  color: var(--brand-deep);
+}
+.gd-sheet-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--card);
+}
+.gd-sheet {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+.gd-sheet th {
+  text-align: left;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 0.45rem 0.4rem;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.gd-sheet td {
+  padding: 0.15rem 0.25rem;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.gd-sheet tr:last-child td { border-bottom: 0; }
+.gd-sheet input {
+  width: 100%;
+  min-height: 40px;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 650;
+  padding: 0.25rem 0.3rem;
+}
+.gd-sheet input:focus {
+  outline: 2px solid var(--brand);
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+.gd-sheet-ident { margin-bottom: 0.2rem; }
+@media print {
+  .gd-sheet-wrap { border: 0; overflow: visible; }
+  .gd-sheet th, .gd-sheet td {
+    border-bottom: 1px solid #111;
+    padding: 0.22rem 0.2rem;
+  }
+  .gd-sheet input {
+    min-height: 0;
+    color: #111;
+    padding: 0.1rem 0;
+  }
 }

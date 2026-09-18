@@ -137,6 +137,11 @@
     if (p.indexOf('/guides/') !== 0) return;
     var gid = p.split('/')[2];
     if (!gid) return;
+    if (gid === 'zones' || gid === 'doors' || gid === 'cameras') {
+      var sheetTitle = { zones: 'Zone list', doors: 'Door programming', cameras: 'Camera directory' }[gid];
+      recordVisit('sheet:' + gid, { href: p, title: sheetTitle });
+      return;
+    }
     if (gid === 'pack') {
       var ptitle = 'Job pack';
       try {
@@ -327,6 +332,9 @@
       { href: '/guides/meter', title: 'Meter' },
       { href: '/guides/pinouts', title: 'Pinouts' },
       { href: '/guides/manuals', title: 'Manuals' },
+      { href: '/guides/zones', title: 'Zone list' },
+      { href: '/guides/doors', title: 'Doors' },
+      { href: '/guides/cameras', title: 'Cam directory' },
       { href: '/guides/readings', title: 'Voltages' }
     ].forEach(function (c) {
       var a = el('a', 'fk-text-chip fk-link', c.title);
@@ -485,6 +493,19 @@
       row.appendChild(a);
     });
     dash.appendChild(row);
+
+    dash.appendChild(block('Job paper', 'Printable leave-behinds'));
+    var paper = el('div', 'fk-chip-row');
+    [
+      { href: '/guides/zones', label: 'Zone list' },
+      { href: '/guides/doors', label: 'Door sheet' },
+      { href: '/guides/cameras', label: 'Cam directory' }
+    ].forEach(function (t) {
+      var a = el('a', 'fk-text-chip fk-link', t.label);
+      a.href = t.href;
+      paper.appendChild(a);
+    });
+    dash.appendChild(paper);
 
     try {
       var pack = JSON.parse(localStorage.getItem('lawsonite-jobpack-v1') || '{}');

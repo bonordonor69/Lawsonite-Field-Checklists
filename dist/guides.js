@@ -184,15 +184,20 @@
     box.appendChild(row);
     return box;
   }
-  function qrBox(url) {
+  function qrBox(url, cap) {
     var wrap = el('div', 'gd-qr');
-    var svg = '';
     try {
-      if (window.LAWSONITE_QR && window.LAWSONITE_QR.svg) svg = window.LAWSONITE_QR.svg(url, 200);
-    } catch (e) { svg = ''; }
-    if (svg) wrap.innerHTML = svg;
-    else wrap.appendChild(el('p', 'gd-qr-fallback', url));
-    wrap.appendChild(el('p', 'gd-qr-cap', 'Scan for this job pack'));
+      if (window.LAWSONITE_QR && window.LAWSONITE_QR.mount) {
+        wrap.appendChild(window.LAWSONITE_QR.mount(url, 252));
+      } else if (window.LAWSONITE_QR && window.LAWSONITE_QR.svg) {
+        wrap.innerHTML = window.LAWSONITE_QR.svg(url, 252);
+      } else {
+        wrap.appendChild(el('p', 'gd-qr-fallback', url));
+      }
+    } catch (e) {
+      wrap.appendChild(el('p', 'gd-qr-fallback', url));
+    }
+    wrap.appendChild(el('p', 'gd-qr-cap', cap || 'Scan for this job pack'));
     return wrap;
   }
   function productCard(p, opts) {
@@ -429,6 +434,18 @@
             kind: 'Manual'
           });
         });
+        PAPER_IDS.forEach(function (id) {
+          if (filterKey !== 'all' && filterKey !== 'docs') return;
+          var spec = JOB_SHEETS[id];
+          if (!hayMatch(spec.title + ' ' + spec.sub + ' ' + spec.lede + ' printable', f)) return;
+          hits.push({
+            href: '/guides/' + id,
+            title: spec.title,
+            sub: spec.sub,
+            icon: spec.icon,
+            kind: 'Paper'
+          });
+        });
         var seen = {};
         hits = hits.filter(function (h) {
           if (seen[h.href + h.title]) return false;
@@ -465,6 +482,28 @@
         }));
         packSec.appendChild(pl);
         groupsHost.appendChild(packSec);
+      }
+
+      if (filterKey === 'all' || filterKey === 'docs') {
+        n += PAPER_IDS.length;
+        var paperSec = el('section', 'gd-section');
+        var ph2 = el('div', 'gd-section-head');
+        ph2.appendChild(el('h2', null, 'Leave-behinds'));
+        ph2.appendChild(el('span', null, String(PAPER_IDS.length)));
+        paperSec.appendChild(ph2);
+        var paperList = el('div', 'gd-list');
+        PAPER_IDS.forEach(function (id) {
+          var spec = JOB_SHEETS[id];
+          paperList.appendChild(toolRow({
+            href: '/guides/' + id,
+            title: spec.title,
+            sub: spec.sub,
+            icon: spec.icon,
+            kind: 'Paper'
+          }));
+        });
+        paperSec.appendChild(paperList);
+        groupsHost.appendChild(paperSec);
       }
 
       (G.groups || []).forEach(function (g) {
@@ -857,6 +896,216 @@
     return box;
   }
 
+  var FORMS_KEY = 'lawsonite-jobforms-v1';
+  var JOB_SHEETS = {
+    zones: {
+      title: 'Zone list',
+      sub: 'Fire / intrusion zones',
+      icon: 'bell',
+      lede: 'Fill on the phone, print for the can. Free pages get the Lawsonite mark. Pro swaps in your logo.',
+      cols: [
+        { key: 'n', label: '#', ph: '' },
+        { key: 'type', label: 'Type', ph: 'Smoke / motion / door' },
+        { key: 'loc', label: 'Location', ph: 'Hall west' },
+        { key: 'device', label: 'Device', ph: 'SD-123' },
+        { key: 'notes', label: 'Notes', ph: '' }
+      ],
+      rows: 16
+    },
+    doors: {
+      title: 'Door programming',
+      sub: 'Reader, lock, REX, contact',
+      icon: 'door',
+      lede: 'One row per opening. Walk the doors with this and the laptop.',
+      cols: [
+        { key: 'name', label: 'Door', ph: 'Stair 2' },
+        { key: 'reader', label: 'Reader', ph: 'HID / OSDP addr' },
+        { key: 'lock', label: 'Lock', ph: 'Strike / mag / EL' },
+        { key: 'rex', label: 'REX / contact', ph: 'PIR · locked status' },
+        { key: 'notes', label: 'Access / notes', ph: 'Unlock sched' }
+      ],
+      rows: 12
+    },
+    cameras: {
+      title: 'Camera directory',
+      sub: 'Name, channel, switch port',
+      icon: 'cam',
+      lede: 'Channel map for the NVR and the switch. Tape a copy in the closet.',
+      cols: [
+        { key: 'n', label: '#', ph: '' },
+        { key: 'name', label: 'Name', ph: 'Lobby PTZ' },
+        { key: 'ch', label: 'Ch / IP', ph: '12 / .41' },
+        { key: 'loc', label: 'Location', ph: 'SE corner' },
+        { key: 'sw', label: 'Switch · port', ph: 'IDF-2 PoE 7' }
+      ],
+      rows: 16
+    }
+  };
+  var PAPER_IDS = ['zones', 'doors', 'cameras'];
+  function loadForms() {
+    try {
+      var v = JSON.parse(localStorage.getItem(FORMS_KEY) || '{}');
+      return {
+        zones: Array.isArray(v.zones) ? v.zones : [],
+        doors: Array.isArray(v.doors) ? v.doors : [],
+        cameras: Array.isArray(v.cameras) ? v.cameras : []
+      };
+    } catch (e) {
+      return { zones: [], doors: [], cameras: [] };
+    }
+  }
+  function saveForms(f) {
+    try { localStorage.setItem(FORMS_KEY, JSON.stringify(f)); } catch (e) {}
+  }
+  function padSheetRows(kind, list) {
+    var spec = JOB_SHEETS[kind];
+    var rows = (list || []).map(function (r) { return r && typeof r === 'object' ? r : {}; });
+    while (rows.length < spec.rows) {
+      var row = {};
+      spec.cols.forEach(function (c) { row[c.key] = ''; });
+      if (Object.prototype.hasOwnProperty.call(row, 'n')) row.n = String(rows.length + 1);
+      rows.push(row);
+    }
+    return rows;
+  }
+  function paperLinks(except) {
+    var nav = el('div', 'gd-pack-tools no-print');
+    PAPER_IDS.forEach(function (id) {
+      if (id === except) return;
+      var a = el('a', 'gd-chip fk-link', JOB_SHEETS[id].title);
+      a.href = '/guides/' + id;
+      nav.appendChild(a);
+    });
+    var pack = el('a', 'gd-chip fk-link', 'Job pack / QR');
+    pack.href = '/guides/pack';
+    nav.appendChild(pack);
+    return nav;
+  }
+  function renderJobSheet(kind) {
+    var spec = JOB_SHEETS[kind];
+    var forms = loadForms();
+    var rows = padSheetRows(kind, forms[kind]);
+    var pack = loadPack();
+    var page = el('div', 'page gd-page gd-sheet-page');
+    page.appendChild(backLink('/field', 'Field'));
+    page.appendChild(printLetterhead(spec.title));
+    var head = el('header', 'gd-hero');
+    head.appendChild(el('p', 'gd-kicker', 'Leave-behind'));
+    head.appendChild(el('h1', null, spec.title));
+    head.appendChild(el('p', 'gd-lede no-print', spec.lede));
+    page.appendChild(head);
+
+    var jobInput = document.createElement('input');
+    jobInput.className = 'gd-search no-print';
+    jobInput.value = pack.title && pack.title !== 'Job pack' ? pack.title : '';
+    jobInput.placeholder = 'Job name — prints on the sheet';
+    jobInput.setAttribute('aria-label', 'Job name');
+    jobInput.addEventListener('change', function () {
+      var next = jobInput.value.trim() || 'Job pack';
+      pack = loadPack();
+      pack.title = next;
+      savePack(pack);
+      var printName = page.querySelector('.gd-sheet-job');
+      if (printName) printName.textContent = next === 'Job pack' ? '' : next;
+    });
+    page.appendChild(jobInput);
+    var printName = el('p', 'gd-sheet-job only-print',
+      pack.title && pack.title !== 'Job pack' ? pack.title : '');
+    page.appendChild(printName);
+
+    var tools = el('div', 'gd-pack-tools no-print');
+    var printBtn = el('button', 'gd-chip is-on', 'Print sheet');
+    printBtn.type = 'button';
+    printBtn.addEventListener('click', function () {
+      document.body.classList.remove('gd-sticker-print');
+      window.print();
+    });
+    var addBtn = el('button', 'gd-chip', 'Add rows');
+    addBtn.type = 'button';
+    var clearBtn = el('button', 'gd-chip', 'Clear sheet');
+    clearBtn.type = 'button';
+    tools.appendChild(printBtn);
+    tools.appendChild(addBtn);
+    tools.appendChild(clearBtn);
+    page.appendChild(tools);
+    page.appendChild(paperLinks(kind));
+
+    var ident = el('div', 'gd-pack-ident gd-sheet-ident');
+    var origin = location.origin && location.origin !== 'null'
+      ? location.origin
+      : 'https://lawsonite.tomcatstudios.com';
+    var qUrl = pack.ids.length ? packQrUrl(pack.ids, pack.title) : (origin + '/guides/' + kind);
+    ident.appendChild(qrBox(qUrl, pack.ids.length ? 'Scan for this job pack' : 'Scan for this sheet'));
+    var identText = el('div', 'gd-pack-ident-text');
+    identText.appendChild(el('p', 'muted',
+      pack.ids.length
+        ? 'QR opens the pinned product pack for this job.'
+        : 'Pin product cards, then this QR opens that pack.'));
+    ident.appendChild(identText);
+    page.appendChild(ident);
+
+    var wrap = el('div', 'gd-sheet-wrap');
+    var table = el('table', 'gd-sheet');
+    var thead = document.createElement('thead');
+    var trh = document.createElement('tr');
+    spec.cols.forEach(function (c) { trh.appendChild(el('th', null, c.label)); });
+    thead.appendChild(trh);
+    table.appendChild(thead);
+    var tbody = document.createElement('tbody');
+    table.appendChild(tbody);
+    wrap.appendChild(table);
+    page.appendChild(wrap);
+
+    function persist() {
+      var all = loadForms();
+      all[kind] = rows;
+      saveForms(all);
+    }
+    function paintRows() {
+      tbody.textContent = '';
+      rows.forEach(function (row, idx) {
+        var tr = document.createElement('tr');
+        spec.cols.forEach(function (c) {
+          var td = document.createElement('td');
+          var inp = document.createElement('input');
+          inp.value = row[c.key] != null ? String(row[c.key]) : '';
+          inp.placeholder = c.ph || '';
+          inp.setAttribute('aria-label', c.label + ' ' + (idx + 1));
+          inp.addEventListener('input', function () {
+            rows[idx][c.key] = inp.value;
+            persist();
+          });
+          td.appendChild(inp);
+          tr.appendChild(td);
+        });
+        tbody.appendChild(tr);
+      });
+    }
+    addBtn.addEventListener('click', function () {
+      var i;
+      for (i = 0; i < 8; i++) {
+        var row = {};
+        spec.cols.forEach(function (c) { row[c.key] = ''; });
+        if (Object.prototype.hasOwnProperty.call(row, 'n')) row.n = String(rows.length + 1);
+        rows.push(row);
+      }
+      persist();
+      paintRows();
+    });
+    clearBtn.addEventListener('click', function () {
+      rows = padSheetRows(kind, []);
+      persist();
+      paintRows();
+    });
+    paintRows();
+    page.appendChild(el('p', 'gd-foot',
+      'Field notes only — not as-built drawings or programming. Confirm the panel, the lock, and the official sheet.'));
+    var sign = el('div', 'gd-pack-sign only-print');
+    sign.appendChild(el('p', null, 'Installed by ________________    Date ______________    Tech ______________'));
+    page.appendChild(sign);
+    return page;
+  }
+
   function renderPack() {
     var sp;
     try { sp = new URLSearchParams(location.search); } catch (e) { sp = new URLSearchParams(); }
@@ -916,6 +1165,11 @@
     tools.appendChild(printBtn);
     tools.appendChild(stickerBtn);
     tools.appendChild(copyBtn);
+    PAPER_IDS.forEach(function (id) {
+      var a = el('a', 'gd-chip fk-link', JOB_SHEETS[id].title);
+      a.href = '/guides/' + id;
+      tools.appendChild(a);
+    });
     if (ids.length) {
       var clear = el('button', 'gd-chip', 'Clear pins');
       clear.type = 'button';
@@ -1022,6 +1276,7 @@
     else {
       var id = path.split('/').pop();
       if (id === 'pack') mount(renderPack());
+      else if (JOB_SHEETS[id]) mount(renderJobSheet(id));
       else mount(renderGuide(id));
     }
   }
@@ -1065,7 +1320,8 @@
       var qs = document.createElement('script');
       qs.src = '/qrcode.js';
       qs.onload = function () {
-        if (pathOf() === '/guides/pack') route();
+        var id = pathOf().split('/').pop();
+        if (id === 'pack' || JOB_SHEETS[id]) route();
       };
       document.head.appendChild(qs);
     }
@@ -1097,6 +1353,16 @@
           hay: ('job pack pinned cards qr panel sticker this job ' + (pack.title || '')).toLowerCase()
         });
       }
+      PAPER_IDS.forEach(function (id) {
+        var spec = JOB_SHEETS[id];
+        rows.unshift({
+          kind: 'doc',
+          title: spec.title,
+          sub: spec.sub,
+          href: '/guides/' + id,
+          hay: (spec.title + ' ' + spec.sub + ' ' + spec.lede + ' printable leave-behind job paper').toLowerCase()
+        });
+      });
       allProducts().forEach(function (pr) {
         var q = encodeURIComponent((pr.title || '').split('/')[0].trim());
         rows.push({
