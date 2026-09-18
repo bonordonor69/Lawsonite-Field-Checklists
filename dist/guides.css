@@ -464,8 +464,34 @@ body.fk-guides .disclaimer-banner { display: none !important; }
   padding: 0.7rem 0.85rem;
 }
 
+.gd-studio-foot {
+  margin: 1.25rem 0 0.5rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+  text-align: center;
+}
+.gd-studio-brand {
+  margin: 0 0 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.gd-studio-brand a {
+  color: var(--brand);
+  text-decoration: none;
+}
+.gd-studio-brand a:hover { text-decoration: underline; }
+.gd-tip-jar {
+  display: inline-block;
+  font-weight: 800;
+  color: var(--brand);
+  text-decoration: none;
+  min-width: 14ch;
+}
+.gd-tip-jar:hover { text-decoration: underline; }
+
 @media print {
-  .gd-back, .fk-tabbar, .fk-search-btn { display: none !important; }
+  .gd-back, .fk-tabbar, .fk-search-btn, .gd-studio-foot { display: none !important; }
   .gd-root { width: 100%; padding: 0; }
   .gd-card, .gd-tile { box-shadow: none; }
 }

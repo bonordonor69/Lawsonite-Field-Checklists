@@ -3,8 +3,8 @@
 window.__LAWSONITE_GUIDES__ = {
   groups: [
     { key: 'learn', title: 'Learn', sub: 'Crash courses', icon: 'meter', ids: ['meter', 'first-five', 'safety'] },
-    { key: 'cheat', title: 'Cheats', sub: 'Lookups', icon: 'wire', ids: ['readings', 'pinouts', 'resistor', 'poe', 'fail-safe', 'ip', 'toner', 'keypad', 'vista-128', 'wireless-5800', 'ecp-vplex', 'rj31x', 'ampacity'] },
-    { key: 'ts', title: 'Calls', sub: 'Symptom trees', icon: 'zap', ids: ['camera-offline', 'reader-dead', 'maglock', 'door-latch', 'access-denied', 'no-comms', 'ac-batt', 'zone-open', 'no-link', 'doorbell', 'keypad-blank', 'wireless-sup', 'polling-trouble'] },
+    { key: 'cheat', title: 'Cheats', sub: 'Lookups', icon: 'wire', ids: ['readings', 'pinouts', 'resistor', 'poe', 'fail-safe', 'ip', 'toner', 'keypad', 'vista-128', 'wireless-5800', 'ecp-vplex', 'rj31x', 'ampacity', 'verkada-claim', 'bosch-sdi2', 'mercury-bus', 'simplex-4100', 'firelite-protocol'] },
+    { key: 'ts', title: 'Calls', sub: 'Symptom trees', icon: 'zap', ids: ['camera-offline', 'reader-dead', 'maglock', 'door-latch', 'access-denied', 'no-comms', 'ac-batt', 'zone-open', 'no-link', 'doorbell', 'keypad-blank', 'wireless-sup', 'polling-trouble', 'verkada-blank', 'verkada-door', 'bosch-lsn', 'nac-booster', 'comms-takeover'] },
     { key: 'docs', title: 'Docs', sub: 'Official sheets', icon: 'book', ids: ['manuals'] }
   ],
   pages: {}
@@ -2648,5 +2648,201 @@ window.__LAWSONITE_GUIDES__ = {
     ],
     [{ href: '/guides/ecp-vplex', label: 'ECP vs V-Plex' }, { href: '/guides/vista-128', label: 'Vista 128' }]
   );
+
+  ts('verkada-blank', 'cam', 'Verkada: link up, Command blank',
+    'Claim, license, then site role',
+    'A Verkada with PoE and a link light is not “dead.” Command is the NVR. If the org cannot see it, you are looking at claim, license, VLAN, or a Site Viewer who was never granted the site.',
+    ['verkada', 'command', 'claim', 'license', 'poe', 'camera'],
+    [
+      { type: 'steps', items: [
+        'Link LED at the camera and the switch. No link is copper or PoE class — see no-link. Do not factory-reset a camera that never had Ethernet.',
+        'Claim the serial in Command BEFORE you hang it on a VLAN that cannot reach the internet. Footage recorded before claim is gone.',
+        'Org Admin vs Site Admin vs Site Viewer. Sites do not inherit users. “IT can see it and I cannot” is permissions, not a bad imager.',
+        'Every camera needs a license on that org. An unlicensed cam looks offline in Command with a healthy PoE light.',
+        'DHCP and outbound HTTPS. A guest VLAN or a firewall that blocks Command is a “dead” camera with a green link.',
+        'PoE+ for IR / analytics / cold start. An af-only switch = night reboot. Same as Axis and Avigilon.',
+        'Non-Verkada ONVIF goes through a Command Connector, not a magic adopt. Check the connector compatibility list.'
+      ]}
+    ],
+    [{ href: '/guides/verkada-claim', label: 'Claim / PoE / license' }, { href: '/guides/manuals?q=verkada', label: 'Verkada cards' }, { href: '/guides/no-link', label: 'No link' }]
+  );
+
+  ts('verkada-door', 'lock', 'Verkada door will not unlock',
+    'Cache, copper, then Command',
+    'Cloud access still has a lock, a fire drop, and a reader on copper. Command being slow is not a reason to swap the controller.',
+    ['verkada', 'ac12', 'ac41', 'access', 'cloud', 'fire drop'],
+    [
+      { type: 'steps', items: [
+        'WAN down: cached credentials should still work until you prove they do not. Do not replace an AC12 because guest Wi-Fi would not load Command.',
+        'Reader beep / LED vs lock motion. Beep and no motion is the output, the strike, or fire-alarm shunt — not a new AD reader.',
+        'Lock current on a PoE door port is a real number. A maglock on the controller brownouts the cassette. Use listed lock power when the sheet says so.',
+        'Fire-alarm release is still a dry contact on the opening. Command schedules do not replace a fire drop on a maglock.',
+        'Door object in Command: port, lock type, DPI, REX. A door that was never added will never unlock, no matter how pretty the LED is.',
+        'Third-party Wiegand on an AD port is a format and jumper conversation. Verkada readers are the easy path.'
+      ]}
+    ],
+    [{ href: '/guides/verkada-claim', label: 'Claim cheat' }, { href: '/guides/access-denied', label: 'Card reads, no unlock' }, { href: '/guides/manuals?trade=access', label: 'Access cards' }]
+  );
+
+  ts('bosch-lsn', 'bell', 'Bosch FPA / LSN loop trouble',
+    'Do not megger it. Sectionalize.',
+    'FPA-1000 / FPA-5000 talk LSN (or LSN improved), not CLIP and not a B-series keypad bus. The wrong laptop tool is how you spend a day.',
+    ['bosch', 'fpa-1000', 'fpa-5000', 'lsn', 'rps', 'fire'],
+    [
+      { type: 'warn', text: 'Do not insulation-test (megger) an LSN loop. You will destroy devices. Impairment / fire watch may be required before you disable anything.' },
+      { type: 'steps', items: [
+        'Photograph the panel, the trouble text, and the loop card. Then follow site impairment process. This is life-safety, not a burg can.',
+        'RPS / FSP-5000-RPS is the fire tool. A laptop with “a Bosch program” (RPS for intrusion, Configuration Manager for cameras) is not automatically the right one.',
+        'Whole loop down: lift the field pair at the panel. Healthy at the board = field. Split the run. A single shorted module can take a chunk of LSN.',
+        'Protocol: LSN devices on an LSN loop. A leftover System Sensor CLIP head will not poll. Match the sheet to the can.',
+        'Ground fault: sectionalize. Do not shotgun detectors. Same as Notifier.',
+        'AC / battery troubles are still voltage. Measure the batteries off the charger before you condemn the CPU.'
+      ]}
+    ],
+    [{ href: '/guides/manuals?q=FPA', label: 'FPA cards' }, { href: '/guides/ac-batt', label: 'AC / battery' }, { href: '/guides/safety', label: 'Doors, fire, jumpering' }]
+  );
+
+  ts('nac-booster', 'fire', 'NAC booster / remote power trouble',
+    'Sync, EOL, then the batteries',
+    'The closet can that is quietly carrying the corridor strobes. FCPS-24S6/S8, Wheelock, Altronix NAC. Input from the FACP, output to the field.',
+    ['nac', 'booster', 'fcps', 'sync', 'strobe', 'eol'],
+    [
+      { type: 'steps', items: [
+        'Sync protocol has to match the FACP and the appliances. Wheelock sync into System Sensor heads (or the reverse) is a disco that will not pass.',
+        'EOL is at the last device on the booster circuit, not back at the FACP. A resistor in the booster can unsupervised the run.',
+        'Measure last-device voltage in alarm. Same drop rule as any NAC. The booster does not repeal Ohm.',
+        'Batteries and the calc on the door are not optional. An untested booster is strobes that die in minute two.',
+        'Input from the FACP: if the booster never triggers, the NAC input, the polarity, or the FACP circuit is the job — not 40 new strobes.',
+        'Class A vs Class B on the booster card. A missing jumper looks like an open NAC.'
+      ]}
+    ],
+    [{ href: '/guides/manuals?q=FCPS', label: 'FCPS card' }, { href: '/refs#nac', label: 'NAC load calc' }, { href: '/guides/manuals?trade=fire', label: 'Fire cards' }]
+  );
+
+  ts('comms-takeover', 'bell', 'Communicator takeover / failed to test',
+    'Path, listing, then the antenna',
+    'LTEM-P, Telguard, BAT-Fire, PRODCM dialer capture. The panel is fine and the path is not — or the path is a burg communicator on a FACP.',
+    ['ltem', 'telguard', 'alula', 'takeover', 'dact', 'communicator'],
+    [
+      { type: 'steps', items: [
+        'Fire-listed vs burg-listed. A TG-1 on a FACP (or a burg LTEM on a fire panel) is an AHJ fail even if it “tests.” Read the door.',
+        'Dialer-capture vs panel bus / ECP. Capture wants ring voltage and polarity. Bus wants the right connector. Mixing them is a silent communicator.',
+        'Power the communicator from a listed supply. Starving it off keypad aux is a brownout after the first radio burst.',
+        'Antenna in a steel closet = one bar and a failed test. RSSI on the unit, photograph it, then move the antenna.',
+        'Registration: AlarmNet 360, Telguard portal, Alula, Alarm.com. A panel with bars and no account is not a new radio.',
+        'After an ISP swap, RJ31X seizure is often dead. That is a communicator job, not an hour on the jack. See RJ31X.'
+      ]}
+    ],
+    [{ href: '/guides/no-comms', label: 'No comms tree' }, { href: '/guides/rj31x', label: 'RJ31X' }, { href: '/guides/manuals?q=LTEM', label: 'LTEM card' }]
+  );
+
+  P['verkada-claim'] = {
+    id: 'verkada-claim', icon: 'cam', kind: 'cheat', eyebrow: 'Cheat sheet',
+    title: 'Verkada claim / PoE / license',
+    hub: 'Claim it before you hang it',
+    lede: 'Command is the product. The camera is a PoE endpoint with a serial. Get the order of operations right and you skip a truck roll.',
+    tags: ['verkada', 'command', 'claim', 'license', 'poe', 'ac12'],
+    related: [{ href: '/guides/verkada-blank', label: 'Command blank' }, { href: '/guides/verkada-door', label: 'Door will not unlock' }, { href: '/guides/manuals?q=verkada', label: 'Verkada cards' }],
+    sections: [
+      {
+        type: 'table',
+        headers: ['Step', 'What “good” looks like', 'How it fails'],
+        rows: [
+          ['Claim', 'Serial in Command, then cable', 'Hung first on a dark VLAN. Footage before claim is gone.'],
+          ['License', 'Org has a seat for that camera', 'Unlicensed = “offline” with a healthy PoE light.'],
+          ['Site role', 'You are Site Admin on that site', 'Sites do not inherit users. IT can see it; you cannot.'],
+          ['PoE', 'at / PoE+ for IR + analytics', 'af-only switch = night reboot.'],
+          ['Network', 'DHCP + outbound HTTPS to Command', 'Guest VLAN / firewall = green link, blank Command.']
+        ]
+      },
+      { type: 'tip', text: 'Access controllers (AC12 / AC41 / AC42) claim the same way. Lock power is still a current number — a maglock on a PoE door port can brown out the cassette.' }
+    ]
+  };
+
+  P['bosch-sdi2'] = {
+    id: 'bosch-sdi2', icon: 'bell', kind: 'cheat', eyebrow: 'Cheat sheet',
+    title: 'Bosch SDI / SDI2 addressing',
+    hub: 'B-series is not a VISTA',
+    lede: 'B8512G / B5512 / D9412GV4 talk SDI or SDI2, not ECP. Keypads, B810 RADION, and B208 expanders each have an address. Two devices on one address is the haunted house.',
+    tags: ['bosch', 'sdi2', 'sdi', 'b8512', 'b5512', 'd9412', 'b810', 'radion'],
+    related: [{ href: '/guides/manuals?q=bosch', label: 'Bosch cards' }, { href: '/guides/keypad', label: 'Keypad addressing' }, { href: '/guides/wireless-sup', label: 'Wireless supervision' }],
+    sections: [
+      {
+        type: 'table',
+        headers: ['Bus', 'What lives here', 'Foot-gun'],
+        rows: [
+          ['SDI (legacy GV4)', 'D1260 / D1255 keypads, older modules', 'Do not land SDI2 devices here and hope.'],
+          ['SDI2 (B-series)', 'B920/B930 pads, B810 RADION, B208 / B308 expanders', 'Unique addresses. Receiver in the metal can = every point supervision-fails.'],
+          ['RADION / B810', 'Wireless PIRs, contacts, smokes', 'Not 5800, not PowerG. Bosch RF only.']
+        ]
+      },
+      { type: 'warn', text: 'RPS (Remote Programming Software) is how you program this. A Vista-style *20 punch will not give you SDI2 modules. Intrusion RPS is not FPA fire RPS.' }
+    ]
+  };
+
+  P['mercury-bus'] = {
+    id: 'mercury-bus', icon: 'lock', kind: 'cheat', eyebrow: 'Cheat sheet',
+    title: 'Mercury LP / MR bus',
+    hub: 'RS-485, address, jumpers — software is a sticker',
+    lede: 'Lenel, RS2, Open Options, Feenics, Genetec, and a pile of others are the same LP1501/1502 + MR52 hardware. The brand on the PC does not change the copper.',
+    tags: ['mercury', 'lp1502', 'mr52', 'rs-485', 'osdp', 'lenel', 'rs2'],
+    related: [{ href: '/guides/reader-dead', label: 'Reader dead' }, { href: '/guides/manuals?q=mercury', label: 'Mercury cards' }, { href: '/refs#rs485', label: 'RS-485 length' }],
+    sections: [
+      {
+        type: 'steps',
+        items: [
+          'One RS-485 pair, daisy-chained, shield single-end. Stars and T-taps are intermittent ghosts.',
+          'Unique addresses on every MR52 / MR16IN. Two boards on address 0 = random downstream death.',
+          'Termination at the far end (and only the far end, plus the intelligent controller). Two extra jumpers in the middle kill the bus.',
+          'Reader port: 12 vs 24, Wiegand vs OSDP. The jumper is how you pick. Wrong jumper + 24 V = dead reader.',
+          'After a power cycle wait for a full boot before you declare a downstream MR dead.',
+          'Software (OnGuard, Access It!, DNA Fusion, Keep) is a download. A “dead door” after a server upgrade is often firmware mismatch, not a new LP1502.'
+        ]
+      }
+    ]
+  };
+
+  P['simplex-4100'] = {
+    id: 'simplex-4100', icon: 'bell', kind: 'cheat', eyebrow: 'Cheat sheet',
+    title: 'Simplex 4100ES first five',
+    hub: 'Do not factory-default a campus panel',
+    lede: 'TrueAlarm, TrueAlert, IDNet / MAPNET, optional voice. The programmer and the job file are the product. This card is orientation.',
+    tags: ['4100es', '4010es', 'simplex', 'truealarm', 'idnet', 'es net'],
+    related: [{ href: '/guides/manuals?q=4100ES', label: '4100ES card' }, { href: '/guides/safety', label: 'Impairment' }, { href: '/guides/bosch-lsn', label: 'Bosch FPA tree' }],
+    sections: [
+      { type: 'warn', text: 'You do not factory-default a 4100ES because a printer is offline. Impairment / fire watch may be required before you disable NAC or IDNet.' },
+      {
+        type: 'steps',
+        items: [
+          'Photograph the door, the trouble, and the revision. 4100U vs 4100ES vs 4010ES are different programmers and different job files.',
+          'TrueAlarm “dirty detector” is a maintenance report, not automatically a new smoke. Run the report before you open 40 bags.',
+          'IDNet vs MAPNET vintage. Mixing cards and devices across generations is a trouble, not a bad head.',
+          'Voice / firefighter phone is its own career. Do not “clear the audio trouble” by pulling amplifiers.',
+          'ES Net vs 4120 network. Unplugging a node to clear a trouble can take a campus with it.'
+        ]
+      }
+    ]
+  };
+
+  P['firelite-protocol'] = {
+    id: 'firelite-protocol', icon: 'bell', kind: 'cheat', eyebrow: 'Cheat sheet',
+    title: 'Fire-Lite LiteSpeed vs CLIP vs SS',
+    hub: 'Protocol is not mix-and-match',
+    lede: 'ES-200X / ES-50X replaced a pile of MS-9200UDLS jobs. The loop protocol is the whole ticket. You cannot split protocols on one SLC.',
+    tags: ['fire-lite', 'es-200x', 'ms-9200udls', 'litespeed', 'clip', 'slc'],
+    related: [{ href: '/guides/manuals?q=ES-200X', label: 'ES-200X card' }, { href: '/guides/manuals?trade=fire', label: 'Fire cards' }],
+    sections: [
+      {
+        type: 'table',
+        headers: ['Panel', 'Protocol', 'Do not'],
+        rows: [
+          ['ES-50X / ES-200X / ES-1000X', 'SS, LiteSpeed, or CLIP (pick one per loop)', 'Mix a leftover CLIP head on a LiteSpeed loop'],
+          ['MS-9200UDLS / MS-9600LS', 'LiteSpeed or CLIP', 'Assume ES auto-learn will fix address collisions'],
+          ['MS-9200 / MS-9050UD vintage', 'CLIP only', 'Drop LiteSpeed detectors on a CLIP-only panel']
+        ]
+      },
+      { type: 'tip', text: 'Address collisions still happen after auto-learn. Walk the map. Impairment process still applies before you disable the SLC.' }
+    ]
+  };
 })(window.__LAWSONITE_GUIDES__.pages);
 

@@ -18,7 +18,9 @@
     { id: 'poe', label: 'PoE budget', hint: 'Switch headroom', href: '/refs#poe' },
     { id: 'battery', label: 'Battery AH', hint: 'Standby time', href: '/refs#battery' },
     { id: 'eol', label: 'EOL helper', hint: 'Supervision', href: '/refs#eol' },
-    { id: 'nac', label: 'NAC load', hint: 'Strobe current', href: '/refs#nac' }
+    { id: 'nac', label: 'NAC load', hint: 'Strobe current', href: '/refs#nac' },
+    { id: 'lock', label: 'Lock power', hint: 'Hold vs inrush', href: '/refs#lock' },
+    { id: 'rs485', label: 'RS-485', hint: 'Bus length', href: '/refs#rs485' }
   ];
 
   var CALLS = [

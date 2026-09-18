@@ -75,9 +75,60 @@
     return out;
   }
 
+  var TIP_URL =
+    'https://www.paypal.com/donate/?business=tlawson1988%40gmail.com&currency_code=USD&item_name=Energy%20drink%20for%20Lawsonite';
+  var TOMCAT_URL = 'https://tomcatstudios.com/';
+  var TIP_PHRASES = [
+    'Buy me a Monster',
+    'Buy me a can of chew',
+    'Buy me a burger',
+    'Buy me a roll of tape',
+    'Buy me some gas',
+    'Buy me some dolphins',
+    'Buy me some zip-ties',
+    'Buy me a coffee',
+    'Buy me a breakfast burrito',
+    'Buy me some jerky',
+    'Buy me a Gatorade',
+    'Buy me some sunflower seeds',
+    'Buy me a slice of pizza',
+    'Buy me a Diet Pepsi',
+    'Buy me a bacon egg n cheese biscuit',
+    'Buy me some ibuprofen',
+    'Buy me a 5-hour Energy',
+    'Buy me a case of water'
+  ];
+  function pickTip(except) {
+    var pool = except ? TIP_PHRASES.filter(function (p) { return p !== except; }) : TIP_PHRASES;
+    return pool[Math.floor(Math.random() * pool.length)] || TIP_PHRASES[0];
+  }
+  function studioFoot() {
+    var foot = el('footer', 'gd-studio-foot');
+    var brand = el('p', 'gd-studio-brand');
+    var tom = el('a', null, 'by Tomcat Studios');
+    tom.href = TOMCAT_URL;
+    tom.target = '_blank';
+    tom.rel = 'noopener noreferrer';
+    brand.appendChild(document.createTextNode('Lawsonite · '));
+    brand.appendChild(tom);
+    var tip = el('a', 'gd-tip-jar');
+    tip.href = TIP_URL;
+    tip.target = '_blank';
+    tip.rel = 'noopener noreferrer';
+    tip.textContent = pickTip();
+    if (root._tipTimer) window.clearInterval(root._tipTimer);
+    root._tipTimer = window.setInterval(function () {
+      tip.textContent = pickTip(tip.textContent);
+    }, 8000);
+    foot.appendChild(brand);
+    foot.appendChild(tip);
+    return foot;
+  }
+
   function mount(node) {
     root.innerHTML = '';
     root.appendChild(node);
+    root.appendChild(studioFoot());
     window.scrollTo(0, 0);
   }
 
