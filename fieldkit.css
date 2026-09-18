@@ -343,6 +343,21 @@ body {
   width: 4.5rem;
   flex: none;
 }
+.fk-print-lmark {
+  display: none;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  place-items: center;
+  background: linear-gradient(145deg, #fb4f14, #000);
+  color: #fff;
+  font-weight: 800;
+  font-size: 1.55rem;
+}
+@media print {
+  .fk-print-lmark { display: grid !important; }
+}
+
 .fk-progress > i {
   display: block;
   height: 100%;

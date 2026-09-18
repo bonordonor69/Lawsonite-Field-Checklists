@@ -137,6 +137,15 @@
     if (p.indexOf('/guides/') !== 0) return;
     var gid = p.split('/')[2];
     if (!gid) return;
+    if (gid === 'pack') {
+      var ptitle = 'Job pack';
+      try {
+        var psp = new URLSearchParams(location.search);
+        ptitle = psp.get('t') || ptitle;
+      } catch (e) {}
+      recordVisit('pack', { href: p + location.search, title: ptitle });
+      return;
+    }
     if (gid === 'manuals') {
       var trade = '';
       var q = '';
@@ -326,6 +335,19 @@
     });
     dash.appendChild(grow);
 
+    try {
+      var pack = JSON.parse(localStorage.getItem('lawsonite-jobpack-v1') || '{}');
+      var pn = pack && Array.isArray(pack.ids) ? pack.ids.length : 0;
+      if (pn) {
+        dash.appendChild(block('This job', pn + ' pinned cards'));
+        var prow = el('div', 'fk-chip-row');
+        var pa = el('a', 'fk-text-chip fk-link', (pack.title || 'Job pack') + ' · QR');
+        pa.href = '/guides/pack';
+        prow.appendChild(pa);
+        dash.appendChild(prow);
+      }
+    } catch (e) {}
+
     dash.appendChild(block('Grab a number', 'One-thumb estimators'));
     var row = el('div', 'fk-calc-row');
     CALCS.forEach(function (c) {
@@ -440,8 +462,10 @@
   }
 
   function landingDashSig() {
+    var pack = '';
+    try { pack = localStorage.getItem('lawsonite-jobpack-v1') || ''; } catch (e) {}
     return state.recents.map(function (r) { return r.id; }).join(',') + '|' +
-      state.favs.map(function (f) { return f.id; }).join(',');
+      state.favs.map(function (f) { return f.id; }).join(',') + '|' + pack;
   }
 
   function renderLandingDash(host) {
@@ -461,6 +485,19 @@
       row.appendChild(a);
     });
     dash.appendChild(row);
+
+    try {
+      var pack = JSON.parse(localStorage.getItem('lawsonite-jobpack-v1') || '{}');
+      var n = pack && Array.isArray(pack.ids) ? pack.ids.length : 0;
+      if (n) {
+        dash.appendChild(block('This job', n + ' pinned cards'));
+        var prow = el('div', 'fk-chip-row');
+        var pa = el('a', 'fk-text-chip fk-link', (pack.title || 'Job pack') + ' · QR');
+        pa.href = '/guides/pack';
+        prow.appendChild(pa);
+        dash.appendChild(prow);
+      }
+    } catch (e) {}
 
     if (state.recents.length) {
       dash.appendChild(block('Recent', null));
@@ -519,12 +556,70 @@
     renderHomeHits(host, query);
   }
 
+  function shopBrand() {
+    try {
+      var pro = JSON.parse(localStorage.getItem('lawsonite-pro-v0') || '{}');
+      var brand = JSON.parse(localStorage.getItem('lawsonite-company-brand-v0') || '{}');
+      var shop = pro.plan === 'shop' && !!(String(brand.companyName || '').trim() || brand.logoDataUrl);
+      return { shop: shop, brand: brand || {} };
+    } catch (e) {
+      return { shop: false, brand: {} };
+    }
+  }
+  function ensurePrintLetterhead(page, title) {
+    if (!page || page.querySelector('.print-letterhead, .gd-letterhead')) return;
+    var shop = shopBrand();
+    var box = el('div', 'print-letterhead only-print');
+    var row = el('div', 'print-letterhead-row');
+    if (shop.shop && shop.brand.logoDataUrl) {
+      var img = document.createElement('img');
+      img.className = 'print-letterhead-logo';
+      img.src = shop.brand.logoDataUrl;
+      img.alt = '';
+      row.appendChild(img);
+    } else {
+      var mark = el('div', 'print-letterhead-logo fk-print-lmark');
+      mark.setAttribute('aria-hidden', 'true');
+      mark.textContent = 'L';
+      row.appendChild(mark);
+    }
+    var text = el('div', 'print-letterhead-text');
+    text.appendChild(el('p', 'print-letterhead-company',
+      shop.shop && shop.brand.companyName
+        ? String(shop.brand.companyName).trim()
+        : 'Lawsonite Field Checklists'));
+    if (shop.shop) {
+      var contact = [shop.brand.phone, shop.brand.email].filter(function (x) {
+        return x && String(x).trim();
+      }).join(' · ');
+      if (contact) text.appendChild(el('p', 'print-letterhead-contact', contact));
+    }
+    if (title) text.appendChild(el('p', 'print-letterhead-doc', title));
+    row.appendChild(text);
+    box.appendChild(row);
+    box.appendChild(el('p', 'print-letterhead-powered',
+      shop.shop
+        ? 'Powered by Lawsonite · by Tomcat Studios'
+        : 'Field leave-behind · Lawsonite by Tomcat Studios'));
+    page.insertBefore(box, page.firstChild);
+  }
+
   /* ---------------- checklist page ---------------- */
   function enhanceChecklist() {
     var page = document.querySelector('.checklist-runner');
     if (!page) return;
 
     var m = location.pathname.match(/^\/checklist\/([a-z0-9-]+)/i);
+
+    var h1 = page.querySelector('h1');
+    ensurePrintLetterhead(page, (h1 && h1.textContent) || 'Checklist');
+    var lh = page.querySelector('.print-letterhead-row');
+    if (lh && !lh.querySelector('.print-letterhead-logo, .fk-print-lmark')) {
+      var mark = el('div', 'print-letterhead-logo fk-print-lmark');
+      mark.setAttribute('aria-hidden', 'true');
+      mark.textContent = 'L';
+      lh.insertBefore(mark, lh.firstChild);
+    }
 
     var toolbar = page.querySelector('.runner-toolbar');
     if (toolbar && !toolbar.querySelector('.fk-filters')) {
@@ -825,6 +920,8 @@
     if (isLanding()) enhanceLanding();
     if (isLibrary()) enhanceHome();
     enhanceChecklist();
+    var refs = document.querySelector('.refs-page');
+    if (refs) ensurePrintLetterhead(refs, 'Field calculators');
     maybeRecordVisit();
     syncStars();
   }

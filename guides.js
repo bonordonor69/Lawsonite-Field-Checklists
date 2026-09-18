@@ -75,6 +75,190 @@
     return out;
   }
 
+  function productSlug(p) {
+    return String((p.brand || '') + ' ' + (p.title || ''))
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48);
+  }
+  function shortId(p) {
+    var s = productSlug(p);
+    var h = 5381;
+    for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;
+    return h.toString(36);
+  }
+  function productByShort(id) {
+    var list = allProducts();
+    for (var i = 0; i < list.length; i++) if (shortId(list[i]) === id) return list[i];
+    return null;
+  }
+
+  var PACK_KEY = 'lawsonite-jobpack-v1';
+  var MAX_PINS = 24;
+  function loadPack() {
+    try {
+      var v = JSON.parse(localStorage.getItem(PACK_KEY) || '{}');
+      return { title: v.title || 'Job pack', ids: Array.isArray(v.ids) ? v.ids.slice() : [] };
+    } catch (e) {
+      return { title: 'Job pack', ids: [] };
+    }
+  }
+  function savePack(pack) {
+    try { localStorage.setItem(PACK_KEY, JSON.stringify(pack)); } catch (e) {}
+  }
+  function isPinned(id) {
+    return loadPack().ids.indexOf(id) >= 0;
+  }
+  function togglePin(id) {
+    var pack = loadPack();
+    var i = pack.ids.indexOf(id);
+    if (i >= 0) pack.ids.splice(i, 1);
+    else {
+      pack.ids.unshift(id);
+      if (pack.ids.length > MAX_PINS) pack.ids.length = MAX_PINS;
+    }
+    savePack(pack);
+    return pack;
+  }
+  function packHref(ids, title) {
+    var q = 'i=' + (ids || []).join(',');
+    if (title && title !== 'Job pack') q += '&t=' + encodeURIComponent(title);
+    return '/guides/pack?' + q;
+  }
+  function packAbs(ids, title) {
+    var origin = location.origin && location.origin !== 'null'
+      ? location.origin
+      : 'https://lawsonite.tomcatstudios.com';
+    return origin + packHref(ids, title);
+  }
+  function packQrUrl(ids, title) {
+    var full = packAbs(ids, title);
+    if (full.length <= 220) return full;
+    return packAbs(ids, '');
+  }
+  function shopBrand() {
+    try {
+      var pro = JSON.parse(localStorage.getItem('lawsonite-pro-v0') || '{}');
+      var brand = JSON.parse(localStorage.getItem('lawsonite-company-brand-v0') || '{}');
+      var shop = pro.plan === 'shop';
+      var configured = !!(String(brand.companyName || '').trim() || brand.logoDataUrl);
+      return { shop: shop && configured, brand: brand || {} };
+    } catch (e) {
+      return { shop: false, brand: {} };
+    }
+  }
+  function lawsoniteMark() {
+    var mark = el('div', 'gd-lmark');
+    mark.setAttribute('aria-hidden', 'true');
+    mark.textContent = 'L';
+    return mark;
+  }
+  function printLetterhead(docTitle) {
+    var shop = shopBrand();
+    var box = el('div', 'gd-letterhead');
+    var row = el('div', 'gd-letterhead-row');
+    if (shop.shop && shop.brand.logoDataUrl) {
+      var img = document.createElement('img');
+      img.className = 'gd-letterhead-logo';
+      img.src = shop.brand.logoDataUrl;
+      img.alt = '';
+      row.appendChild(img);
+    } else {
+      row.appendChild(lawsoniteMark());
+    }
+    var text = el('div', 'gd-letterhead-text');
+    text.appendChild(el('p', 'gd-letterhead-company',
+      shop.shop && shop.brand.companyName
+        ? String(shop.brand.companyName).trim()
+        : 'Lawsonite Field Checklists'));
+    if (shop.shop) {
+      var contact = [shop.brand.phone, shop.brand.email].filter(function (x) { return x && String(x).trim(); }).join(' · ');
+      if (contact) text.appendChild(el('p', 'gd-letterhead-sub', contact));
+      text.appendChild(el('p', 'gd-letterhead-sub', 'Powered by Lawsonite · Tomcat Studios'));
+    } else {
+      text.appendChild(el('p', 'gd-letterhead-sub', 'by Tomcat Studios'));
+    }
+    if (docTitle) text.appendChild(el('p', 'gd-letterhead-doc', docTitle));
+    row.appendChild(text);
+    box.appendChild(row);
+    return box;
+  }
+  function qrBox(url) {
+    var wrap = el('div', 'gd-qr');
+    var svg = '';
+    try {
+      if (window.LAWSONITE_QR && window.LAWSONITE_QR.svg) svg = window.LAWSONITE_QR.svg(url, 200);
+    } catch (e) { svg = ''; }
+    if (svg) wrap.innerHTML = svg;
+    else wrap.appendChild(el('p', 'gd-qr-fallback', url));
+    wrap.appendChild(el('p', 'gd-qr-cap', 'Scan for this job pack'));
+    return wrap;
+  }
+  function productCard(p, opts) {
+    opts = opts || {};
+    var id = shortId(p);
+    var card = el('article', 'gd-product');
+    var top = el('div', 'gd-product-top');
+    var tags = el('div', 'gd-product-tags');
+    if (p.brand) tags.appendChild(el('span', 'gd-tag', p.brand));
+    var trade = productTrade(p);
+    var tradeLabel = (TRADES.concat([{ key: 'other', label: 'Other' }]).filter(function (t) { return t.key === trade; })[0] || {}).label;
+    if (tradeLabel) tags.appendChild(el('span', 'gd-tag gd-tag-trade', tradeLabel));
+    if (opts.pin !== false) {
+      var pinned = isPinned(id);
+      var pin = el('button', 'gd-pin' + (pinned ? ' is-on' : ''), pinned ? '★' : '☆');
+      pin.type = 'button';
+      pin.title = pinned ? 'Unpin from job pack' : 'Pin to job pack';
+      pin.setAttribute('aria-label', pin.title);
+      pin.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        togglePin(id);
+        if (opts.onPin) opts.onPin();
+      });
+      tags.appendChild(pin);
+    }
+    top.appendChild(tags);
+    top.appendChild(el('h3', null, p.title));
+    card.appendChild(top);
+    if (p.use) card.appendChild(el('p', 'gd-product-use', p.use));
+    if (p.look || (p.gotchas && p.gotchas.length)) {
+      var d = document.createElement('details');
+      d.className = 'gd-more';
+      if (opts.open) d.open = true;
+      d.appendChild(el('summary', null, 'Field notes'));
+      if (p.look) {
+        var look = el('p');
+        look.appendChild(el('strong', null, 'Label: '));
+        look.appendChild(document.createTextNode(p.look));
+        d.appendChild(look);
+      }
+      if (p.gotchas && p.gotchas.length) {
+        var ul = el('ul', 'gd-steps');
+        p.gotchas.forEach(function (g) { ul.appendChild(el('li', null, g)); });
+        d.appendChild(ul);
+      }
+      card.appendChild(d);
+    }
+    if (p.href) {
+      var a = el('a', 'gd-link');
+      a.href = p.href;
+      var external = /^https?:/i.test(p.href);
+      if (external) {
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+      }
+      var left = el('span');
+      left.appendChild(el('strong', null, p.linkLabel || (external ? 'Manufacturer docs' : 'Open')));
+      if (p.linkSub) left.appendChild(el('em', null, p.linkSub));
+      a.appendChild(left);
+      a.appendChild(el('span', 'gd-ext', external ? 'Official' : 'Open'));
+      card.appendChild(a);
+    }
+    return card;
+  }
+
   var TIP_URL =
     'https://www.paypal.com/donate/?business=tlawson1988%40gmail.com&currency_code=USD&item_name=Energy%20drink%20for%20Lawsonite';
   var TOMCAT_URL = 'https://tomcatstudios.com/';
@@ -261,6 +445,26 @@
         hits.forEach(function (h) { list.appendChild(toolRow(h)); });
         groupsHost.appendChild(list);
         return;
+      }
+
+      var pack = loadPack();
+      if (pack.ids.length && (filterKey === 'all' || filterKey === 'docs')) {
+        n += 1;
+        var packSec = el('section', 'gd-section');
+        var ph = el('div', 'gd-section-head');
+        ph.appendChild(el('h2', null, 'This job'));
+        ph.appendChild(el('span', null, String(pack.ids.length)));
+        packSec.appendChild(ph);
+        var pl = el('div', 'gd-list');
+        pl.appendChild(toolRow({
+          href: packHref(pack.ids, pack.title),
+          title: pack.title || 'Job pack',
+          sub: pack.ids.length + ' pinned cards · panel QR',
+          icon: 'book',
+          kind: 'Pack'
+        }));
+        packSec.appendChild(pl);
+        groupsHost.appendChild(packSec);
       }
 
       (G.groups || []).forEach(function (g) {
@@ -490,10 +694,24 @@
     bar.appendChild(chipRow);
     wrap.appendChild(bar);
 
+    var packBar = el('div', 'gd-pack-bar no-print');
+    wrap.appendChild(packBar);
     var meta = el('p', 'gd-meta');
     wrap.appendChild(meta);
     var host = el('div', 'gd-product-list');
     wrap.appendChild(host);
+
+    function paintPackBar() {
+      packBar.textContent = '';
+      var pack = loadPack();
+      var n = pack.ids.length;
+      packBar.appendChild(el('span', null, n ? (n + ' pinned for this job') : 'Pin cards for this job'));
+      if (n) {
+        var open = el('a', 'gd-chip fk-link', 'Open pack / QR');
+        open.href = packHref(pack.ids, pack.title);
+        packBar.appendChild(open);
+      }
+    }
 
     function syncQuery() {
       var params = [];
@@ -515,49 +733,7 @@
         if (tradeKey !== 'all' && trade !== tradeKey) return;
         if (f && !hayMatch(productHay(p), f)) return;
         shown++;
-        var card = el('article', 'gd-product');
-        var top = el('div', 'gd-product-top');
-        var tags = el('div', 'gd-product-tags');
-        if (p.brand) tags.appendChild(el('span', 'gd-tag', p.brand));
-        var tradeLabel = (TRADES.concat([{ key: 'other', label: 'Other' }]).filter(function (t) { return t.key === trade; })[0] || {}).label;
-        if (tradeLabel) tags.appendChild(el('span', 'gd-tag gd-tag-trade', tradeLabel));
-        top.appendChild(tags);
-        top.appendChild(el('h3', null, p.title));
-        card.appendChild(top);
-        if (p.use) card.appendChild(el('p', 'gd-product-use', p.use));
-        if (p.look || (p.gotchas && p.gotchas.length)) {
-          var d = document.createElement('details');
-          d.className = 'gd-more';
-          d.appendChild(el('summary', null, 'Field notes'));
-          if (p.look) {
-            var look = el('p');
-            look.appendChild(el('strong', null, 'Label: '));
-            look.appendChild(document.createTextNode(p.look));
-            d.appendChild(look);
-          }
-          if (p.gotchas && p.gotchas.length) {
-            var ul = el('ul', 'gd-steps');
-            p.gotchas.forEach(function (g) { ul.appendChild(el('li', null, g)); });
-            d.appendChild(ul);
-          }
-          card.appendChild(d);
-        }
-        if (p.href) {
-          var a = el('a', 'gd-link');
-          a.href = p.href;
-          var external = /^https?:/i.test(p.href);
-          if (external) {
-            a.target = '_blank';
-            a.rel = 'noopener noreferrer';
-          }
-          var left = el('span');
-          left.appendChild(el('strong', null, p.linkLabel || (external ? 'Manufacturer docs' : 'Open')));
-          if (p.linkSub) left.appendChild(el('em', null, p.linkSub));
-          a.appendChild(left);
-          a.appendChild(el('span', 'gd-ext', external ? 'Official' : 'Open'));
-          card.appendChild(a);
-        }
-        host.appendChild(card);
+        host.appendChild(productCard(p, { onPin: function () { paintPackBar(); } }));
       });
       var tradeName = tradeKey === 'all' ? '' : (' · ' + (tradeKey.charAt(0).toUpperCase() + tradeKey.slice(1)));
       if (shown) meta.textContent = shown + ' of ' + allItems.length + tradeName;
@@ -567,9 +743,11 @@
           ? 'No product matched. Try Verkada, Vista 128, Salto, or a trade chip.'
           : 'Nothing in that trade yet. Pick All or search a model.'));
       }
+      paintPackBar();
     }
     q.addEventListener('input', paint);
     paint();
+    paintPackBar();
     return wrap;
   }
 
@@ -679,6 +857,124 @@
     return box;
   }
 
+  function renderPack() {
+    var sp;
+    try { sp = new URLSearchParams(location.search); } catch (e) { sp = new URLSearchParams(); }
+    var ids = (sp.get('i') || '').split(',').filter(Boolean);
+    var title = sp.get('t') || '';
+    var local = loadPack();
+    if (!ids.length) ids = local.ids.slice();
+    if (!title) title = local.title || 'Job pack';
+    if (ids.length && !(sp.get('i'))) {
+      try { history.replaceState({}, '', packHref(ids, title)); } catch (e) {}
+    }
+
+    var page = el('div', 'page gd-page gd-pack');
+    page.appendChild(backLink('/guides/manuals', 'Product cards'));
+    page.appendChild(printLetterhead(title));
+
+    var head = el('header', 'gd-hero');
+    head.appendChild(el('p', 'gd-kicker', 'Job pack'));
+    var titleInput = document.createElement('input');
+    titleInput.className = 'gd-search gd-pack-title no-print';
+    titleInput.value = title;
+    titleInput.setAttribute('aria-label', 'Job pack name');
+    titleInput.placeholder = 'Job name — Building A, 3rd floor…';
+    head.appendChild(titleInput);
+    head.appendChild(el('h1', 'only-print', title));
+    head.appendChild(el('p', 'gd-lede no-print',
+      'Pin cards on the manuals page, name the job, print the pack or a panel QR. Free prints get the Lawsonite mark. Pro adds your company logo.'));
+    page.appendChild(head);
+
+    var url = packQrUrl(ids, title);
+    var tools = el('div', 'gd-pack-tools no-print');
+    var printBtn = el('button', 'gd-chip is-on', 'Print pack');
+    printBtn.type = 'button';
+    printBtn.addEventListener('click', function () {
+      document.body.classList.remove('gd-sticker-print');
+      window.print();
+    });
+    var stickerBtn = el('button', 'gd-chip', 'Print panel QR');
+    stickerBtn.type = 'button';
+    stickerBtn.addEventListener('click', function () {
+      document.body.classList.add('gd-sticker-print');
+      window.print();
+    });
+    window.addEventListener('afterprint', function () {
+      document.body.classList.remove('gd-sticker-print');
+    });
+    var copyBtn = el('button', 'gd-chip', 'Copy link');
+    copyBtn.type = 'button';
+    copyBtn.addEventListener('click', function () {
+      var u = packAbs(ids, titleInput.value || title);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(u).then(function () { copyBtn.textContent = 'Copied'; });
+      } else {
+        window.prompt('Copy pack link', u);
+      }
+    });
+    tools.appendChild(printBtn);
+    tools.appendChild(stickerBtn);
+    tools.appendChild(copyBtn);
+    if (ids.length) {
+      var clear = el('button', 'gd-chip', 'Clear pins');
+      clear.type = 'button';
+      clear.addEventListener('click', function () {
+        savePack({ title: titleInput.value || 'Job pack', ids: [] });
+        location.assign('/guides/manuals');
+      });
+      tools.appendChild(clear);
+    }
+    page.appendChild(tools);
+
+    var ident = el('div', 'gd-pack-ident');
+    ident.appendChild(qrBox(url));
+    var identText = el('div', 'gd-pack-ident-text');
+    identText.appendChild(el('p', 'gd-pack-url', url));
+    identText.appendChild(el('p', 'muted', 'Tape the QR on the can. Anyone who scans it gets this pack.'));
+    ident.appendChild(identText);
+    page.appendChild(ident);
+
+    titleInput.addEventListener('change', function () {
+      var next = titleInput.value.trim() || 'Job pack';
+      var pack = loadPack();
+      pack.title = next;
+      if (!pack.ids.length) pack.ids = ids.slice();
+      savePack(pack);
+      title = next;
+      try { history.replaceState({}, '', packHref(ids, next)); } catch (e) {}
+      var abs = packAbs(ids, next);
+      var qr = ident.querySelector('.gd-qr');
+      if (qr) {
+        var fresh = qrBox(packQrUrl(ids, next));
+        qr.replaceWith(fresh);
+      }
+      var urlEl = ident.querySelector('.gd-pack-url');
+      if (urlEl) urlEl.textContent = abs;
+    });
+
+    var list = el('div', 'gd-product-list gd-pack-cards');
+    if (!ids.length) {
+      list.appendChild(el('p', 'gd-empty', 'No cards pinned yet. Open Product cards and tap the star.'));
+    } else {
+      ids.forEach(function (id) {
+        var p = productByShort(id);
+        if (!p) return;
+        list.appendChild(productCard(p, {
+          open: true,
+          onPin: function () { location.assign(packHref(loadPack().ids, titleInput.value || title)); }
+        }));
+      });
+    }
+    page.appendChild(list);
+    page.appendChild(el('p', 'gd-foot',
+      'Educational job aide only — not code, manufacturer instructions, or AHJ approval. Confirm the device label, the panel programming, and the official sheet.'));
+    var sign = el('div', 'gd-pack-sign only-print');
+    sign.appendChild(el('p', null, 'Installed by ________________    Date ______________    Tech ______________'));
+    page.appendChild(sign);
+    return page;
+  }
+
   function renderGuide(id) {
     var p = pageOf(id);
     if (!p) {
@@ -689,6 +985,9 @@
     }
     var page = el('div', 'page gd-page');
     page.appendChild(backLink('/field', 'Field'));
+    var lh = printLetterhead(p.title);
+    lh.classList.add('only-print');
+    page.appendChild(lh);
     var head = el('header', 'gd-hero');
     head.appendChild(el('p', 'gd-kicker', p.eyebrow || 'Field'));
     head.appendChild(el('h1', null, p.title));
@@ -722,7 +1021,8 @@
     if (path === '/field' || path === '/guides') mount(renderHub());
     else {
       var id = path.split('/').pop();
-      mount(renderGuide(id));
+      if (id === 'pack') mount(renderPack());
+      else mount(renderGuide(id));
     }
   }
 
@@ -756,9 +1056,20 @@
 
   function boot() {
     if (!document.body) { setTimeout(boot, 30); return; }
-    G = window.__LAWSONITE_GUIDES__ || G;
-    if (!G) { setTimeout(boot, 40); return; }
-    route();
+    function start() {
+      G = window.__LAWSONITE_GUIDES__ || G;
+      if (!G) { setTimeout(start, 40); return; }
+      route();
+    }
+    if (!window.LAWSONITE_QR) {
+      var qs = document.createElement('script');
+      qs.src = '/qrcode.js';
+      qs.onload = function () {
+        if (pathOf() === '/guides/pack') route();
+      };
+      document.head.appendChild(qs);
+    }
+    start();
   }
   boot();
 
@@ -776,6 +1087,16 @@
           hay: (p.title + ' ' + (p.lede || '') + ' ' + (p.hub || '') + ' ' + (p.tags || []).join(' ') + ' ' + (p.eyebrow || '')).toLowerCase()
         };
       });
+      var pack = loadPack();
+      if (pack.ids.length) {
+        rows.unshift({
+          kind: 'doc',
+          title: pack.title || 'Job pack',
+          sub: pack.ids.length + ' pinned cards · QR',
+          href: packHref(pack.ids, pack.title),
+          hay: ('job pack pinned cards qr panel sticker this job ' + (pack.title || '')).toLowerCase()
+        });
+      }
       allProducts().forEach(function (pr) {
         var q = encodeURIComponent((pr.title || '').split('/')[0].trim());
         rows.push({
