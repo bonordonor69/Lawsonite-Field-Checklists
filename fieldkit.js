@@ -535,9 +535,12 @@
 
     dash.appendChild(block('Rough-in', 'Hardware on the steel'));
     var hwrow = el('div', 'fk-chip-row');
-    var hwa = el('a', 'fk-text-chip fk-link', 'Cable hardware picker');
+    var hwa = el('a', 'fk-text-chip fk-link', 'Cable hardware');
     hwa.href = '/guides/hardware';
     hwrow.appendChild(hwa);
+    var hwm = el('a', 'fk-text-chip fk-link', 'Boxes / pipe');
+    hwm.href = '/guides/hardware?tab=mount';
+    hwrow.appendChild(hwm);
     dash.appendChild(hwrow);
 
     dash.appendChild(block('Job paper', 'Printable leave-behinds'));

@@ -44,6 +44,27 @@
     sms: '#10 x 1″ SMS / wood screw into the stud. Not for 80-cable points.'
   };
 
+  var BOX = {
+    g1: part('1-GANG', '1-gang box (new-work or old-work)', 'Carlon / RACO 1-gang. Readers, pulls, PIRs. Old-work wings in finished drywall.'),
+    g2: part('2-GANG', '2-gang box', 'Keypad + reader, or a fat reader plate. Same fasteners as 1-gang, more mud ring.'),
+    sq4: part('RACO 232', '4″ square 2-1/8″ deep steel', 'The default device box. Horn-strobes, smokes, camera plates, 4″ mud ring to 1-gang if needed.'),
+    sq411: part('RACO 257', '4-11/16″ square deep', 'Bigger can for splices, camera adapters, or a fat 3/4″ conduit run.'),
+    fs: part('FS-1', 'FS / FD weatherproof (Appleton / Red Dot)', 'Cast FS box, gasketed cover. Outdoor cameras, readers, strobes. Listed wet-location.'),
+    pendant: part('3/4 NPT', 'Pendant / 3/4″ NPT mount', 'Camera pendant cap + locknut/nipple. Independent support — not the tile.'),
+    pole: part('POLE-MNT', 'Pole mount + stainless straps', '2–6″ pole cap or universal camera pole mount. Two stainless band clamps. Drip loop the LFMC.'),
+    corner: part('CORNER', 'Corner / wall-mount adapter plate', 'Camera wall/corner plate that lands on a 4″ sq or FS box. Verify the camera’s hole pattern.'),
+    mag: part('MAG-HW', 'Maglock mounting kit (sex bolts / thru-bolts)', 'Through the header, not into drywall. Bond sensor leads separate from coil.'),
+    strike: part('STRIKE-PREP', 'Strike prep / faceplate kit', 'Match the lock prep (ANSI, cylindrical, mortise). Shim, don’t butcher the jamb.')
+  };
+  var RACE = {
+    open: part('NONE', 'No raceway — cable in wall / open', 'Romex-style LV, J-hook above, staple only where the spec allows. Not a substitute for pipe on fire or wet.'),
+    emt: part('EMT 1/2', '1/2″ EMT + set-screw connectors', 'Indoor dry. 3/4″ if the fill or the device nipple wants it. LB/LL as the drawing shows.'),
+    pvc: part('PVC 1/2', '1/2″ Sch 40 PVC + glue fittings', 'Corrosion, underground, some outdoor. Transition to EMT/LFMC with a listed adapter before the device if required.'),
+    lfmc: part('LFMC 1/2', '1/2″ liquid-tite (LFMC) + listed connectors', 'Last few feet to a wet/damp device, cameras on poles, rooftop. Arlington / Appleton liquid-tite connectors, not a dry EMT set-screw.'),
+    fmc: part('FMC 1/2', '1/2″ flex (FMC) + connectors', 'Indoor fixture whip. Not a wet-location stand-in for liquid-tite.'),
+    mc: part('MC 1/2', 'MC / AC connector + anti-short', 'When the home-run is MC. Bond the connector. Anti-short bushing on AC.')
+  };
+
   var HW = {
     cables: [
       { key: 'cat6', label: 'Cat5e / Cat6', wide: false },
@@ -91,7 +112,64 @@
       ['Rod adapter (SCH14)', 'Existing 1/4-20 / 3/8-16 rod', 'Hang a hook from all-thread already in the deck', 'Do not share fire-sprinkler rod unless the spec allows it.'],
       ['Cable tray / basket', 'Structure', '80+ cables, fiber trunks, composite', 'Per tray fill. Hooks only for drops off the tray.']
     ],
-    resolve: resolve
+    devices: [
+      { key: 'camera', label: 'Camera (bullet / turret / dome)' },
+      { key: 'ptz', label: 'PTZ / multi-sensor' },
+      { key: 'reader', label: 'Wall reader / keypad' },
+      { key: 'mullion', label: 'Mullion reader' },
+      { key: 'strobe', label: 'Horn / strobe / speaker' },
+      { key: 'pull', label: 'Pull station' },
+      { key: 'detect', label: 'Smoke / heat / CO' },
+      { key: 'pir', label: 'PIR / motion / glassbreak' },
+      { key: 'mag', label: 'Maglock' },
+      { key: 'strike', label: 'Electric strike / exit' },
+      { key: 'bell', label: 'Bell / sounder' },
+      { key: 'can', label: 'Power can / enclosure' }
+    ],
+    walls: [
+      { key: 'stud', label: 'Drywall / wood or metal stud' },
+      { key: 'concrete', label: 'Concrete wall / ceiling' },
+      { key: 'cmu', label: 'CMU / block' },
+      { key: 'brick', label: 'Brick / masonry veneer' },
+      { key: 'outdoor', label: 'Outdoor / stucco / EIFS' },
+      { key: 'pole', label: 'Pole / post' },
+      { key: 'tgrid', label: 'Acoustical T-grid' },
+      { key: 'steel', label: 'Steel beam / deck' }
+    ],
+    raceways: [
+      { key: 'open', label: 'Open / in-wall cable (no pipe)' },
+      { key: 'emt', label: 'EMT' },
+      { key: 'pvc', label: 'PVC conduit' },
+      { key: 'lfmc', label: 'Liquid-tite (LFMC)' },
+      { key: 'fmc', label: 'Flex (FMC)' },
+      { key: 'mc', label: 'MC / AC cable' }
+    ],
+    boxes: [
+      { key: 'g1', label: '1-gang' },
+      { key: 'g2', label: '2-gang' },
+      { key: 'sq4', label: '4″ square' },
+      { key: 'sq411', label: '4-11/16″ square' },
+      { key: 'fs', label: 'FS / FD weatherproof' },
+      { key: 'pendant', label: 'Pendant / 3/4″ NPT' },
+      { key: 'pole', label: 'Pole mount + straps' },
+      { key: 'corner', label: 'Corner / wall-mount plate' }
+    ],
+    mountCheat: [
+      ['1-gang box', 'Stud, old-work drywall', 'Readers, pulls, PIRs, doorbells', 'Not a strobe or camera. Old-work wings in finished walls.'],
+      ['4″ square steel (RACO 232 class)', 'Stud, masonry, above ceiling', 'Horn-strobes, smokes, camera plates, splices', 'Default device box. Mud-ring to 1-gang if the plate wants it.'],
+      ['4-11/16″ square', 'Same as 4″ sq, more volume', 'Fat splices, 3/4″ conduit, PTZ adapters', 'Use when 4″ fill is a lie.'],
+      ['FS / FD weatherproof', 'Outdoor, wet, wash-down', 'Outdoor cameras, readers, strobes', 'Gasketed cover. Listed wet fittings — not a dry EMT connector in the rain.'],
+      ['Pendant 3/4″ NPT', 'Structure / rod, not the tile', 'Indoor dome / PTZ drops', 'Independent support. T-grid is not a pendant mount.'],
+      ['Pole mount + stainless straps', 'Light pole, 2–6″ post', 'Parking / site cameras', 'Drip loop. LFMC last few feet. Don’t rely on one zip-tie.'],
+      ['EMT 1/2–3/4', 'Indoor dry walls / decks', 'Most commercial device pipe', 'Set-screw connectors indoors. Compression in wet. LB where the drawing says.'],
+      ['PVC Sch 40', 'Corrosion, underground, some outdoor', 'Site conduit, corrosive rooms', 'Listed transition before the device if the spec wants metal at the head.'],
+      ['Liquid-tite LFMC', 'Wet/damp last 6 ft, poles, rooftop', 'Cameras, outdoor readers, rooftop cans', 'Listed liquid-tite connectors. FMC indoor flex is not the same listing.'],
+      ['MC / AC', 'When the homerun is MC', 'Branch to the box', 'Bond the connector. Anti-short on AC. Don’t treat it like NM.'],
+      ['Maglock kit / thru-bolts', 'Door header / frame', 'Mags', 'Not drywall anchors. Fire-release path is separate from the coil.'],
+      ['Strike prep / faceplate', 'Door jamb', 'Electric strikes', 'Match ANSI/cylindrical/mortise prep. The strike sheet, not a 4″ sq.']
+    ],
+    resolve: resolve,
+    resolveMount: resolveMount
   };
 
   function find(list, key) {
@@ -191,6 +269,114 @@
       primary: support,
       hook: hook,
       fastener: fastener,
+      alts: alts,
+      warnings: warnings
+    };
+  }
+
+  function wallFastener(wall) {
+    if (!wall) return { part: CLIP.sms, text: FAST.sms };
+    if (wall.key === 'concrete' || wall.key === 'brick') return { part: CLIP.tapcon, text: '1/4″ x 1-3/4″ hex Tapcon (dust the hole, min embed per sheet).' };
+    if (wall.key === 'cmu') return { part: CLIP.tapcon, text: '1/4″ x 1-3/4″ hex Tapcon into grouted cell, or sleeve anchor in hollow CMU.' };
+    if (wall.key === 'outdoor') return { part: CLIP.tapcon, text: 'Tapcon or sleeve into structure — not into EIFS foam. FS box + listed wet fittings.' };
+    if (wall.key === 'pole') return { part: BOX.pole, text: 'Two stainless band clamps. No Tek screws as the only support on a light pole.' };
+    if (wall.key === 'tgrid') return { part: CLIP.tgrid, text: 'Independent support (rod/beam). The tile and the tee are not a device mount.' };
+    if (wall.key === 'steel') return { part: CLIP.f18, text: 'Beam clamp or Sammy’s, then the box/nipple. Don’t drill a joist unless the steel guy said so.' };
+    return { part: CLIP.sms, text: '#8–#10 x 1-1/4″ into wood stud, or self-drilling into 20–25 ga metal stud. Toggle only if you missed the stud and the load is light.' };
+  }
+
+  function resolveMount(sel) {
+    sel = sel || {};
+    var device = find(HW.devices, sel.device);
+    var wall = find(HW.walls, sel.wall);
+    var race = find(HW.raceways, sel.raceway);
+    var boxSel = find(HW.boxes, sel.box);
+    if (!device || !wall || !race || !boxSel) return null;
+
+    var warnings = [];
+    var alts = [];
+    var box = BOX.sq4;
+    var racePart = RACE[sel.raceway] || RACE.open;
+    var mount = null;
+    var wf = wallFastener(wall);
+
+    if (device.key === 'camera' || device.key === 'ptz') {
+      if (sel.box === 'pendant') box = BOX.pendant;
+      else if (sel.box === 'pole' || wall.key === 'pole') box = BOX.pole;
+      else if (sel.box === 'fs' || wall.key === 'outdoor') box = BOX.fs;
+      else if (sel.box === 'corner') box = BOX.corner;
+      else if (sel.box === 'sq411' || device.key === 'ptz') box = BOX.sq411;
+      else box = BOX.sq4;
+      mount = box;
+      if (wall.key === 'tgrid') warnings.push('A camera on T-grid needs independent support (pendant off rod/structure). Clipping a dome to the tile fails inspection and physics.');
+      if (device.key === 'ptz' && sel.box === 'g1') warnings.push('A PTZ is not a 1-gang device. Pendant, pole, or 4-11/16 with the manufacturer’s adapter.');
+    } else if (device.key === 'reader' || device.key === 'pir') {
+      box = sel.box === 'g2' ? BOX.g2 : (sel.box === 'fs' || wall.key === 'outdoor' ? BOX.fs : BOX.g1);
+      mount = box;
+    } else if (device.key === 'mullion') {
+      box = part('MULLION', 'Mullion mount bracket', 'Slimline bracket on the frame. No 4″ sq. Keep the raceway in the frame or a nearby FS.');
+      mount = box;
+      warnings.push('Mullion readers do not sit on a 4″ square. Frame bracket + a nearby box for the splice if the frame is too tight.');
+    } else if (device.key === 'strobe' || device.key === 'bell' || device.key === 'detect') {
+      box = (sel.box === 'fs' || wall.key === 'outdoor') ? BOX.fs : (sel.box === 'sq411' ? BOX.sq411 : BOX.sq4);
+      mount = box;
+      warnings.push('Fire notification / detection wants a listed box. A plastic handy box is how you fail the walkthrough.');
+    } else if (device.key === 'pull') {
+      box = sel.box === 'sq4' ? BOX.sq4 : BOX.g1;
+      mount = box;
+      warnings.push('Pulls are usually 1-gang at 48″ AFF, listed box, accessible. Confirm ADA/AHJ height.');
+    } else if (device.key === 'mag') {
+      box = BOX.mag;
+      mount = box;
+      racePart = sel.raceway === 'open' ? RACE.open : racePart;
+      warnings.push('Maglocks thru-bolt the header. Drywall anchors and 1-gang boxes are not a mag mount. Fire-release wiring is a separate supervised path.');
+    } else if (device.key === 'strike') {
+      box = BOX.strike;
+      mount = box;
+      warnings.push('The strike lives in the jamb prep. Pipe to a nearby junction — don’t try to hide an FS box in the strike pocket.');
+    } else if (device.key === 'can') {
+      box = part('CAN', 'Enclosure backpan / Unistrut kit', 'Altronix / LSP can on strut or Tapcons. Knockouts for the raceway. Bond the can.');
+      mount = box;
+      if (sel.box === 'sq4') warnings.push('A power can is not a 4″ sq. Use the enclosure’s mounting and strut.');
+    }
+
+    if (wall.key === 'outdoor' && sel.raceway === 'emt' && sel.box !== 'fs' && device.key !== 'mag' && device.key !== 'strike') {
+      warnings.push('Outdoor + EMT: the box still needs to be wet-listed (FS/FD) or you will grow a science experiment in the can.');
+    }
+    if (wall.key === 'outdoor' && sel.raceway === 'open') {
+      warnings.push('Outdoor with no raceway: UV, water, and the AHJ. Use LFMC/FS or listed wet cord only if the camera sheet allows it.');
+    }
+    if (sel.raceway === 'fmc' && (wall.key === 'outdoor' || wall.key === 'pole')) {
+      warnings.push('Indoor flex (FMC) is not liquid-tite. Wet/damp last-six-feet is LFMC with listed connectors.');
+    }
+    if (sel.raceway === 'lfmc') {
+      warnings.push('LFMC (liquid-tite) wants listed liquid-tite connectors and a gasketed box. A dry set-screw EMT fitting on sealtite is a leak.');
+    }
+    if (sel.raceway === 'pvc' && (device.key === 'strobe' || device.key === 'detect' || device.key === 'pull')) {
+      warnings.push('Fire devices: follow the listing. Some AHJs want metal raceway at the device even if the homerun is PVC.');
+    }
+    if (wall.key === 'pole' && sel.raceway !== 'lfmc' && sel.raceway !== 'pvc') {
+      warnings.push('Pole cameras: drip loop and usually LFMC or PVC-coated for the last few feet. Water follows the pipe into the head.');
+    }
+    if (wall.key === 'tgrid' && (device.key === 'strobe' || device.key === 'detect')) {
+      warnings.push('Ceiling strobes/smokes on T-grid use a listed bar/bridge, not a batwing and a prayer. Independent support if the spec says so.');
+    }
+    warnings.push('NEC 314 for boxes, 300/350–360 for raceway type, 760 for fire. Manufacturer mount kit wins over a generic plate. Educational only.');
+
+    if (sel.raceway === 'emt') alts.push(RACE.lfmc);
+    if (sel.raceway === 'open' && wall.key === 'outdoor') alts.push(RACE.lfmc);
+    if (box === BOX.sq4) alts.push(BOX.sq411);
+    if (wall.key === 'outdoor' && box !== BOX.fs && device.key !== 'mag' && device.key !== 'strike') alts.push(BOX.fs);
+
+    return {
+      device: device,
+      wall: wall,
+      raceway: race,
+      box: boxSel,
+      primary: mount || box,
+      hook: racePart,
+      fastener: wf.text,
+      fastenerPart: wf.part,
       alts: alts,
       warnings: warnings
     };

@@ -404,6 +404,11 @@
         ev.preventDefault();
         ev.stopPropagation();
         togglePin(id);
+        var on = isPinned(id);
+        pin.classList.toggle('is-on', on);
+        pin.textContent = on ? '★' : '☆';
+        pin.title = on ? 'Unpin from job pack' : 'Pin to job pack';
+        pin.setAttribute('aria-label', pin.title);
         if (opts.onPin) opts.onPin();
       });
       tags.appendChild(pin);
@@ -691,7 +696,8 @@
         });
         [
           { href: '/guides/hardware', title: 'Cable hardware picker', sub: 'CADDY-class spec card', icon: 'clip', hay: 'cable hardware caddy j-hook beam clamp sammys cat6a fiber' },
-          { href: '/guides/hardware?tab=cheats', title: 'Hardware cheat sheet', sub: 'Support vs substrate', icon: 'wire', hay: 'cheat sheet flange batwing bridle' },
+          { href: '/guides/hardware?tab=mount', title: 'Device mounting picker', sub: 'Boxes, pipe, liquid-tite', icon: 'lock', hay: 'box emt liquid-tite fs fd tapcon camera mount pendant pole' },
+          { href: '/guides/hardware?tab=cheats', title: 'Hardware cheat sheet', sub: 'Support vs substrate', icon: 'wire', hay: 'cheat sheet flange batwing bridle fs box lfmc' },
           { href: '/guides/hardware?tab=bom', title: 'Hardware pack list', sub: 'BOM for ADI / Anixter', icon: 'book', hay: 'bom pack list order hardware' }
         ].forEach(function (h) {
           if (filterKey !== 'all' && filterKey !== 'cheat') return;
@@ -737,11 +743,11 @@
       }
 
       if (filterKey === 'all' || filterKey === 'cheat') {
-        n += 2;
+        n += 3;
         var hwSec = el('section', 'gd-section');
         var hwh = el('div', 'gd-section-head');
         hwh.appendChild(el('h2', null, 'Rough-in'));
-        hwh.appendChild(el('span', null, '2'));
+        hwh.appendChild(el('span', null, '3'));
         hwSec.appendChild(hwh);
         var hwl = el('div', 'gd-list');
         hwl.appendChild(toolRow({
@@ -752,9 +758,16 @@
           kind: 'Tool'
         }));
         hwl.appendChild(toolRow({
+          href: '/guides/hardware?tab=mount',
+          title: 'Device mounting picker',
+          sub: 'Boxes, EMT, liquid-tite, Tapcons',
+          icon: 'lock',
+          kind: 'Tool'
+        }));
+        hwl.appendChild(toolRow({
           href: '/guides/hardware?tab=cheats',
           title: 'Hardware cheat sheet',
-          sub: 'J-hook, hammer-on, batwing, bridle, Sammy’s',
+          sub: 'J-hook, hammer-on, batwing, FS box, LFMC',
           icon: 'wire',
           kind: 'Cheat'
         }));
@@ -1427,7 +1440,7 @@
 
     var tab = hwTab();
     var tabs = el('div', 'gd-pack-tools no-print');
-    [['picker', 'Picker'], ['cheats', 'Cheat sheet'], ['bom', 'Pack list']].forEach(function (t) {
+    [['picker', 'Cable'], ['mount', 'Boxes / pipe'], ['cheats', 'Cheat sheet'], ['bom', 'Pack list']].forEach(function (t) {
       var a = el('a', 'gd-chip fk-link' + (tab === t[0] ? ' is-on' : ''), t[1]);
       a.href = t[0] === 'picker' ? '/guides/hardware' : '/guides/hardware?tab=' + t[0];
       tabs.appendChild(a);
@@ -1444,6 +1457,13 @@
     }
     if (tab === 'bom') {
       page.appendChild(renderBomList());
+      return page;
+    }
+    if (tab === 'mount') {
+      head.querySelector('h1').textContent = 'Device mounting picker';
+      head.querySelector('.gd-lede').textContent =
+        'Device, wall, raceway, box — then the FS / 4″ sq / liquid-tite / Tapcon spec. Same pack list as cable hardware.';
+      page.appendChild(renderMountPicker(H));
       return page;
     }
     page.appendChild(renderHardwarePicker(H));
@@ -1473,8 +1493,29 @@
     printBtn.addEventListener('click', function () { window.print(); });
     box.appendChild(printBtn);
     box.appendChild(wrap);
+    if (H.mountCheat && H.mountCheat.length) {
+      box.appendChild(el('h2', null, 'Boxes, pipe, liquid-tite'));
+      var wrap2 = el('div', 'gd-sheet-wrap');
+      var table2 = el('table', 'gd-sheet gd-cheat-table');
+      var thead2 = document.createElement('thead');
+      var trh2 = document.createElement('tr');
+      ['Hardware type', 'Substrate / attachment', 'Best used for', 'Cable / load limits'].forEach(function (h) {
+        trh2.appendChild(el('th', null, h));
+      });
+      thead2.appendChild(trh2);
+      table2.appendChild(thead2);
+      var tb2 = document.createElement('tbody');
+      H.mountCheat.forEach(function (row) {
+        var tr = document.createElement('tr');
+        row.forEach(function (cell) { tr.appendChild(el('td', null, cell)); });
+        tb2.appendChild(tr);
+      });
+      table2.appendChild(tb2);
+      wrap2.appendChild(table2);
+      box.appendChild(wrap2);
+    }
     box.appendChild(el('p', 'gd-foot',
-      'Trade equivalents. Confirm the nVent CADDY catalog, the cable listing, and the AHJ. Educational only.'));
+      'Trade equivalents. Confirm the nVent CADDY catalog, the box/raceway listing, and the AHJ. Educational only.'));
     return box;
   }
   function renderBomList() {
@@ -1687,6 +1728,115 @@
           addLine(spec, spec.hook, '', n);
         }
         addBomItem({ mpn: 'FASTENER', name: spec.fastener, desc: path.join(' · ') }, n);
+        addBtn.textContent = 'Added';
+        setTimeout(function () { addBtn.textContent = 'Add to pack list'; }, 1200);
+      });
+      addRow.appendChild(el('span', null, 'Qty'));
+      addRow.appendChild(qty);
+      addRow.appendChild(addBtn);
+      var printBtn = el('button', 'gd-chip', 'Print card');
+      printBtn.type = 'button';
+      printBtn.addEventListener('click', function () { window.print(); });
+      addRow.appendChild(printBtn);
+      var toBom = el('a', 'gd-chip fk-link', 'Open pack list');
+      toBom.href = '/guides/hardware?tab=bom';
+      addRow.appendChild(toBom);
+      card.appendChild(addRow);
+      host.appendChild(card);
+    }
+    paint();
+    return wrap;
+  }
+  function renderMountPicker(H) {
+    var wrap = el('div', 'gd-hw-picker');
+    var sel = { device: '', wall: '', raceway: '', box: '' };
+    var host = el('div');
+    wrap.appendChild(host);
+    function findHw(list, key) {
+      var i;
+      for (i = 0; i < list.length; i++) if (list[i].key === key) return list[i];
+      return null;
+    }
+    function chipRow(label, list, key) {
+      var box = el('div', 'gd-hw-step no-print');
+      box.appendChild(el('p', 'gd-kicker', label));
+      var row = el('div', 'gd-chips');
+      list.forEach(function (item) {
+        var b = el('button', 'gd-chip' + (sel[key] === item.key ? ' is-on' : ''), item.label);
+        b.type = 'button';
+        b.addEventListener('click', function () {
+          sel[key] = item.key;
+          paint();
+        });
+        row.appendChild(b);
+      });
+      box.appendChild(row);
+      host.appendChild(box);
+    }
+    function paint() {
+      host.textContent = '';
+      chipRow('1 · What are you mounting?', H.devices, 'device');
+      chipRow('2 · Wall / structure', H.walls, 'wall');
+      chipRow('3 · Raceway / environment', H.raceways, 'raceway');
+      chipRow('4 · Box / mount style', H.boxes, 'box');
+      var spec = H.resolveMount && H.resolveMount(sel);
+      if (!spec) {
+        host.appendChild(el('p', 'gd-empty', 'Walk the four steps. Box, pipe, and fasteners fill in as you go.'));
+        return;
+      }
+      var card = el('article', 'gd-spec');
+      card.appendChild(el('p', 'gd-kicker', 'Field spec card'));
+      var path = [spec.device.label, spec.wall.label, spec.raceway.label, spec.box.label];
+      card.appendChild(el('h2', null, path.join(' · ')));
+      function block(title, item, extra) {
+        var b = el('div', 'gd-spec-block');
+        b.appendChild(el('h3', null, title));
+        if (item && item.name) {
+          b.appendChild(el('p', 'gd-spec-name', item.name));
+          if (item.mpn) b.appendChild(el('p', 'gd-spec-mpn', item.mpn));
+          if (item.desc) b.appendChild(el('p', null, item.desc));
+        } else if (extra) {
+          b.appendChild(el('p', null, extra));
+        }
+        card.appendChild(b);
+      }
+      block('Box / mount', spec.primary);
+      block('Raceway / fittings', spec.hook);
+      var fast = el('div', 'gd-spec-block');
+      fast.appendChild(el('h3', null, 'Required fastener'));
+      fast.appendChild(el('p', null, spec.fastener));
+      card.appendChild(fast);
+      if (spec.alts && spec.alts.length) {
+        var alt = el('div', 'gd-spec-block');
+        alt.appendChild(el('h3', null, 'Acceptable substitutes'));
+        spec.alts.forEach(function (a) {
+          alt.appendChild(el('p', null, (a.mpn ? a.mpn + ' — ' : '') + a.name + (a.desc ? '. ' + a.desc : '')));
+        });
+        card.appendChild(alt);
+      }
+      var warn = el('div', 'gd-spec-warn');
+      warn.appendChild(el('h3', null, 'Code & compliance'));
+      var ul = el('ul', 'gd-steps');
+      spec.warnings.forEach(function (w) { ul.appendChild(el('li', null, w)); });
+      warn.appendChild(ul);
+      card.appendChild(warn);
+      var addRow = el('div', 'gd-spec-add no-print');
+      var qty = document.createElement('input');
+      qty.type = 'number';
+      qty.min = '1';
+      qty.value = '1';
+      qty.className = 'gd-bom-qty';
+      qty.setAttribute('aria-label', 'Quantity');
+      var addBtn = el('button', 'gd-chip is-on', 'Add to pack list');
+      addBtn.type = 'button';
+      addBtn.addEventListener('click', function () {
+        var n = qty.value;
+        if (spec.primary) addBomItem({ mpn: spec.primary.mpn, name: spec.primary.name, desc: spec.primary.desc }, n);
+        if (spec.hook && spec.hook.mpn && spec.hook.mpn !== 'NONE' && spec.hook.mpn !== (spec.primary && spec.primary.mpn)) {
+          addBomItem({ mpn: spec.hook.mpn, name: spec.hook.name, desc: spec.hook.desc }, n);
+        }
+        if (spec.fastenerPart) addBomItem({ mpn: spec.fastenerPart.mpn, name: spec.fastenerPart.name, desc: spec.fastener }, n);
+        else addBomItem({ mpn: 'FASTENER', name: spec.fastener, desc: path.join(' · ') }, n);
         addBtn.textContent = 'Added';
         setTimeout(function () { addBtn.textContent = 'Add to pack list'; }, 1200);
       });
@@ -1992,6 +2142,13 @@
         sub: 'J-hooks, CADDY clips, fasteners, pack list',
         href: '/guides/hardware',
         hay: 'cable hardware picker caddy j-hook beam clamp batwing bridle ring sammys tapcon cat6a fiber fplp pack list bom anixter adi'
+      });
+      rows.unshift({
+        kind: 'guide',
+        title: 'Device mounting picker',
+        sub: 'Boxes, EMT, liquid-tite, FS, Tapcons',
+        href: '/guides/hardware?tab=mount',
+        hay: 'device mounting box 4 square fs fd liquid-tite lfmc emt pvc pendant pole camera reader strobe tapcon'
       });
       rows.unshift({
         kind: 'guide',
