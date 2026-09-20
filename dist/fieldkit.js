@@ -137,6 +137,10 @@
     if (p.indexOf('/guides/') !== 0) return;
     var gid = p.split('/')[2];
     if (!gid) return;
+    if (gid === 'hardware') {
+      recordVisit('hardware', { href: p + location.search, title: 'Cable hardware picker' });
+      return;
+    }
     if (gid === 'zones' || gid === 'doors' || gid === 'cameras') {
       var sheetTitle = { zones: 'Zone list', doors: 'Door programming', cameras: 'Camera directory' }[gid];
       recordVisit('sheet:' + gid, { href: p, title: sheetTitle });
@@ -332,6 +336,7 @@
       { href: '/guides/meter', title: 'Meter' },
       { href: '/guides/pinouts', title: 'Pinouts' },
       { href: '/guides/manuals', title: 'Manuals' },
+      { href: '/guides/hardware', title: 'Hardware' },
       { href: '/guides/zones', title: 'Zone list' },
       { href: '/guides/doors', title: 'Doors' },
       { href: '/guides/cameras', title: 'Cam directory' },
@@ -493,6 +498,13 @@
       row.appendChild(a);
     });
     dash.appendChild(row);
+
+    dash.appendChild(block('Rough-in', 'Hardware on the steel'));
+    var hwrow = el('div', 'fk-chip-row');
+    var hwa = el('a', 'fk-text-chip fk-link', 'Cable hardware picker');
+    hwa.href = '/guides/hardware';
+    hwrow.appendChild(hwa);
+    dash.appendChild(hwrow);
 
     dash.appendChild(block('Job paper', 'Printable leave-behinds'));
     var paper = el('div', 'fk-chip-row');

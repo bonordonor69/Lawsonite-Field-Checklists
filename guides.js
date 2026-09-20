@@ -40,7 +40,11 @@
   }
   function productHay(p) {
     if (!p) return '';
-    return [p.title, p.brand, p.use, p.look, (p.gotchas || []).join(' '), (p.tags || []).join(' ')].join(' ');
+    var d = window.__LAWSONITE_DEFAULTS_FOR__ ? window.__LAWSONITE_DEFAULTS_FOR__(p) : null;
+    var def = d
+      ? [d.user, d.pass, d.ip, d.extra, 'default login', 'factory default']
+      : [];
+    return [p.title, p.brand, p.use, p.look, (p.gotchas || []).join(' '), (p.tags || []).join(' ')].concat(def).join(' ');
   }
   var TRADES = [
     { key: 'all', label: 'All' },
@@ -106,6 +110,62 @@
   }
   function savePack(pack) {
     try { localStorage.setItem(PACK_KEY, JSON.stringify(pack)); } catch (e) {}
+  }
+  var BOM_KEY = 'lawsonite-bom-v1';
+  function loadBom() {
+    try {
+      var v = JSON.parse(localStorage.getItem(BOM_KEY) || '{}');
+      return { job: v.job || '', items: Array.isArray(v.items) ? v.items : [] };
+    } catch (e) {
+      return { job: '', items: [] };
+    }
+  }
+  function saveBom(bom) {
+    try { localStorage.setItem(BOM_KEY, JSON.stringify(bom)); } catch (e) {}
+  }
+  function addBomItem(item, qty) {
+    qty = parseInt(qty, 10);
+    if (!(qty > 0)) qty = 1;
+    var bom = loadBom();
+    var i;
+    for (i = 0; i < bom.items.length; i++) {
+      if (bom.items[i].mpn === item.mpn && bom.items[i].name === item.name) {
+        bom.items[i].qty += qty;
+        saveBom(bom);
+        return bom;
+      }
+    }
+    bom.items.push({
+      mpn: item.mpn || '',
+      name: item.name || '',
+      desc: item.desc || '',
+      qty: qty
+    });
+    saveBom(bom);
+    return bom;
+  }
+  function bomText() {
+    var bom = loadBom();
+    var pack = loadPack();
+    var job = bom.job || (pack.title && pack.title !== 'Job pack' ? pack.title : 'Job');
+    var lines = [
+      'Lawsonite hardware pack list',
+      job,
+      new Date().toLocaleString(),
+      '',
+      'QTY\tMPN\tITEM',
+      '---\t---\t----'
+    ];
+    var i, it;
+    for (i = 0; i < bom.items.length; i++) {
+      it = bom.items[i];
+      lines.push(it.qty + '\t' + (it.mpn || '—') + '\t' + it.name + (it.desc ? ' — ' + it.desc : ''));
+    }
+    if (!bom.items.length) lines.push('(empty)');
+    lines.push('');
+    lines.push('Educational field aide. Confirm nVent CADDY catalog, AHJ, TIA, and NEC before you order.');
+    lines.push('Lawsonite by Tomcat Studios — lawsonite.tomcatstudios.com/guides/hardware');
+    return lines.join('\n');
   }
   function isPinned(id) {
     return loadPack().ids.indexOf(id) >= 0;
@@ -255,6 +315,25 @@
         d.appendChild(ul);
       }
       card.appendChild(d);
+    }
+    var fac = window.__LAWSONITE_DEFAULTS_FOR__ ? window.__LAWSONITE_DEFAULTS_FOR__(p) : (p.defaults || null);
+    if (fac) {
+      var fd = document.createElement('details');
+      fd.className = 'gd-more gd-defaults';
+      if (opts.open) fd.open = true;
+      fd.appendChild(el('summary', null, 'Factory defaults'));
+      var dl = el('dl', 'gd-kv gd-defaults-kv');
+      [['User / installer', fac.user], ['Password / master', fac.pass], ['Default IP', fac.ip]].forEach(function (pair) {
+        if (!pair[1]) return;
+        var row = el('div');
+        row.appendChild(el('dt', null, pair[0]));
+        row.appendChild(el('dd', null, pair[1]));
+        dl.appendChild(row);
+      });
+      fd.appendChild(dl);
+      if (fac.extra) fd.appendChild(el('p', 'gd-defaults-extra', fac.extra));
+      fd.appendChild(el('p', 'gd-mini', 'Change these. Official sheet wins. Not a backdoor list — if they still work, the last tech left the job open.'));
+      card.appendChild(fd);
     }
     if (p.href) {
       var a = el('a', 'gd-link');
@@ -456,6 +535,15 @@
             kind: 'Paper'
           });
         });
+        [
+          { href: '/guides/hardware', title: 'Cable hardware picker', sub: 'CADDY-class spec card', icon: 'clip', hay: 'cable hardware caddy j-hook beam clamp sammys cat6a fiber' },
+          { href: '/guides/hardware?tab=cheats', title: 'Hardware cheat sheet', sub: 'Support vs substrate', icon: 'wire', hay: 'cheat sheet flange batwing bridle' },
+          { href: '/guides/hardware?tab=bom', title: 'Hardware pack list', sub: 'BOM for ADI / Anixter', icon: 'book', hay: 'bom pack list order hardware' }
+        ].forEach(function (h) {
+          if (filterKey !== 'all' && filterKey !== 'cheat') return;
+          if (!hayMatch(h.hay + ' ' + h.title, f)) return;
+          hits.push({ href: h.href, title: h.title, sub: h.sub, icon: h.icon, kind: 'Tool' });
+        });
         var seen = {};
         hits = hits.filter(function (h) {
           if (seen[h.href + h.title]) return false;
@@ -492,6 +580,32 @@
         }));
         packSec.appendChild(pl);
         groupsHost.appendChild(packSec);
+      }
+
+      if (filterKey === 'all' || filterKey === 'cheat') {
+        n += 2;
+        var hwSec = el('section', 'gd-section');
+        var hwh = el('div', 'gd-section-head');
+        hwh.appendChild(el('h2', null, 'Rough-in'));
+        hwh.appendChild(el('span', null, '2'));
+        hwSec.appendChild(hwh);
+        var hwl = el('div', 'gd-list');
+        hwl.appendChild(toolRow({
+          href: '/guides/hardware',
+          title: 'Cable hardware picker',
+          sub: 'Path, beam, flange, fill → CADDY-class spec',
+          icon: 'clip',
+          kind: 'Tool'
+        }));
+        hwl.appendChild(toolRow({
+          href: '/guides/hardware?tab=cheats',
+          title: 'Hardware cheat sheet',
+          sub: 'J-hook, hammer-on, batwing, bridle, Sammy’s',
+          icon: 'wire',
+          kind: 'Cheat'
+        }));
+        hwSec.appendChild(hwl);
+        groupsHost.appendChild(hwSec);
       }
 
       if (filterKey === 'all' || filterKey === 'docs') {
@@ -558,7 +672,8 @@
       fire: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3s5 5 5 9a5 5 0 1 1-10 0c0-2 2-4 3-6 0 2 2 2 2 4"/></svg>',
       wire: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 12h6M14 12h6M10 8v8M14 8v8"/></svg>',
       bell: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5"/><path d="M9 17a3 3 0 0 0 6 0"/></svg>',
-      user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3"/><path d="M5 19a7 7 0 0 1 14 0"/></svg>'
+      user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="3"/><path d="M5 19a7 7 0 0 1 14 0"/></svg>',
+      clip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 8h10M6 12h12M8 16h8"/><path d="M4 7l2-3h12l2 3v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z"/></svg>'
     };
     return I[name] || I.zap;
   }
@@ -1148,6 +1263,312 @@
     return page;
   }
 
+  function hwTab() {
+    try { return (new URLSearchParams(location.search)).get('tab') || 'picker'; }
+    catch (e) { return 'picker'; }
+  }
+  function renderHardware() {
+    var H = window.__LAWSONITE_HARDWARE__;
+    var page = el('div', 'page gd-page gd-hw-page');
+    page.appendChild(backLink('/field', 'Field'));
+    var pack = loadPack();
+    var origin = location.origin && location.origin !== 'null'
+      ? location.origin
+      : 'https://lawsonite.tomcatstudios.com';
+    page.appendChild(printLetterhead('Cable hardware', {
+      qrUrl: origin + '/guides/hardware',
+      qrCap: 'Hardware picker',
+      jobName: pack.title && pack.title !== 'Job pack' ? pack.title : ''
+    }));
+    var head = el('header', 'gd-hero no-print');
+    head.appendChild(el('p', 'gd-kicker', 'Rough-in'));
+    head.appendChild(el('h1', null, 'Cable hardware picker'));
+    head.appendChild(el('p', 'gd-lede',
+      'Path, substrate, flange, fill — then a field spec card with CADDY-class parts, the fastener, and the inspection warnings. Add counts to a pack list for ADI / Anixter.'));
+    page.appendChild(head);
+
+    var tab = hwTab();
+    var tabs = el('div', 'gd-pack-tools no-print');
+    [['picker', 'Picker'], ['cheats', 'Cheat sheet'], ['bom', 'Pack list']].forEach(function (t) {
+      var a = el('a', 'gd-chip fk-link' + (tab === t[0] ? ' is-on' : ''), t[1]);
+      a.href = t[0] === 'picker' ? '/guides/hardware' : '/guides/hardware?tab=' + t[0];
+      tabs.appendChild(a);
+    });
+    page.appendChild(tabs);
+
+    if (!H || !H.resolve) {
+      page.appendChild(el('p', 'gd-empty', 'Loading hardware dictionary…'));
+      return page;
+    }
+    if (tab === 'cheats') {
+      page.appendChild(renderHardwareCheats(H));
+      return page;
+    }
+    if (tab === 'bom') {
+      page.appendChild(renderBomList());
+      return page;
+    }
+    page.appendChild(renderHardwarePicker(H));
+    return page;
+  }
+  function renderHardwareCheats(H) {
+    var wrap = el('div', 'gd-sheet-wrap');
+    var table = el('table', 'gd-sheet gd-cheat-table');
+    var thead = document.createElement('thead');
+    var trh = document.createElement('tr');
+    ['Hardware type', 'Substrate / attachment', 'Best used for', 'Cable / load limits'].forEach(function (h) {
+      trh.appendChild(el('th', null, h));
+    });
+    thead.appendChild(trh);
+    table.appendChild(thead);
+    var tb = document.createElement('tbody');
+    (H.cheat || []).forEach(function (row) {
+      var tr = document.createElement('tr');
+      row.forEach(function (cell) { tr.appendChild(el('td', null, cell)); });
+      tb.appendChild(tr);
+    });
+    table.appendChild(tb);
+    wrap.appendChild(table);
+    var box = el('div');
+    var printBtn = el('button', 'gd-chip is-on no-print', 'Print cheat sheet');
+    printBtn.type = 'button';
+    printBtn.addEventListener('click', function () { window.print(); });
+    box.appendChild(printBtn);
+    box.appendChild(wrap);
+    box.appendChild(el('p', 'gd-foot',
+      'Trade equivalents. Confirm the nVent CADDY catalog, the cable listing, and the AHJ. Educational only.'));
+    return box;
+  }
+  function renderBomList() {
+    var box = el('div', 'gd-bom');
+    var bom = loadBom();
+    var pack = loadPack();
+    var jobInput = document.createElement('input');
+    jobInput.className = 'gd-search no-print';
+    jobInput.value = bom.job || (pack.title && pack.title !== 'Job pack' ? pack.title : '');
+    jobInput.placeholder = 'Job name on the export';
+    jobInput.addEventListener('change', function () {
+      var b = loadBom();
+      b.job = jobInput.value.trim();
+      saveBom(b);
+    });
+    box.appendChild(jobInput);
+    var list = el('div', 'gd-bom-list');
+    function paint() {
+      bom = loadBom();
+      list.textContent = '';
+      if (!bom.items.length) {
+        list.appendChild(el('p', 'gd-empty', 'Nothing on the pack list yet. Run the picker and tap Add to pack list.'));
+        return;
+      }
+      bom.items.forEach(function (it, idx) {
+        var row = el('div', 'gd-bom-row');
+        var qty = document.createElement('input');
+        qty.type = 'number';
+        qty.min = '1';
+        qty.className = 'gd-bom-qty';
+        qty.value = String(it.qty);
+        qty.addEventListener('change', function () {
+          var b = loadBom();
+          b.items[idx].qty = Math.max(1, parseInt(qty.value, 10) || 1);
+          saveBom(b);
+        });
+        row.appendChild(qty);
+        var text = el('div', 'gd-bom-text');
+        text.appendChild(el('strong', null, it.name));
+        text.appendChild(el('span', null, (it.mpn ? it.mpn + ' · ' : '') + (it.desc || '')));
+        row.appendChild(text);
+        var rm = el('button', 'gd-chip', 'Remove');
+        rm.type = 'button';
+        rm.addEventListener('click', function () {
+          var b = loadBom();
+          b.items.splice(idx, 1);
+          saveBom(b);
+          paint();
+        });
+        row.appendChild(rm);
+        list.appendChild(row);
+      });
+    }
+    paint();
+    box.appendChild(list);
+    var tools = el('div', 'gd-pack-tools no-print');
+    function currentText() {
+      var b = loadBom();
+      if (jobInput.value.trim()) {
+        b.job = jobInput.value.trim();
+        saveBom(b);
+      }
+      return bomText();
+    }
+    var copyBtn = el('button', 'gd-chip is-on', 'Copy list');
+    copyBtn.type = 'button';
+    copyBtn.addEventListener('click', function () {
+      var t = currentText();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t).then(function () { copyBtn.textContent = 'Copied'; });
+      } else window.prompt('Copy pack list', t);
+    });
+    var dlBtn = el('button', 'gd-chip', 'Download .txt');
+    dlBtn.type = 'button';
+    dlBtn.addEventListener('click', function () {
+      var t = currentText();
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([t], { type: 'text/plain' }));
+      a.download = 'lawsonite-pack-list.txt';
+      a.click();
+    });
+    var mailBtn = el('a', 'gd-chip fk-link', 'Email list');
+    mailBtn.addEventListener('click', function (ev) {
+      var t = currentText();
+      mailBtn.href = 'mailto:?subject=' + encodeURIComponent('Hardware pack list') +
+        '&body=' + encodeURIComponent(t);
+      if (!t) ev.preventDefault();
+    });
+    var clearBtn = el('button', 'gd-chip', 'Clear list');
+    clearBtn.type = 'button';
+    clearBtn.addEventListener('click', function () {
+      saveBom({ job: jobInput.value.trim(), items: [] });
+      paint();
+    });
+    tools.appendChild(copyBtn);
+    tools.appendChild(dlBtn);
+    tools.appendChild(mailBtn);
+    tools.appendChild(clearBtn);
+    box.appendChild(tools);
+    var pre = el('pre', 'gd-bom-preview only-print');
+    pre.textContent = bomText();
+    box.appendChild(pre);
+    return box;
+  }
+  function renderHardwarePicker(H) {
+    var wrap = el('div', 'gd-hw-picker');
+    var sel = { cable: '', substrate: '', flange: '', size: '' };
+    var host = el('div');
+    wrap.appendChild(host);
+
+    function chipRow(label, list, key, force) {
+      var sub = findHw(H.substrates, sel.substrate);
+      if (key === 'flange' && !(sub && sub.flange) && !force) return;
+      var box = el('div', 'gd-hw-step no-print');
+      box.appendChild(el('p', 'gd-kicker', label));
+      var row = el('div', 'gd-chips');
+      list.forEach(function (item) {
+        var b = el('button', 'gd-chip' + (sel[key] === item.key ? ' is-on' : ''), item.label);
+        b.type = 'button';
+        b.addEventListener('click', function () {
+          sel[key] = item.key;
+          if (key === 'substrate' && !(item.flange)) sel.flange = '';
+          paint();
+        });
+        row.appendChild(b);
+      });
+      box.appendChild(row);
+      host.appendChild(box);
+    }
+    function findHw(list, key) {
+      var i;
+      for (i = 0; i < list.length; i++) if (list[i].key === key) return list[i];
+      return null;
+    }
+    function addLine(spec, item, extra, qty) {
+      if (!item) return;
+      addBomItem({
+        mpn: item.mpn || '',
+        name: item.name || extra || '',
+        desc: item.desc || extra || ''
+      }, qty);
+    }
+    function paint() {
+      host.textContent = '';
+      chipRow('1 · Cable / pathway', H.cables, 'cable');
+      chipRow('2 · Substrate / mounting surface', H.substrates, 'substrate');
+      chipRow('3 · Flange / surface thickness', H.flanges, 'flange');
+      chipRow('4 · Pathway size / fill', H.sizes, 'size');
+      var spec = H.resolve(sel);
+      if (!spec) {
+        host.appendChild(el('p', 'gd-empty',
+          sel.substrate && findHw(H.substrates, sel.substrate).flange && !sel.flange
+            ? 'Pick the flange thickness — hammer-on clips are sized to the beam.'
+            : 'Walk the four steps. The spec card fills in as you go.'));
+        return;
+      }
+      var card = el('article', 'gd-spec');
+      card.appendChild(el('p', 'gd-kicker', 'Field spec card'));
+      var path = [spec.cable.label, spec.substrate.label];
+      if (spec.flange) path.push(spec.flange.label);
+      path.push(spec.size.label);
+      card.appendChild(el('h2', null, path.join(' · ')));
+
+      function block(title, item, extra) {
+        var b = el('div', 'gd-spec-block');
+        b.appendChild(el('h3', null, title));
+        if (item && item.name) {
+          b.appendChild(el('p', 'gd-spec-name', item.name));
+          if (item.mpn) b.appendChild(el('p', 'gd-spec-mpn', item.mpn));
+          if (item.desc) b.appendChild(el('p', null, item.desc));
+        } else if (extra) {
+          b.appendChild(el('p', null, extra));
+        }
+        card.appendChild(b);
+      }
+      block('Primary support hardware', spec.primary);
+      block('Cable support (J-hook / tray)', spec.hook);
+      var fast = el('div', 'gd-spec-block');
+      fast.appendChild(el('h3', null, 'Required fastener'));
+      fast.appendChild(el('p', null, spec.fastener));
+      card.appendChild(fast);
+      if (spec.alts && spec.alts.length) {
+        var alt = el('div', 'gd-spec-block');
+        alt.appendChild(el('h3', null, 'Acceptable substitutes'));
+        spec.alts.forEach(function (a) {
+          alt.appendChild(el('p', null, (a.mpn ? a.mpn + ' — ' : '') + a.name + (a.desc ? '. ' + a.desc : '')));
+        });
+        card.appendChild(alt);
+      }
+      var warn = el('div', 'gd-spec-warn');
+      warn.appendChild(el('h3', null, 'Code & compliance'));
+      var ul = el('ul', 'gd-steps');
+      spec.warnings.forEach(function (w) { ul.appendChild(el('li', null, w)); });
+      warn.appendChild(ul);
+      card.appendChild(warn);
+
+      var addRow = el('div', 'gd-spec-add no-print');
+      var qty = document.createElement('input');
+      qty.type = 'number';
+      qty.min = '1';
+      qty.value = '1';
+      qty.className = 'gd-bom-qty';
+      qty.setAttribute('aria-label', 'Quantity');
+      var addBtn = el('button', 'gd-chip is-on', 'Add to pack list');
+      addBtn.type = 'button';
+      addBtn.addEventListener('click', function () {
+        var n = qty.value;
+        addLine(spec, spec.primary, '', n);
+        if (spec.hook && (!spec.primary || spec.hook.mpn !== spec.primary.mpn)) {
+          addLine(spec, spec.hook, '', n);
+        }
+        addBomItem({ mpn: 'FASTENER', name: spec.fastener, desc: path.join(' · ') }, n);
+        addBtn.textContent = 'Added';
+        setTimeout(function () { addBtn.textContent = 'Add to pack list'; }, 1200);
+      });
+      addRow.appendChild(el('span', null, 'Qty'));
+      addRow.appendChild(qty);
+      addRow.appendChild(addBtn);
+      var printBtn = el('button', 'gd-chip', 'Print card');
+      printBtn.type = 'button';
+      printBtn.addEventListener('click', function () { window.print(); });
+      addRow.appendChild(printBtn);
+      var toBom = el('a', 'gd-chip fk-link', 'Open pack list');
+      toBom.href = '/guides/hardware?tab=bom';
+      addRow.appendChild(toBom);
+      card.appendChild(addRow);
+      host.appendChild(card);
+    }
+    paint();
+    return wrap;
+  }
+
   function renderPack() {
     var sp;
     try { sp = new URLSearchParams(location.search); } catch (e) { sp = new URLSearchParams(); }
@@ -1331,6 +1752,7 @@
     else {
       var id = path.split('/').pop();
       if (id === 'pack') mount(renderPack());
+      else if (id === 'hardware') mount(renderHardware());
       else if (JOB_SHEETS[id]) mount(renderJobSheet(id));
       else mount(renderGuide(id));
     }
@@ -1376,9 +1798,17 @@
       qs.src = '/qrcode.js';
       qs.onload = function () {
         var id = pathOf().split('/').pop();
-        if (id === 'pack' || JOB_SHEETS[id]) route();
+        if (id === 'pack' || JOB_SHEETS[id] || id === 'hardware') route();
       };
       document.head.appendChild(qs);
+    }
+    if (!window.__LAWSONITE_HARDWARE__) {
+      var hs = document.createElement('script');
+      hs.src = '/hardware-data.js';
+      hs.onload = function () {
+        if (pathOf().split('/').pop() === 'hardware') route();
+      };
+      document.head.appendChild(hs);
     }
     start();
   }
@@ -1417,6 +1847,27 @@
           href: '/guides/' + id,
           hay: (spec.title + ' ' + spec.sub + ' ' + spec.lede + ' printable leave-behind job paper').toLowerCase()
         });
+      });
+      rows.unshift({
+        kind: 'guide',
+        title: 'Cable hardware picker',
+        sub: 'J-hooks, CADDY clips, fasteners, pack list',
+        href: '/guides/hardware',
+        hay: 'cable hardware picker caddy j-hook beam clamp batwing bridle ring sammys tapcon cat6a fiber fplp pack list bom anixter adi'
+      });
+      rows.unshift({
+        kind: 'guide',
+        title: 'Hardware cheat sheet',
+        sub: 'Support types vs substrate vs load',
+        href: '/guides/hardware?tab=cheats',
+        hay: 'hardware cheat sheet flange clip j-hook t-grid drop wire bridle ring'
+      });
+      rows.unshift({
+        kind: 'doc',
+        title: 'Hardware pack list',
+        sub: 'BOM export for ADI / Anixter',
+        href: '/guides/hardware?tab=bom',
+        hay: 'bom pack list bill of materials adi anixter order hardware'
       });
       allProducts().forEach(function (pr) {
         var q = encodeURIComponent((pr.title || '').split('/')[0].trim());
