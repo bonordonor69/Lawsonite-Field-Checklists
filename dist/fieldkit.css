@@ -343,6 +343,22 @@ body {
   width: 4.5rem;
   flex: none;
 }
+.fk-job-row { align-items: center; }
+.fk-job-sel {
+  flex: 1 1 12rem;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  padding: 0.35rem 0.65rem;
+}
+.fk-job-row button.fk-text-chip {
+  appearance: none;
+  cursor: pointer;
+}
 .fk-print-lmark {
   display: none;
   width: 56px;

@@ -348,18 +348,7 @@
     });
     dash.appendChild(grow);
 
-    try {
-      var pack = JSON.parse(localStorage.getItem('lawsonite-jobpack-v1') || '{}');
-      var pn = pack && Array.isArray(pack.ids) ? pack.ids.length : 0;
-      if (pn) {
-        dash.appendChild(block('This job', pn + ' pinned cards'));
-        var prow = el('div', 'fk-chip-row');
-        var pa = el('a', 'fk-text-chip fk-link', (pack.title || 'Job pack') + ' · QR');
-        pa.href = '/guides/pack';
-        prow.appendChild(pa);
-        dash.appendChild(prow);
-      }
-    } catch (e) {}
+    appendJobSwitcher(dash);
 
     dash.appendChild(block('Grab a number', 'One-thumb estimators'));
     var row = el('div', 'fk-calc-row');
@@ -476,9 +465,54 @@
 
   function landingDashSig() {
     var pack = '';
+    var job = '';
     try { pack = localStorage.getItem('lawsonite-jobpack-v1') || ''; } catch (e) {}
+    try { job = localStorage.getItem('lawsonite-jobs-v1') || ''; } catch (e) {}
     return state.recents.map(function (r) { return r.id; }).join(',') + '|' +
-      state.favs.map(function (f) { return f.id; }).join(',') + '|' + pack;
+      state.favs.map(function (f) { return f.id; }).join(',') + '|' + pack + '|' + job;
+  }
+  function appendJobSwitcher(dash) {
+    var api = window.__LAWSONITE_JOBS__;
+    var row = el('div', 'fk-chip-row fk-job-row');
+    if (api && api.state) {
+      var s = api.state();
+      var cur = api.current() || {};
+      var n = cur.pack && cur.pack.ids ? cur.pack.ids.length : 0;
+      dash.appendChild(block('This job', (cur.name || 'Job') + (n ? ' · ' + n + ' pins' : '')));
+      var sel = document.createElement('select');
+      sel.className = 'fk-job-sel';
+      sel.setAttribute('aria-label', 'Current job');
+      s.jobs.forEach(function (j) {
+        var o = document.createElement('option');
+        o.value = j.id;
+        var pins = j.pack && j.pack.ids ? j.pack.ids.length : 0;
+        o.textContent = (j.name || 'Job') + (pins ? ' · ' + pins : '');
+        sel.appendChild(o);
+      });
+      sel.value = s.current;
+      sel.addEventListener('change', function () {
+        api.switchTo(sel.value);
+        enhanceLanding();
+        renderDash(true);
+      });
+      row.appendChild(sel);
+      var add = el('button', 'fk-text-chip', '+ Job');
+      add.type = 'button';
+      add.addEventListener('click', function () {
+        var name = window.prompt('Name this job', '');
+        if (name === null) return;
+        api.create(name.trim() || '');
+        enhanceLanding();
+        renderDash(true);
+      });
+      row.appendChild(add);
+    } else {
+      dash.appendChild(block('This job', 'Pins, sheets, pack list'));
+    }
+    var pa = el('a', 'fk-text-chip fk-link', 'Open pack / QR');
+    pa.href = '/guides/pack';
+    row.appendChild(pa);
+    dash.appendChild(row);
   }
 
   function renderLandingDash(host) {
@@ -519,18 +553,7 @@
     });
     dash.appendChild(paper);
 
-    try {
-      var pack = JSON.parse(localStorage.getItem('lawsonite-jobpack-v1') || '{}');
-      var n = pack && Array.isArray(pack.ids) ? pack.ids.length : 0;
-      if (n) {
-        dash.appendChild(block('This job', n + ' pinned cards'));
-        var prow = el('div', 'fk-chip-row');
-        var pa = el('a', 'fk-text-chip fk-link', (pack.title || 'Job pack') + ' · QR');
-        pa.href = '/guides/pack';
-        prow.appendChild(pa);
-        dash.appendChild(prow);
-      }
-    } catch (e) {}
+    appendJobSwitcher(dash);
 
     if (state.recents.length) {
       dash.appendChild(block('Recent', null));

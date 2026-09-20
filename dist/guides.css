@@ -17,6 +17,37 @@ body.fk-guides .disclaimer-banner { display: none !important; }
   margin: 0 auto;
   padding: 0.75rem 1rem calc(5.8rem + env(safe-area-inset-bottom, 0px));
 }
+.gd-jobbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.65rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.gd-jobbar-lab {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.gd-jobbar-sel,
+.fk-job-sel {
+  flex: 1 1 10rem;
+  min-height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  padding: 0.3rem 0.55rem;
+}
+.gd-jobbar .gd-chip { min-height: 40px; padding: 0.3rem 0.7rem; }
 .gd-page { display: grid; gap: 0.85rem; }
 
 .gd-hero {

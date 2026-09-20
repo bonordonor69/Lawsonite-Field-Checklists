@@ -99,29 +99,143 @@
   }
 
   var PACK_KEY = 'lawsonite-jobpack-v1';
+  var BOM_KEY = 'lawsonite-bom-v1';
+  var FORMS_KEY = 'lawsonite-jobforms-v1';
+  var JOBS_KEY = 'lawsonite-jobs-v1';
   var MAX_PINS = 24;
-  function loadPack() {
+  var MAX_JOBS = 24;
+  function jobId() {
+    return Date.now().toString(36) + Math.floor(Math.random() * 1e5).toString(36);
+  }
+  function readJSON(key, fallback) {
     try {
-      var v = JSON.parse(localStorage.getItem(PACK_KEY) || '{}');
-      return { title: v.title || 'Job pack', ids: Array.isArray(v.ids) ? v.ids.slice() : [] };
-    } catch (e) {
-      return { title: 'Job pack', ids: [] };
+      var v = JSON.parse(localStorage.getItem(key) || 'null');
+      return v == null ? fallback : v;
+    } catch (e) { return fallback; }
+  }
+  function writeJSON(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) {}
+  }
+  function blankJob(name) {
+    var n = String(name || '').trim() || 'Job';
+    return {
+      id: jobId(),
+      name: n,
+      pack: { title: n, ids: [] },
+      forms: { zones: [], doors: [], cameras: [] },
+      bom: { items: [] }
+    };
+  }
+  function currentJobFrom(s) {
+    var i;
+    for (i = 0; i < s.jobs.length; i++) if (s.jobs[i].id === s.current) return s.jobs[i];
+    return s.jobs[0];
+  }
+  function loadJobsState() {
+    var s = readJSON(JOBS_KEY, null);
+    if (s && Array.isArray(s.jobs) && s.jobs.length) {
+      if (!s.jobs.some(function (j) { return j.id === s.current; })) s.current = s.jobs[0].id;
+      return s;
     }
+    var pack = readJSON(PACK_KEY, {}) || {};
+    var forms = readJSON(FORMS_KEY, {}) || {};
+    var bom = readJSON(BOM_KEY, {}) || {};
+    var name = (pack.title && pack.title !== 'Job pack') ? pack.title : (bom.job || 'Job');
+    var job = blankJob(name);
+    job.pack = { title: pack.title || name, ids: Array.isArray(pack.ids) ? pack.ids.slice() : [] };
+    job.forms = {
+      zones: Array.isArray(forms.zones) ? forms.zones : [],
+      doors: Array.isArray(forms.doors) ? forms.doors : [],
+      cameras: Array.isArray(forms.cameras) ? forms.cameras : []
+    };
+    job.bom = { items: Array.isArray(bom.items) ? bom.items : [] };
+    s = { current: job.id, jobs: [job] };
+    writeJSON(JOBS_KEY, s);
+    return s;
+  }
+  function saveJobsState(s) {
+    writeJSON(JOBS_KEY, s);
+    var j = currentJobFrom(s);
+    if (!j) return;
+    writeJSON(PACK_KEY, j.pack || { title: 'Job pack', ids: [] });
+    writeJSON(FORMS_KEY, j.forms || { zones: [], doors: [], cameras: [] });
+    writeJSON(BOM_KEY, { job: j.name || '', items: (j.bom && j.bom.items) || [] });
+  }
+  function currentJob() { return currentJobFrom(loadJobsState()); }
+  function patchCurrentJob(fn) {
+    var s = loadJobsState();
+    fn(currentJobFrom(s));
+    saveJobsState(s);
+  }
+  function afterJobChange() {
+    var path = pathOf();
+    if (path === '/guides/pack') {
+      var p = loadPack();
+      try { history.replaceState({}, '', packHref(p.ids, p.title)); } catch (e) {}
+    }
+    route();
+  }
+  function switchJob(id) {
+    var s = loadJobsState();
+    if (!s.jobs.some(function (j) { return j.id === id; })) return;
+    s.current = id;
+    saveJobsState(s);
+    afterJobChange();
+  }
+  function createJob(name) {
+    var s = loadJobsState();
+    if (s.jobs.length >= MAX_JOBS) return currentJob();
+    var job = blankJob(name || ('Job ' + (s.jobs.length + 1)));
+    s.jobs.unshift(job);
+    s.current = job.id;
+    saveJobsState(s);
+    afterJobChange();
+    return job;
+  }
+  function deleteJob(id) {
+    var s = loadJobsState();
+    if (s.jobs.length < 2) return;
+    s.jobs = s.jobs.filter(function (j) { return j.id !== id; });
+    if (s.current === id) s.current = s.jobs[0].id;
+    saveJobsState(s);
+    afterJobChange();
+  }
+  function loadPack() {
+    var p = currentJob().pack || {};
+    return { title: p.title || 'Job pack', ids: Array.isArray(p.ids) ? p.ids.slice() : [] };
   }
   function savePack(pack) {
-    try { localStorage.setItem(PACK_KEY, JSON.stringify(pack)); } catch (e) {}
+    patchCurrentJob(function (j) {
+      j.pack = { title: pack.title || 'Job pack', ids: (pack.ids || []).slice() };
+      if (pack.title && pack.title !== 'Job pack') j.name = pack.title;
+    });
   }
-  var BOM_KEY = 'lawsonite-bom-v1';
   function loadBom() {
-    try {
-      var v = JSON.parse(localStorage.getItem(BOM_KEY) || '{}');
-      return { job: v.job || '', items: Array.isArray(v.items) ? v.items : [] };
-    } catch (e) {
-      return { job: '', items: [] };
-    }
+    var j = currentJob();
+    return { job: j.name || '', items: Array.isArray(j.bom && j.bom.items) ? j.bom.items.slice() : [] };
   }
   function saveBom(bom) {
-    try { localStorage.setItem(BOM_KEY, JSON.stringify(bom)); } catch (e) {}
+    patchCurrentJob(function (j) {
+      j.bom = { items: Array.isArray(bom.items) ? bom.items : [] };
+      if (bom.job && String(bom.job).trim()) j.name = String(bom.job).trim();
+    });
+  }
+  function loadForms() {
+    var f = currentJob().forms || {};
+    return {
+      zones: Array.isArray(f.zones) ? f.zones : [],
+      doors: Array.isArray(f.doors) ? f.doors : [],
+      cameras: Array.isArray(f.cameras) ? f.cameras : []
+    };
+  }
+  function saveForms(f) {
+    patchCurrentJob(function (j) {
+      j.forms = {
+        zones: Array.isArray(f.zones) ? f.zones : [],
+        doors: Array.isArray(f.doors) ? f.doors : [],
+        cameras: Array.isArray(f.cameras) ? f.cameras : []
+      };
+    });
   }
   function addBomItem(item, qty) {
     qty = parseInt(qty, 10);
@@ -403,8 +517,48 @@
     return foot;
   }
 
+  function jobBar() {
+    var s = loadJobsState();
+    var bar = el('div', 'gd-jobbar no-print');
+    bar.appendChild(el('span', 'gd-jobbar-lab', 'Job'));
+    var sel = document.createElement('select');
+    sel.className = 'gd-jobbar-sel';
+    sel.setAttribute('aria-label', 'Current job');
+    s.jobs.forEach(function (j) {
+      var o = document.createElement('option');
+      o.value = j.id;
+      var pins = j.pack && j.pack.ids ? j.pack.ids.length : 0;
+      o.textContent = (j.name || 'Job') + (pins ? ' · ' + pins + ' pins' : '');
+      sel.appendChild(o);
+    });
+    sel.value = s.current;
+    sel.addEventListener('change', function () { switchJob(sel.value); });
+    bar.appendChild(sel);
+    var add = el('button', 'gd-chip', '+ Job');
+    add.type = 'button';
+    add.title = 'Start a new job — pins, sheets, and pack list stay on the old one';
+    add.addEventListener('click', function () {
+      var name = window.prompt('Name this job', '');
+      if (name === null) return;
+      createJob(name.trim() || ('Job ' + (loadJobsState().jobs.length + 1)));
+    });
+    bar.appendChild(add);
+    if (s.jobs.length > 1) {
+      var del = el('button', 'gd-chip', 'Delete');
+      del.type = 'button';
+      del.addEventListener('click', function () {
+        var j = currentJob();
+        if (window.confirm('Delete “' + (j.name || 'Job') + '”? Pins, zone/door/camera sheets, and the hardware list for this job go with it.')) {
+          deleteJob(j.id);
+        }
+      });
+      bar.appendChild(del);
+    }
+    return bar;
+  }
   function mount(node) {
     root.innerHTML = '';
+    root.appendChild(jobBar());
     root.appendChild(node);
     root.appendChild(studioFoot());
     window.scrollTo(0, 0);
@@ -1021,7 +1175,6 @@
     return box;
   }
 
-  var FORMS_KEY = 'lawsonite-jobforms-v1';
   var JOB_SHEETS = {
     zones: {
       title: 'Zone list',
@@ -1099,21 +1252,6 @@
     }
   };
   var PAPER_IDS = ['zones', 'doors', 'cameras'];
-  function loadForms() {
-    try {
-      var v = JSON.parse(localStorage.getItem(FORMS_KEY) || '{}');
-      return {
-        zones: Array.isArray(v.zones) ? v.zones : [],
-        doors: Array.isArray(v.doors) ? v.doors : [],
-        cameras: Array.isArray(v.cameras) ? v.cameras : []
-      };
-    } catch (e) {
-      return { zones: [], doors: [], cameras: [] };
-    }
-  }
-  function saveForms(f) {
-    try { localStorage.setItem(FORMS_KEY, JSON.stringify(f)); } catch (e) {}
-  }
   function padSheetRows(kind, list) {
     var spec = JOB_SHEETS[kind];
     var rows = (list || []).map(function (r) { return r && typeof r === 'object' ? r : {}; });
@@ -1881,5 +2019,12 @@
       });
       return rows;
     }
+  };
+  window.__LAWSONITE_JOBS__ = {
+    state: loadJobsState,
+    current: currentJob,
+    switchTo: switchJob,
+    create: createJob,
+    remove: deleteJob
   };
 })();

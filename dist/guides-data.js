@@ -167,9 +167,9 @@ window.__LAWSONITE_GUIDES__ = {
   P.pinouts = {
     id: 'pinouts', icon: 'wire', kind: 'cheat', eyebrow: 'Cheat sheet',
     title: 'Pinouts & pairs',
-    hub: 'RJ45, Wiegand, OSDP, lock, PoE',
-    lede: 'The colors people argue about on the truck. Always check the reader card — HID is common, not universal.',
-    tags: ['568B', 'RJ45', 'Wiegand', 'OSDP', 'pinout', 'PoE', 'wiring'],
+    hub: 'RJ45, Wiegand, OSDP, lock, PoE, 12-strand fiber',
+    lede: 'The colors people argue about on the truck. Always check the reader card — HID is common, not universal. Fiber colors below are TIA-598, not a guess.',
+    tags: ['568B', 'RJ45', 'Wiegand', 'OSDP', 'pinout', 'PoE', 'wiring', 'fiber', 'MPO', '12-strand', 'TIA-598'],
     related: [{ href: '/guides/poe', label: 'PoE classes' }, { href: '/guides/reader-dead', label: 'Reader dead' }],
     sections: [
       {
@@ -220,6 +220,34 @@ window.__LAWSONITE_GUIDES__ = {
       {
         type: 'h2', text: 'Maglock / strike at the door',
         body: 'Power pair to the coil. Bond / door-status is a separate supervised loop. REX / motion / crash bar is what lets people out. Fire-release is what drops the lock on alarm. Do not share a random negative with a reader unless the drawing says so.'
+      },
+      {
+        type: 'h2', text: '12-strand fiber (TIA-598)',
+        body: 'Same 12 colors whether it is tight-buffer indoor distribution, a loose-tube outdoor subunit, a fan-out kit, or an MPO-12 looking at the end with the key up. Position 1 is Blue. Do not invent a house color code — the next tech (and the OTDR trace) will hate you.'
+      },
+      {
+        type: 'svg',
+        caption: 'TIA-598 12-fiber: 1 Blue, 2 Orange, 3 Green, 4 Brown, 5 Slate, 6 White, 7 Red, 8 Black, 9 Yellow, 10 Violet, 11 Rose, 12 Aqua. MPO-12, key up, pin 1 at left.',
+        svg: '<svg viewBox="0 0 320 168" role="img" aria-label="12-strand TIA-598 fiber colors"><g font-size="8" font-weight="700" text-anchor="middle"><rect x="14" y="18" width="22" height="44" rx="3" fill="#2f80ed"/><text x="25" y="44" fill="#fff">1</text><rect x="38" y="18" width="22" height="44" rx="3" fill="#e67e22"/><text x="49" y="44" fill="#fff">2</text><rect x="62" y="18" width="22" height="44" rx="3" fill="#1e8449"/><text x="73" y="44" fill="#fff">3</text><rect x="86" y="18" width="22" height="44" rx="3" fill="#6e2c00"/><text x="97" y="44" fill="#fff">4</text><rect x="110" y="18" width="22" height="44" rx="3" fill="#7f8c8d"/><text x="121" y="44" fill="#fff">5</text><rect x="134" y="18" width="22" height="44" rx="3" fill="#ecf0f1" stroke="#999"/><text x="145" y="44" fill="#333">6</text><rect x="158" y="18" width="22" height="44" rx="3" fill="#c0392b"/><text x="169" y="44" fill="#fff">7</text><rect x="182" y="18" width="22" height="44" rx="3" fill="#1a1a1a"/><text x="193" y="44" fill="#fff">8</text><rect x="206" y="18" width="22" height="44" rx="3" fill="#f1c40f"/><text x="217" y="44" fill="#333">9</text><rect x="230" y="18" width="22" height="44" rx="3" fill="#8e44ad"/><text x="241" y="44" fill="#fff">10</text><rect x="254" y="18" width="22" height="44" rx="3" fill="#e91e8c"/><text x="265" y="44" fill="#fff">11</text><rect x="278" y="18" width="22" height="44" rx="3" fill="#1abc9c"/><text x="289" y="44" fill="#fff">12</text></g><g font-size="8" text-anchor="middle" fill="currentColor"><text x="25" y="78">Blu</text><text x="49" y="78">Org</text><text x="73" y="78">Grn</text><text x="97" y="78">Brn</text><text x="121" y="78">Slt</text><text x="145" y="78">Wht</text><text x="169" y="78">Red</text><text x="193" y="78">Blk</text><text x="217" y="78">Yel</text><text x="241" y="78">Vio</text><text x="265" y="78">Rs</text><text x="289" y="78">Aq</text></g><text x="160" y="104" text-anchor="middle" font-size="11" fill="currentColor">MPO-12 · key up · pin 1 left (Blue) → pin 12 right (Aqua)</text><text x="160" y="122" text-anchor="middle" font-size="10" fill="currentColor">Fan-out / pigtails use the same 12 colors on 900 µm buffers.</text><text x="160" y="140" text-anchor="middle" font-size="10" fill="currentColor">Type A cassette is 1:1. Type B flips 1↔12 (40/100G). Do not mix.</text><text x="160" y="158" text-anchor="middle" font-size="10" fill="currentColor">24-fiber adds a black tracer on 13–24, same color order.</text></svg>'
+      },
+      {
+        type: 'table', title: '12-fiber positions',
+        headers: ['Pos', 'Color', 'Field note'],
+        rows: [
+          ['1', 'Blue', 'MPO pin 1, key up, left'],
+          ['2', 'Orange', ''],
+          ['3', 'Green', ''],
+          ['4', 'Brown', ''],
+          ['5', 'Slate (gray)', 'Not “silver” — slate'],
+          ['6', 'White', 'Easy to lose in a white buffer tube'],
+          ['7', 'Red', ''],
+          ['8', 'Black', ''],
+          ['9', 'Yellow', 'Not “the fiber is SM because it is yellow” — SM jacket is yellow, this is fiber #9'],
+          ['10', 'Violet', ''],
+          ['11', 'Rose (pink)', ''],
+          ['12', 'Aqua', 'MPO pin 12. Aqua jacket elsewhere means OM3/OM4 — different conversation']
+        ],
+        foot: 'Polarity: Type A = straight 1–1. Type B = reversed 1–12 (common on 40/100G SR4). Type C = pair flip. Match the cassette to the trunk or you will light the wrong pin with a perfect loss reading. Educational only — the method drawing wins.'
       }
     ]
   };
