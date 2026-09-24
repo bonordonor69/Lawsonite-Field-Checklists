@@ -843,9 +843,9 @@ var qrcodegen;
     return QRC.encodeText(String(text || ' '), QRC.Ecc.MEDIUM);
   }
   function svg(text, px) {
-    px = px || 252;
+    px = px || 280;
     var qr = encode(text);
-    var border = 4;
+    var border = 6;
     var s = qr.size;
     var n = s + border * 2;
     var d = [];
@@ -860,12 +860,12 @@ var qrcodegen;
       '<path fill="#000000" d="' + d.join('') + '"/></svg>';
   }
   function mount(text, cssPx) {
-    cssPx = cssPx || 252;
+    cssPx = cssPx || 280;
     var qr = encode(text);
-    var border = 4;
+    var border = 6;
     var s = qr.size;
     var n = s + border * 2;
-    var scale = 10;
+    var scale = Math.max(10, Math.ceil(cssPx / n) || 10);
     var canvas = document.createElement('canvas');
     canvas.width = n * scale;
     canvas.height = n * scale;

@@ -301,13 +301,19 @@
     return '/guides/pack?' + q;
   }
   function packAbs(ids, title) {
-    var origin = location.origin && location.origin !== 'null'
+    var origin = location.origin && location.origin !== 'null' && location.protocol !== 'data:'
       ? location.origin
       : 'https://lawsonite.tomcatstudios.com';
-    return origin + packHref(ids, title);
+    if (String(origin).indexOf('data:') === 0) origin = 'https://lawsonite.tomcatstudios.com';
+    var href = packHref(ids, title);
+    if (href.indexOf('data:') === 0) href = '/guides/pack';
+    return origin + href;
   }
   function packQrUrl(ids, title) {
     var full = packAbs(ids, title);
+    if (full.indexOf('data:') === 0 || full.indexOf('http') !== 0) {
+      full = packAbs(ids, '');
+    }
     if (full.length <= 220) return full;
     return packAbs(ids, '');
   }
@@ -315,7 +321,7 @@
     try {
       var pro = JSON.parse(localStorage.getItem('lawsonite-pro-v0') || '{}');
       var brand = JSON.parse(localStorage.getItem('lawsonite-company-brand-v0') || '{}');
-      var shop = pro.plan === 'shop';
+      var shop = pro.plan === 'pro' || pro.plan === 'shop';
       var configured = !!(String(brand.companyName || '').trim() || brand.logoDataUrl);
       return { shop: shop && configured, brand: brand || {} };
     } catch (e) {
@@ -359,7 +365,7 @@
     row.appendChild(text);
     box.appendChild(row);
     if (opts.qrUrl) {
-      var qr = qrBox(opts.qrUrl, opts.qrCap || 'Scan', 96);
+      var qr = qrBox(opts.qrUrl, opts.qrCap || 'Scan to open this pack', 200);
       qr.classList.add('gd-qr-head');
       if (opts.qrPrintOnly) qr.classList.add('only-print');
       box.appendChild(qr);
@@ -367,21 +373,52 @@
     }
     return box;
   }
-  function qrBox(url, cap, cssPx) {
-    var wrap = el('div', 'gd-qr');
-    cssPx = cssPx || 252;
+  function paintQrInto(wrap, url, cssPx) {
+    wrap.querySelectorAll('canvas, svg, .gd-qr-fallback, .gd-qr-waiting').forEach(function (n) {
+      n.remove();
+    });
     try {
       if (window.LAWSONITE_QR && window.LAWSONITE_QR.mount) {
-        wrap.appendChild(window.LAWSONITE_QR.mount(url, cssPx));
-      } else if (window.LAWSONITE_QR && window.LAWSONITE_QR.svg) {
-        wrap.innerHTML = window.LAWSONITE_QR.svg(url, cssPx);
-      } else {
-        wrap.appendChild(el('p', 'gd-qr-fallback', url));
+        wrap.insertBefore(window.LAWSONITE_QR.mount(url, cssPx), wrap.firstChild);
+        return true;
       }
-    } catch (e) {
-      wrap.appendChild(el('p', 'gd-qr-fallback', url));
+      if (window.LAWSONITE_QR && window.LAWSONITE_QR.svg) {
+        var holder = document.createElement('div');
+        holder.innerHTML = window.LAWSONITE_QR.svg(url, cssPx);
+        var node = holder.firstChild;
+        if (node) wrap.insertBefore(node, wrap.firstChild);
+        return !!node;
+      }
+    } catch (e) {}
+    return false;
+  }
+  function qrBox(url, cap, cssPx) {
+    var wrap = el('div', 'gd-qr');
+    cssPx = cssPx || 280;
+    if (cssPx < 180) cssPx = 180;
+    var waiting = el('p', 'gd-qr-waiting muted', 'Preparing QR…');
+    wrap.appendChild(waiting);
+    wrap.appendChild(el('p', 'gd-qr-cap', cap || 'Scan to open this pack'));
+    var tries = 0;
+    var maxTries = 25;
+    function attempt() {
+      if (paintQrInto(wrap, url, cssPx)) {
+        var w = wrap.querySelector('.gd-qr-waiting');
+        if (w) w.remove();
+        return;
+      }
+      tries += 1;
+      if (tries < maxTries) {
+        setTimeout(attempt, 80);
+        return;
+      }
+      var w2 = wrap.querySelector('.gd-qr-waiting');
+      if (w2) w2.remove();
+      if (!wrap.querySelector('.gd-qr-fallback')) {
+        wrap.insertBefore(el('p', 'gd-qr-fallback', url), wrap.firstChild);
+      }
     }
-    wrap.appendChild(el('p', 'gd-qr-cap', cap || 'Scan for this job pack'));
+    attempt();
     return wrap;
   }
   function productCard(p, opts) {
@@ -1038,7 +1075,7 @@
       var n = pack.ids.length;
       packBar.appendChild(el('span', null, n ? (n + ' pinned for this job') : 'Pin cards for this job'));
       if (n) {
-        var open = el('a', 'gd-chip fk-link', 'Open pack / QR');
+        var open = el('a', 'gd-chip fk-link', 'Share pack (QR)');
         open.href = packHref(pack.ids, pack.title);
         packBar.appendChild(open);
       }
@@ -1284,7 +1321,7 @@
       a.href = '/guides/' + id;
       nav.appendChild(a);
     });
-    var pack = el('a', 'gd-chip fk-link', 'Job pack / QR');
+    var pack = el('a', 'gd-chip fk-link', 'Share pack (QR)');
     pack.href = '/guides/pack';
     nav.appendChild(pack);
     return nav;
@@ -1303,7 +1340,7 @@
     var jobName = pack.title && pack.title !== 'Job pack' ? pack.title : '';
     page.appendChild(printLetterhead(spec.title, {
       qrUrl: qUrl,
-      qrCap: pack.ids.length ? 'Job pack' : 'Open sheet',
+      qrCap: pack.ids.length ? 'Scan to open this pack' : 'Open sheet',
       jobName: jobName
     }));
     var head = el('header', 'gd-hero no-print');
@@ -1860,26 +1897,38 @@
   function renderPack() {
     var sp;
     try { sp = new URLSearchParams(location.search); } catch (e) { sp = new URLSearchParams(); }
-    var ids = (sp.get('i') || '').split(',').filter(Boolean);
+    var rawIds = (sp.get('i') || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean);
     var title = sp.get('t') || '';
     var local = loadPack();
-    if (!ids.length) ids = local.ids.slice();
+    if (!rawIds.length) rawIds = local.ids.slice();
     if (!title) title = local.title || 'Job pack';
+    var knownIds = [];
+    var missingIds = [];
+    rawIds.forEach(function (id) {
+      if (productByShort(id)) knownIds.push(id);
+      else missingIds.push(id);
+    });
+    var ids = knownIds.slice();
+    var packOk = ids.length > 0;
     if (ids.length && !(sp.get('i'))) {
       try { history.replaceState({}, '', packHref(ids, title)); } catch (e) {}
     }
 
     var page = el('div', 'page gd-page gd-pack');
     page.appendChild(backLink('/guides/manuals', 'Product cards'));
-    var url = packQrUrl(ids, title);
-    page.appendChild(printLetterhead(title, {
-      qrUrl: url,
-      qrCap: 'Job pack',
-      qrPrintOnly: true
-    }));
+    var url = packOk ? packQrUrl(ids, title) : '';
+    if (packOk) {
+      page.appendChild(printLetterhead(title, {
+        qrUrl: url,
+        qrCap: 'Scan to open this pack',
+        qrPrintOnly: true
+      }));
+    } else {
+      page.appendChild(printLetterhead(title, {}));
+    }
 
     var head = el('header', 'gd-hero');
-    head.appendChild(el('p', 'gd-kicker', 'Job pack'));
+    head.appendChild(el('p', 'gd-kicker', packOk ? 'Job pack' : 'Pack not found'));
     var titleInput = document.createElement('input');
     titleInput.className = 'gd-search gd-pack-title no-print';
     titleInput.value = title;
@@ -1888,19 +1937,25 @@
     head.appendChild(titleInput);
     head.appendChild(el('h1', 'only-print', title));
     head.appendChild(el('p', 'gd-lede no-print',
-      'Pin cards on the manuals page, name the job, print the pack or a panel QR. Free prints get the Lawsonite mark. Pro adds your company logo.'));
+      packOk
+        ? 'Pin cards on the manuals page, name the job, print the pack or a QR for the panel. Free prints get the Lawsonite mark. Pro adds your company logo.'
+        : 'This link has no matching product cards. Open Product cards, pin what you need, then share a fresh pack link.'));
     page.appendChild(head);
 
     var tools = el('div', 'gd-pack-tools no-print');
     var printBtn = el('button', 'gd-chip is-on', 'Print pack');
     printBtn.type = 'button';
+    printBtn.disabled = !packOk;
     printBtn.addEventListener('click', function () {
+      if (!packOk) return;
       document.body.classList.remove('gd-sticker-print');
       window.print();
     });
-    var stickerBtn = el('button', 'gd-chip', 'Print panel QR');
+    var stickerBtn = el('button', 'gd-chip', 'Print QR for this job pack');
     stickerBtn.type = 'button';
+    stickerBtn.disabled = !packOk;
     stickerBtn.addEventListener('click', function () {
+      if (!packOk) return;
       document.body.classList.add('gd-sticker-print');
       window.print();
     });
@@ -1909,7 +1964,9 @@
     });
     var copyBtn = el('button', 'gd-chip', 'Copy link');
     copyBtn.type = 'button';
+    copyBtn.disabled = !packOk;
     copyBtn.addEventListener('click', function () {
+      if (!packOk) return;
       var u = packAbs(ids, titleInput.value || title);
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(u).then(function () { copyBtn.textContent = 'Copied'; });
@@ -1937,44 +1994,61 @@
     page.appendChild(tools);
 
     var ident = el('div', 'gd-pack-ident');
-    ident.appendChild(qrBox(url));
-    var identText = el('div', 'gd-pack-ident-text');
-    identText.appendChild(el('p', 'gd-pack-url', url));
-    identText.appendChild(el('p', 'muted', 'Tape the QR on the can. Anyone who scans it gets this pack.'));
-    ident.appendChild(identText);
+    if (packOk) {
+      ident.appendChild(qrBox(url));
+      var identText = el('div', 'gd-pack-ident-text');
+      identText.appendChild(el('p', 'gd-pack-url', url));
+      identText.appendChild(el('p', 'muted', 'Tape the QR on the can. Anyone who scans it gets this pack.'));
+      ident.appendChild(identText);
+    } else {
+      ident.classList.add('gd-pack-ident-empty');
+      ident.appendChild(el('p', 'gd-empty', missingIds.length
+        ? ('Pack not found — no matching cards for: ' + missingIds.join(', ') + '.')
+        : 'No cards in this pack.'));
+      var go = el('a', 'gd-chip fk-link', 'Open Product cards');
+      go.href = '/guides/manuals';
+      ident.appendChild(go);
+    }
     page.appendChild(ident);
 
-    titleInput.addEventListener('change', function () {
-      var next = titleInput.value.trim() || 'Job pack';
-      var pack = loadPack();
-      pack.title = next;
-      if (!pack.ids.length) pack.ids = ids.slice();
-      savePack(pack);
-      title = next;
-      try { history.replaceState({}, '', packHref(ids, next)); } catch (e) {}
-      var abs = packAbs(ids, next);
-      var nextUrl = packQrUrl(ids, next);
-      page.querySelectorAll('.gd-qr').forEach(function (qr) {
-        var headQr = qr.classList.contains('gd-qr-head');
-        var fresh = qrBox(nextUrl, headQr ? 'Job pack' : 'Scan for this job pack', headQr ? 96 : 252);
-        if (headQr) {
-          fresh.classList.add('gd-qr-head');
-          if (qr.classList.contains('only-print')) fresh.classList.add('only-print');
-        }
-        qr.replaceWith(fresh);
+    if (packOk) {
+      titleInput.addEventListener('change', function () {
+        var next = titleInput.value.trim() || 'Job pack';
+        var pack = loadPack();
+        pack.title = next;
+        if (!pack.ids.length) pack.ids = ids.slice();
+        savePack(pack);
+        title = next;
+        try { history.replaceState({}, '', packHref(ids, next)); } catch (e) {}
+        var abs = packAbs(ids, next);
+        var nextUrl = packQrUrl(ids, next);
+        page.querySelectorAll('.gd-qr').forEach(function (qr) {
+          var headQr = qr.classList.contains('gd-qr-head');
+          var fresh = qrBox(nextUrl, 'Scan to open this pack', headQr ? 200 : 280);
+          if (headQr) {
+            fresh.classList.add('gd-qr-head');
+            if (qr.classList.contains('only-print')) fresh.classList.add('only-print');
+          }
+          qr.replaceWith(fresh);
+        });
+        var urlEl = ident.querySelector('.gd-pack-url');
+        if (urlEl) urlEl.textContent = abs;
+        var docEl = page.querySelector('.gd-letterhead-doc');
+        if (docEl) docEl.textContent = next;
+        var h1 = page.querySelector('.gd-hero h1');
+        if (h1) h1.textContent = next;
       });
-      var urlEl = ident.querySelector('.gd-pack-url');
-      if (urlEl) urlEl.textContent = abs;
-      var docEl = page.querySelector('.gd-letterhead-doc');
-      if (docEl) docEl.textContent = next;
-      var h1 = page.querySelector('.gd-hero h1');
-      if (h1) h1.textContent = next;
-    });
+    }
 
     var list = el('div', 'gd-product-list gd-pack-cards');
-    if (!ids.length) {
+    if (!rawIds.length) {
       list.appendChild(el('p', 'gd-empty', 'No cards pinned yet. Open Product cards and tap the star.'));
+    } else if (!packOk) {
+      list.appendChild(el('p', 'gd-empty', 'No cards — this pack link does not match any product cards. Do not tape a QR from an empty pack.'));
     } else {
+      if (missingIds.length) {
+        list.appendChild(el('p', 'gd-empty', 'Skipped unknown pins: ' + missingIds.join(', ') + '.'));
+      }
       ids.forEach(function (id) {
         var p = productByShort(id);
         if (!p) return;

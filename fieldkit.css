@@ -745,3 +745,15 @@ h1 { letter-spacing: -0.03em; }
   html { scroll-behavior: auto; }
   .fk-tile, .checklist-card-wrap, .category-card { transition: none; }
 }
+
+/* runner sticky sits above fk-tabbar on phone */
+@media (max-width: 860px) {
+  .runner-sticky-bar {
+    bottom: calc(var(--fk-nav-h, 4.35rem) + env(safe-area-inset-bottom, 0px)) !important;
+    padding-bottom: 0.55rem !important;
+  }
+  .checklist-runner,
+  .page.checklist-runner {
+    padding-bottom: calc(11.5rem + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
