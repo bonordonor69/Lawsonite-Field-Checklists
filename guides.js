@@ -510,7 +510,7 @@
   }
 
   var TIP_URL =
-    'https://www.paypal.com/donate/?business=tlawson1988%40gmail.com&currency_code=USD&item_name=Energy%20drink%20for%20Lawsonite';
+    'https://paypal.me/tomcatstudios';
   var TOMCAT_URL = 'https://tomcatstudios.com/';
   var TIP_PHRASES = [
     'Buy me a Monster',
