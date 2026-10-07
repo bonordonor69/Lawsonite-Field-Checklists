@@ -427,7 +427,7 @@
 
   function renderHomeHits(host, query) {
     buildIndex();
-    var kindLabel = { list: 'List', calc: 'Calc', guide: 'Guide', call: 'Call', doc: 'Manual' };
+    var kindLabel = { list: 'Checklist', calc: 'Calc', guide: 'Guide', call: 'Guide', doc: 'Manual' };
     var all = searchIndex(query, true);
     var items = all.filter(function (r) {
       return r.kind !== 'step' && r.kind !== 'tip';
@@ -513,26 +513,54 @@
       var js0 = readJSON('lawsonite-jobs-v1', null);
       if (js0 && js0.jobs && js0.jobs.length) cur = js0.jobs.filter(function (j) { return j.id === js0.current; })[0] || js0.jobs[0];
     }
-    if (cur) {
+    var jobCard = el('div', 'fk-home-card');
+    if (cur && !genericJobName(cur.name)) {
       var n = cur.pack && cur.pack.ids ? cur.pack.ids.length : 0;
-      dash.appendChild(block('This job', (cur.name || 'Job') + (n ? ' · ' + n + ' pins' : '')));
+      jobCard.appendChild(block('This job', cur.name + (n ? ' · ' + n + ' pins' : '')));
     } else {
-      dash.appendChild(block('This job', 'Job sheets, pins, paper, pack list'));
+      jobCard.appendChild(block('This job', 'Name this site'));
     }
     var js = el('a', 'fk-text-chip fk-link', 'Job sheets');
     js.href = '/jobsheets';
-    js.title = 'Saved job sheets, plus switch or start a job';
+    js.title = 'Saved job sheets, plus switch or start a site';
     row.appendChild(js);
-    var pa = el('a', 'fk-text-chip fk-link', 'Open pack / QR');
+    var pa = el('a', 'fk-text-chip fk-link', 'Pinned cards');
     pa.href = '/guides/pack';
+    pa.title = 'Product cards starred for this site';
     row.appendChild(pa);
-    dash.appendChild(row);
+    jobCard.appendChild(row);
+    dash.appendChild(jobCard);
+  }
+  function genericJobName(n) {
+    n = String(n || '').trim();
+    return !n || /^job( \d+)?$/i.test(n) || n === 'Job pack';
+  }
+  function homeCard(title, sub, row) {
+    var card = el('div', 'fk-home-card');
+    card.appendChild(block(title, sub));
+    if (row) card.appendChild(row);
+    return card;
   }
 
   function renderLandingDash(host) {
     var dash = el('div', 'fk-dash start-dash');
 
-    dash.appendChild(block('Or pick a trade', 'Trouble guides & checklists'));
+    if (state.recents.length) {
+      var recentCard = el('div', 'fk-home-card');
+      recentCard.appendChild(block('Recent', null));
+      var rl0 = el('ul', 'fk-list');
+      state.recents.forEach(function (r) {
+        var li = el('li');
+        var a = el('a', 'fk-link', r.title || r.id);
+        a.href = r.href || ('/checklist/' + r.id);
+        li.appendChild(a);
+        if (r.ts) li.appendChild(el('span', 'fk-meta', fmtWhen(r.ts)));
+        rl0.appendChild(li);
+      });
+      recentCard.appendChild(rl0);
+      dash.appendChild(recentCard);
+    }
+
     var row = el('div', 'fk-chip-row start-trades');
     [
       { trade: 'fire', label: 'Fire' },
@@ -545,9 +573,8 @@
       a.href = '/guides/trade?t=' + t.trade;
       row.appendChild(a);
     });
-    dash.appendChild(row);
+    dash.appendChild(homeCard('Or pick a trade', 'Trouble guides and checklists', row));
 
-    dash.appendChild(block('Rough-in', 'Hardware on the steel'));
     var hwrow = el('div', 'fk-chip-row');
     var hwa = el('a', 'fk-text-chip fk-link', 'Cable hardware');
     hwa.href = '/guides/hardware';
@@ -555,9 +582,8 @@
     var hwm = el('a', 'fk-text-chip fk-link', 'Boxes / pipe');
     hwm.href = '/guides/hardware?tab=mount';
     hwrow.appendChild(hwm);
-    dash.appendChild(hwrow);
+    dash.appendChild(homeCard('Rough-in', 'Hardware on the steel', hwrow));
 
-    dash.appendChild(block('Job paper', 'Printable leave-behinds'));
     var paper = el('div', 'fk-chip-row');
     [
       { href: '/guides/zones', label: 'Zone list' },
@@ -568,23 +594,9 @@
       a.href = t.href;
       paper.appendChild(a);
     });
-    dash.appendChild(paper);
+    dash.appendChild(homeCard('Job paper', 'Printable leave-behinds', paper));
 
     appendJobSwitcher(dash);
-
-    if (state.recents.length) {
-      dash.appendChild(block('Recent', null));
-      var rl = el('ul', 'fk-list');
-      state.recents.forEach(function (r) {
-        var li = el('li');
-        var a = el('a', 'fk-link', r.title || r.id);
-        a.href = r.href || ('/checklist/' + r.id);
-        li.appendChild(a);
-        if (r.ts) li.appendChild(el('span', 'fk-meta', fmtWhen(r.ts)));
-        rl.appendChild(li);
-      });
-      dash.appendChild(rl);
-    }
 
     if (state.favs.length) {
       dash.appendChild(block('Starred', state.favs.length + ' saved'));
@@ -610,6 +622,9 @@
     var q = document.getElementById('start-search');
     var host = document.getElementById('start-root');
     if (!host) return;
+    if (q && q.placeholder !== 'Symptom, model, or calc') q.placeholder = 'Symptom, model, or calc';
+    var hint = page.querySelector('.start-hint');
+    if (hint) hint.textContent = 'A symptom, a model, or a calc';
     var query = (q && q.value ? q.value : '').trim();
     page.classList.toggle('is-searching', !!query);
     page.classList.toggle('has-dash', !query);
@@ -777,27 +792,55 @@
       else xrow.appendChild(dchip);
     }
 
+    labelCategoryDone(page);
     shapeChecklistRows(page);
     clampDecides(page.querySelector('details.fk-decides'));
+    ensureDecidesScrim();
 
     page.querySelectorAll('.page-header .lede, .page-header .inline-disclaimer').forEach(function (p) {
       if (p.dataset.fkClamp) return;
       if (!(window.matchMedia && window.matchMedia('(max-width: 640px)').matches)) return;
       p.dataset.fkClamp = '1';
       p.classList.add('fk-clamp');
-      p.setAttribute('tabindex', '0');
-      p.setAttribute('role', 'button');
-      p.setAttribute('aria-expanded', 'false');
-      p.setAttribute('title', 'Tap to show all');
+      var more = el('button', 'fk-more', 'More');
+      more.type = 'button';
       function flip() {
         var open = !p.classList.contains('is-open');
         p.classList.toggle('is-open', open);
         p.setAttribute('aria-expanded', open ? 'true' : 'false');
+        more.textContent = open ? 'Less' : 'More';
+        more.setAttribute('aria-expanded', open ? 'true' : 'false');
       }
+      more.addEventListener('click', function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        flip();
+      });
       p.addEventListener('click', flip);
-      p.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
+      if (p.nextSibling) p.parentNode.insertBefore(more, p.nextSibling);
+      else p.parentNode.appendChild(more);
     });
 
+  }
+
+  function labelCategoryDone(page) {
+    var a = page.querySelector('a.runner-done');
+    if (!a) return;
+    var href = a.getAttribute('href') || '';
+    var m = href.match(/\/category\/([a-z0-9-]+)/i);
+    var names = { fire: 'Fire', access: 'Access', cameras: 'Cameras', network: 'Network', troubleshoot: 'Troubleshoot' };
+    var name = m ? (names[m[1]] || m[1]) : '';
+    a.textContent = name ? (name + ' list') : 'Back to list';
+    a.setAttribute('title', 'Leaves this checklist. Does not mark a step.');
+  }
+
+  function ensureDecidesScrim() {
+    if (document.querySelector('.fk-decides-scrim')) return;
+    var s = el('div', 'fk-decides-scrim');
+    s.addEventListener('click', function () {
+      document.querySelectorAll('details.fk-decides[open]').forEach(function (d) { d.open = false; });
+    });
+    document.body.appendChild(s);
   }
 
   /* print: open the 'decides the call' strip (collapsed on phones) */
@@ -945,6 +988,20 @@
         outR.push(rr);
       }
       outR.partial = ranked.partial;
+      /* Title hits first. A manual whose title misses the words waits behind the checklist or guide. */
+      var ts = core.terms(q);
+      var digitQ = /\d/.test(q);
+      function tier(r) {
+        var blob = core.norm((r.title || '') + ' ' + (r.sub || ''));
+        var s = core.scoreText(blob, core.norm(r.title || ''), ts);
+        if (s.inTitle > 0 && r.kind === 'doc' && digitQ) return 0;
+        if (s.inTitle > 0 && r.kind !== 'doc') return 0;
+        if (r.kind !== 'doc' && s.matched > 0) return 1;
+        if (s.inTitle > 0) return 2;
+        return 3;
+      }
+      outR.forEach(function (r, i) { r._ord = i; });
+      outR.sort(function (a, b) { return tier(a) - tier(b) || (a._ord - b._ord); });
       return outR;
     }
     var tokens = q.toLowerCase().split(/[^a-z0-9+/]+/).filter(function (t) { return t.length > 0; });
@@ -1019,7 +1076,8 @@
       var b = el('button', 'fk-pal-item' + (idx === 0 ? ' is-active' : ''));
       b.type = 'button';
       b.dataset.idx = String(idx);
-      b.innerHTML = '<span class="fk-pal-kind">' + r.kind + '</span><span><strong></strong><span></span></span>';
+      var shortKind = { list: 'Checklist', calc: 'Calc', tip: 'Tip', step: 'Step', guide: 'Guide', call: 'Guide', doc: 'Manual' };
+      b.innerHTML = '<span class="fk-pal-kind">' + (shortKind[r.kind] || r.kind) + '</span><span><strong></strong><span></span></span>';
       b.querySelector('strong').textContent = r.title;
       b.querySelector('span span').textContent = r.sub;
       b.addEventListener('click', function () { go(r.href); });
@@ -1091,14 +1149,18 @@
     if (!xrow || xrow.querySelector('.fk-row-actions')) return;
     var actions = el('div', 'fk-row-actions');
     var tools = el('div', 'fk-row-tools');
+    var sections = el('div', 'fk-row-sections');
     Array.prototype.slice.call(xrow.children).forEach(function (node) {
       var primary = node.classList.contains('runner-jobsheet') ||
         node.classList.contains('fk-decides-chip') ||
         node.classList.contains('reset-quiet');
-      (primary ? actions : tools).appendChild(node);
+      if (primary) actions.appendChild(node);
+      else if (node.classList.contains('fk-toc')) sections.appendChild(node);
+      else tools.appendChild(node);
     });
     xrow.appendChild(actions);
     xrow.appendChild(tools);
+    if (sections.childNodes.length) xrow.appendChild(sections);
   }
 
   function clampDecides(dec) {
@@ -1473,10 +1535,38 @@
     return sec;
   }
 
+  function polishRefs(page) {
+    if (!page) return;
+    page.querySelectorAll('p, .calc-note, .info-panel, .soft-upgrade, .calc-sync-label').forEach(function (n) {
+      if (n.closest && n.closest('.calc-card')) return;
+      var t = n.textContent || '';
+      if (t.indexOf('Last-used inputs') >= 0 || t.indexOf('Educational estimate only') >= 0 || t.indexOf('full calc pad') >= 0 || t.indexOf('Optional Pro') >= 0) {
+        n.classList.add('fk-quiet-note');
+      }
+      if (t.indexOf('One-thumb estimators') >= 0 && t.indexOf('Full pad offline') >= 0) {
+        n.textContent = 'One-thumb estimators. The number is a teaching approximation. Verify it with the device sheet.';
+      }
+    });
+    var order = ['#ohm', '#vd', '#battery', '#watts', '#loopft', '#gfvolt'];
+    page.querySelectorAll('.calc-jump').forEach(function (nav) {
+      var links = Array.prototype.slice.call(nav.querySelectorAll('a'));
+      var front = [];
+      order.forEach(function (hash) {
+        links.forEach(function (l) {
+          if ((l.getAttribute('href') || '').indexOf(hash) >= 0) front.push(l);
+        });
+      });
+      var i;
+      for (i = front.length - 1; i >= 0; i--) nav.insertBefore(front[i], nav.firstChild);
+    });
+  }
+
   function ensureFieldCalcs() {
     var page = document.querySelector('.refs-page');
-    if (!page || document.getElementById('watts')) {
+    if (!page) return;
+    if (document.getElementById('watts')) {
       paintNacPtp();
+      polishRefs(page);
       return;
     }
     var ohm = document.getElementById('ohm');
@@ -1504,6 +1594,23 @@
     paintLoop();
     paintGf();
     paintNacPtp();
+    polishRefs(page);
+  }
+
+  function plainPortal() {
+    if (pathOf() !== '/portal') return;
+    document.querySelectorAll('p, li').forEach(function (p) {
+      var t = p.textContent || '';
+      if (t.indexOf('localStorage') >= 0 || t.indexOf('seeds three sample') >= 0) {
+        if (p.dataset.fkPlain === 'store') return;
+        p.dataset.fkPlain = 'store';
+        p.textContent = 'Sample company docs are already here. What you add stays on this phone or this computer.';
+      } else if (t.indexOf('Free / Pro switch') >= 0 || t.indexOf('switch in the header') >= 0) {
+        if (p.dataset.fkPlain === 'plan') return;
+        p.dataset.fkPlain = 'plan';
+        p.textContent = 'The toolkit stays free. Pro, chosen on this page, adds your logo, company docs, crew seats, and letterhead.';
+      }
+    });
   }
 
   function refreshFieldMath(ev) {
@@ -1543,6 +1650,7 @@
     var refs = document.querySelector('.refs-page');
     if (refs) ensurePrintLetterhead(refs, 'Field calculators');
     ensureFieldCalcs();
+    plainPortal();
     fitHomeAboveTab();
     maybeRecordVisit();
     syncStars();
@@ -1621,6 +1729,16 @@
       window.__FK_FIELD_PASS = true;
       document.addEventListener('input', refreshFieldMath);
       document.addEventListener('change', refreshFieldMath);
+      document.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest && ev.target.closest('.checklist-runner .reset-quiet');
+        if (!b || b.dataset.fkResetOk) return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (!window.confirm('Clear every mark on this checklist?')) return;
+        b.dataset.fkResetOk = '1';
+        b.click();
+        delete b.dataset.fkResetOk;
+      }, true);
     }
     enhance();
     var root = document.getElementById('root');

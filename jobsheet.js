@@ -413,16 +413,21 @@
 
       page.appendChild(jobPanel());
 
-      var toolbar = el('div', 'js-list-toolbar no-print');
-      var bNew = el('a', 'btn', 'New job sheet');
-      bNew.href = '/jobsheets/new';
-      toolbar.appendChild(bNew);
-      page.appendChild(toolbar);
+      if (recs.length) {
+        var toolbar = el('div', 'js-list-toolbar no-print');
+        var bNew = el('a', 'btn', 'New job sheet');
+        bNew.href = '/jobsheets/new';
+        toolbar.appendChild(bNew);
+        page.appendChild(toolbar);
+      }
 
       if (!recs.length) {
         var empty = el('div', 'card js-card-pad js-empty');
         empty.appendChild(el('h2', null, 'No job sheets yet'));
-        empty.appendChild(el('p', null, 'Open any checklist and tap “Job sheet” in the row under the progress bar (next to Reset). It captures the run with site, tech, time, and notes, saved on this device. Or tap New job sheet and pick a checklist.'));
+        empty.appendChild(el('p', null, 'A site holds the pins and the paper. A job sheet is one checklist run. Open a checklist and tap Job sheet, or start one here.'));
+        var bEmpty = el('a', 'btn', 'New job sheet');
+        bEmpty.href = '/jobsheets/new';
+        empty.appendChild(bEmpty);
         page.appendChild(empty);
         mount(page);
         return;
@@ -504,12 +509,12 @@
     sel.value = s.current;
     sel.addEventListener('change', function () { api.switchTo(sel.value); renderList(); });
     row.appendChild(sel);
-    var bAdd = el('button', 'btn ghost', '+ New job');
+    var bAdd = el('button', 'btn ghost', 'New site');
     bAdd.type = 'button';
     bAdd.addEventListener('click', function () {
-      var name = window.prompt('Name this job (site / account)', '');
-      if (name === null) return;
-      api.create(name.trim() || '');
+      var name = window.prompt('Site name', '');
+      if (name === null || !String(name).trim()) return;
+      api.create(String(name).trim());
       renderList();
     });
     row.appendChild(bAdd);
@@ -538,7 +543,7 @@
     }
     box.appendChild(row);
     var links = el('div', 'js-jobpanel-links');
-    [['/guides/pack', 'Pack / QR'], ['/guides/zones', 'Zone list'], ['/guides/doors', 'Door sheet'], ['/guides/cameras', 'Cam directory'], ['/guides/hardware?tab=bom', 'Pack list']].forEach(function (l) {
+    [['/guides/pack', 'Pinned cards'], ['/guides/zones', 'Zone list'], ['/guides/doors', 'Door sheet'], ['/guides/cameras', 'Cam directory'], ['/guides/hardware?tab=bom', 'Pack list']].forEach(function (l) {
       var a = el('a', 'chip js-joblink', l[1]);
       a.href = l[0];
       links.appendChild(a);

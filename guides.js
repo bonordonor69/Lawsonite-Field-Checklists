@@ -1944,6 +1944,11 @@
     var local = loadPack();
     if (!rawIds.length) rawIds = local.ids.slice();
     if (!title) title = local.title || 'Job pack';
+    function genericPackName(n) {
+      n = String(n || '').trim();
+      return !n || /^job( \d+)?$/i.test(n) || n === 'Job pack';
+    }
+    var named = !genericPackName(title);
     var knownIds = [];
     var missingIds = [];
     rawIds.forEach(function (id) {
@@ -1970,18 +1975,20 @@
     }
 
     var head = el('header', 'gd-hero');
-    head.appendChild(el('p', 'gd-kicker', packOk ? 'Job pack' : 'Pack not found'));
+    head.appendChild(el('p', 'gd-kicker', missingIds.length && !packOk ? 'Pack link does not match' : 'Pinned cards'));
     var titleInput = document.createElement('input');
     titleInput.className = 'gd-search gd-pack-title no-print';
-    titleInput.value = title;
-    titleInput.setAttribute('aria-label', 'Job pack name');
-    titleInput.placeholder = 'Job name — Building A, 3rd floor…';
+    titleInput.value = named ? title : '';
+    titleInput.setAttribute('aria-label', 'Site name');
+    titleInput.placeholder = 'Site name — Building A, 3rd floor…';
     head.appendChild(titleInput);
-    head.appendChild(el('h1', 'only-print', title));
+    head.appendChild(el('h1', 'only-print', named ? title : 'Pinned cards'));
     head.appendChild(el('p', 'gd-lede no-print',
       packOk
-        ? 'Pin cards on the manuals page, name the job, print the pack or a QR for the panel. Free prints get the Lawsonite mark. Pro adds your company logo.'
-        : 'This link has no matching product cards. Open Product cards, pin what you need, then share a fresh pack link.'));
+        ? 'Star a product card, name the site, then print the pack or a QR for the panel.'
+        : (missingIds.length
+          ? 'This link does not match a product card. Open Product cards, star what this site needs, and share a fresh link.'
+          : 'Nothing pinned yet. Star a product card, then print or share this job.')));
     page.appendChild(head);
 
     var tools = el('div', 'gd-pack-tools no-print');
@@ -2045,8 +2052,8 @@
     } else {
       ident.classList.add('gd-pack-ident-empty');
       ident.appendChild(el('p', 'gd-empty', missingIds.length
-        ? ('Pack not found — no matching cards for: ' + missingIds.join(', ') + '.')
-        : 'No cards in this pack.'));
+        ? ('No matching cards for: ' + missingIds.join(', ') + '.')
+        : 'Nothing pinned yet.'));
       var go = el('a', 'gd-chip fk-link', 'Open Product cards');
       go.href = '/guides/manuals';
       ident.appendChild(go);
@@ -2084,7 +2091,7 @@
 
     var list = el('div', 'gd-product-list gd-pack-cards');
     if (!rawIds.length) {
-      list.appendChild(el('p', 'gd-empty', 'No cards pinned yet. Open Product cards and tap the star.'));
+      list.appendChild(el('p', 'gd-empty', 'Nothing pinned yet. Star a product card.'));
     } else if (!packOk) {
       list.appendChild(el('p', 'gd-empty', 'No cards — this pack link does not match any product cards. Do not tape a QR from an empty pack.'));
     } else {
@@ -2159,7 +2166,7 @@
     page.appendChild(backLink('/', 'Search'));
     var head = el('header', 'gd-hero');
         head.appendChild(el('h1', null, v.label + ': trouble guides & checklists'));
-    head.appendChild(el('p', 'gd-lede', 'Start from the symptom. Product cards for ' + v.label.toLowerCase() + ' are one tap down.'));
+    head.appendChild(el('p', 'gd-lede', 'Start from the symptom.'));
     page.appendChild(head);
     var chips = el('div', 'gd-chips gd-trade-chips');
     Object.keys(TRADE_VIEWS).forEach(function (k) {
@@ -2169,6 +2176,11 @@
       chips.appendChild(a);
     });
     page.appendChild(chips);
+    var docs = el('p', 'gd-trade-docs');
+    var da = el('a', 'gd-chip fk-link', 'Product cards for ' + v.label);
+    da.href = '/guides/manuals?trade=' + key;
+    docs.appendChild(da);
+    page.appendChild(docs);
     function group(title, rows) {
       if (!rows.length) return;
       var sec = el('section', 'gd-section');
@@ -2201,16 +2213,12 @@
     var L = window.__LAWSONITE__;
     var cls = (L && L.checklists) || [];
     var seen = {};
+    v.calls.forEach(function (id) { seen[id] = 1; });
     var lists = [];
     cls.forEach(function (c) { if (v.cats.indexOf(c.category) >= 0 && !seen[c.id]) { seen[c.id] = 1; lists.push(c); } });
     v.lists.forEach(function (id) { cls.forEach(function (c) { if (c.id === id && !seen[c.id]) { seen[c.id] = 1; lists.push(c); } }); });
     group('Checklists', lists.map(function (c) { return { href: '/checklist/' + c.id, title: c.title, sub: '', icon: 'check' }; }));
     group('Cheat sheets', pageRows(v.cheats, 'Cheat'));
-    var docs = el('p', 'gd-trade-docs');
-    var da = el('a', 'gd-chip fk-link', 'Product cards & manuals for ' + v.label + ' →');
-    da.href = '/guides/manuals?trade=' + key;
-    docs.appendChild(da);
-    page.appendChild(docs);
     return page;
   }
 
