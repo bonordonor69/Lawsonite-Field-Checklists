@@ -864,3 +864,104 @@ details.fk-decides li { margin: 0.25rem 0; line-height: 1.4; }
 
 /* Desktop: long section-chip rows no longer widen the checklist grid past the viewport (pre-existing overflow on long packs) */
 .page.checklist-runner > * { min-width: 0; }
+
+/* Field header stays a tool. Plan choice lives on Company. */
+.app-header .plan-switch { display: none !important; }
+
+/* Checklist: primary actions wrap on their own row. Filters, calcs, and section jumps wrap under them. */
+.checklist-runner .runner-extras {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem;
+  overflow: visible;
+}
+.checklist-runner .runner-extras > .fk-row-actions,
+.checklist-runner .runner-extras > .fk-row-tools {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.checklist-runner .fk-row-tools .fk-toc {
+  display: flex;
+  flex: 1 1 100%;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 0.15rem;
+}
+.checklist-runner .fk-row-tools .fk-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+@media (max-width: 860px) {
+  .checklist-runner .runner-extras .pro-badge { display: none; }
+  /* Beats the unlayered flex:1 1 100% / flex-wrap:wrap rules above (same element, later, and a direct-child selector). */
+  .checklist-runner .runner-extras > .fk-row-tools {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    padding-bottom: 0.35rem;
+  }
+  .checklist-runner .runner-extras > .fk-row-tools::-webkit-scrollbar { height: 6px; }
+  .checklist-runner .runner-extras > .fk-row-tools::-webkit-scrollbar-thumb {
+    background: var(--brand, #fb4f14);
+    border-radius: 999px;
+  }
+  .checklist-runner .runner-extras > .fk-row-tools > .fk-toc,
+  .checklist-runner .runner-extras > .fk-row-tools > .fk-filters,
+  .checklist-runner .runner-extras > .fk-row-tools > .fk-calc-clone,
+  .checklist-runner .runner-extras > .fk-row-tools > .related-calc-chip {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    overflow: visible;
+    width: auto;
+    max-width: none;
+  }
+  details.fk-decides { margin: 0.2rem 0 0.35rem; }
+  details.fk-decides li { margin: 0.08rem 0; }
+  .fk-decides-more { margin: 0.1rem 0 0.35rem; }
+}
+
+/* Phone: the decision strip stays three lines until the tech asks for the rest. */
+.fk-decides-more {
+  min-height: 44px;
+  margin: 0 0 0.7rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--line, #d9d0c7);
+  background: var(--card, #fff);
+  color: var(--brand-deep, #c4320a);
+  font-weight: 800;
+  cursor: pointer;
+}
+@media (min-width: 641px) { .fk-decides-more { display: none; } }
+@media (max-width: 640px) {
+  details.fk-decides:not(.is-full) li:nth-child(n + 4) { display: none; }
+  /* The chip already names this strip. Hiding the summary keeps the Gate on the phone screen. */
+  .checklist-runner details.fk-decides[open] > summary { display: none; }
+  .checklist-runner details.fk-decides[open] { margin: 0.1rem 0 0.2rem; padding-top: 0.3rem; }
+  .checklist-runner details.fk-decides[open] ul { margin: 0 0 0.15rem; }
+}
+@media print {
+  details.fk-decides > summary { display: flex !important; }
+  details.fk-decides li { display: list-item !important; }
+  .fk-decides-more { display: none !important; }
+}
+
+/* Phone home: keep Job sheets and Open pack above the tab bar. */
+@media (max-width: 860px) {
+  .start-page.has-dash { padding-top: 0.35rem; }
+  .start-page h1 { margin-bottom: 0.6rem; }
+  .start-page #start-root { margin-top: 0.5rem; }
+  .start-page .fk-dash { gap: 0.65rem; }
+  .start-page .fk-block { gap: 0.35rem; }
+  .start-page .fk-job-row { scroll-margin-bottom: 5.5rem; }
+  .start-page.fk-home-tight h1 { margin-bottom: 0.35rem; }
+  .start-page.fk-home-tight .fk-dash { gap: 0.4rem; }
+  .start-page.fk-home-tight #start-root { margin-top: 0.3rem; }
+}

@@ -20,7 +20,12 @@
     { id: 'eol', label: 'EOL helper', hint: 'Supervision', href: '/refs#eol' },
     { id: 'nac', label: 'NAC load', hint: 'Strobe current', href: '/refs#nac' },
     { id: 'lock', label: 'Lock power', hint: 'Hold vs inrush', href: '/refs#lock' },
-    { id: 'rs485', label: 'RS-485', hint: 'Bus length', href: '/refs#rs485' }
+    { id: 'rs485', label: 'RS-485', hint: 'Bus length', href: '/refs#rs485' },
+    { id: 'watts', label: 'Watts / VA', hint: 'V × I × PF', href: '/refs#watts' },
+    { id: 'poeday', label: 'Day / night PoE', hint: 'IR budget', href: '/refs#poeday' },
+    { id: 'retain', label: 'NVR retention', hint: 'Cameras × bitrate × days', href: '/refs#retain' },
+    { id: 'loopft', label: 'Loop ohms to feet', hint: 'Pair resistance', href: '/refs#loopft' },
+    { id: 'gfvolt', label: 'Ground-fault voltage', hint: 'About half to earth', href: '/refs#gfvolt' }
   ];
 
   var CALLS = [
@@ -764,7 +769,6 @@
       dchip.addEventListener('click', function () {
         dec.open = !dec.open;
         syncChip();
-        if (dec.open) dec.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
       });
       dec.addEventListener('toggle', syncChip);
       syncChip();
@@ -772,6 +776,9 @@
       if (jsb && jsb.nextSibling) xrow.insertBefore(dchip, jsb.nextSibling);
       else xrow.appendChild(dchip);
     }
+
+    shapeChecklistRows(page);
+    clampDecides(page.querySelector('details.fk-decides'));
 
     page.querySelectorAll('.page-header .lede, .page-header .inline-disclaimer').forEach(function (p) {
       if (p.dataset.fkClamp) return;
@@ -1068,8 +1075,463 @@
   }
   window.addEventListener('resize', syncHeaderHeight);
 
+  /* ---------------- field pass: rows, calcs, dead route ---------------- */
+  var OHM_KFT = { 10: 1, 12: 1.59, 14: 2.53, 16: 4.02, 18: 6.39, 20: 10.15, 22: 16.14, 24: 25.67 };
+  var NAC_MA = {
+    horn: 75,
+    'strobe-15': 60,
+    'strobe-75': 140,
+    'strobe-110': 180,
+    'horn-strobe-75': 200,
+    'horn-strobe-110': 250
+  };
+
+  function shapeChecklistRows(page) {
+    var xrow = page.querySelector('.runner-extras');
+    if (!xrow || xrow.querySelector('.fk-row-actions')) return;
+    var actions = el('div', 'fk-row-actions');
+    var tools = el('div', 'fk-row-tools');
+    Array.prototype.slice.call(xrow.children).forEach(function (node) {
+      var primary = node.classList.contains('runner-jobsheet') ||
+        node.classList.contains('fk-decides-chip') ||
+        node.classList.contains('reset-quiet');
+      (primary ? actions : tools).appendChild(node);
+    });
+    xrow.appendChild(actions);
+    xrow.appendChild(tools);
+  }
+
+  function clampDecides(dec) {
+    if (!dec || dec.querySelector('.fk-decides-more')) return;
+    if (dec.querySelectorAll('li').length <= 3) return;
+    var more = el('button', 'fk-decides-more', 'Rest of the call');
+    more.type = 'button';
+    more.addEventListener('click', function (ev) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      var open = dec.classList.toggle('is-full');
+      more.textContent = open ? 'First three' : 'Rest of the call';
+      more.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    dec.appendChild(more);
+  }
+
+  function redirectDeadChecklist() {
+    if (pathOf() === '/checklist/false-alarm-symptom-tree') {
+      location.replace('/checklist/door-forced-held-open-diagnostics');
+    }
+  }
+
+  function fkNum(n) {
+    var v = parseFloat(String(n == null ? '' : n).replace(/,/g, ''));
+    return isFinite(v) ? v : null;
+  }
+  function fkFixed(n, d) {
+    if (n == null || !isFinite(n)) return '—';
+    return n.toFixed(d);
+  }
+  function fkLoad(id, fallback) {
+    try {
+      var v = JSON.parse(localStorage.getItem('lawsonite-calc-fk-' + id) || 'null');
+      return v && typeof v === 'object' ? v : fallback;
+    } catch (e) { return fallback; }
+  }
+  function fkSave(id, obj) {
+    try { localStorage.setItem('lawsonite-calc-fk-' + id, JSON.stringify(obj)); } catch (e) {}
+  }
+  function fkRead(card) {
+    var out = {};
+    card.querySelectorAll('[data-k]').forEach(function (el) {
+      out[el.dataset.k] = el.type === 'checkbox' ? el.checked : el.value;
+    });
+    return out;
+  }
+  function fkWrite(card, values) {
+    Object.keys(values).forEach(function (k) {
+      var node = card.querySelector('[data-k="' + k + '"]');
+      if (!node) return;
+      if (node.type === 'checkbox') node.checked = !!values[k];
+      else node.value = values[k];
+    });
+  }
+  function fkResult(card, rows) {
+    var stack = card.querySelector('.result-stack');
+    if (!stack) {
+      stack = el('div', 'result-stack');
+      card.appendChild(stack);
+    }
+    stack.textContent = '';
+    rows.forEach(function (r) {
+      if (r.badge) {
+        stack.appendChild(el('p', 'badge ' + (r.bad ? 'bad' : 'ok'), r.badge));
+        return;
+      }
+      var box = el('div', 'result-box' + (r.warn ? ' warn-result' : ''));
+      box.appendChild(el('span', null, r.label));
+      box.appendChild(el('strong', null, r.value));
+      stack.appendChild(box);
+    });
+  }
+
+  function fkCard(id, title, note) {
+    var sec = el('section', 'calc-card fk-field-calc');
+    sec.id = id;
+    var head = el('div', 'calc-card-head');
+    head.appendChild(el('h2', null, title));
+    sec.appendChild(head);
+    sec.appendChild(el('p', 'calc-note warn', note));
+    return sec;
+  }
+  function fkGrid(sec) {
+    var g = el('div', 'calc-grid');
+    sec.appendChild(g);
+    return g;
+  }
+  function fkField(grid, label, key, value, mode) {
+    var lab = el('label');
+    lab.appendChild(document.createTextNode(label));
+    var input = el('input');
+    input.setAttribute('inputmode', mode || 'decimal');
+    input.dataset.k = key;
+    input.value = value;
+    lab.appendChild(input);
+    grid.appendChild(lab);
+  }
+  function fkSelect(grid, label, key, value, options) {
+    var lab = el('label');
+    lab.appendChild(document.createTextNode(label));
+    var sel = el('select');
+    sel.dataset.k = key;
+    options.forEach(function (opt) {
+      var o = el('option', null, opt[1]);
+      o.value = String(opt[0]);
+      sel.appendChild(o);
+    });
+    sel.value = String(value);
+    lab.appendChild(sel);
+    grid.appendChild(lab);
+  }
+  function fkCheck(sec, key, label, on) {
+    var lab = el('label', 'check-inline');
+    var input = el('input');
+    input.type = 'checkbox';
+    input.dataset.k = key;
+    input.checked = !!on;
+    lab.appendChild(input);
+    lab.appendChild(document.createTextNode(label));
+    sec.appendChild(lab);
+  }
+  function fkPresets(sec, chips, paint) {
+    var row = el('div', 'preset-chips');
+    chips.forEach(function (c) {
+      var b = el('button', 'preset-chip', c.label);
+      b.type = 'button';
+      b.addEventListener('click', function () {
+        fkWrite(sec, c.values);
+        paint();
+      });
+      row.appendChild(b);
+    });
+    sec.appendChild(row);
+  }
+  function fkJump(id, label) {
+    document.querySelectorAll('.calc-jump').forEach(function (nav) {
+      if (nav.querySelector('a[href="#' + id + '"]')) return;
+      var a = el('a', null, label);
+      a.href = '#' + id;
+      nav.appendChild(a);
+    });
+  }
+
+  function paintWatts() {
+    var card = document.getElementById('watts');
+    if (!card) return;
+    var v = fkRead(card);
+    fkSave('watts', v);
+    var volts = fkNum(v.volts), amps = fkNum(v.amps), pf = fkNum(v.pf);
+    if (volts == null || amps == null || pf == null || volts < 0 || amps < 0 || pf < 0 || pf > 1) {
+      fkResult(card, [{ badge: 'Enter volts, amps, and a power factor from 0 to 1.', bad: true }]);
+      return;
+    }
+    var va = volts * amps;
+    var w = va * pf;
+    fkResult(card, [
+      { label: 'Watts', value: fkFixed(w, 2) + ' W' },
+      { label: 'VA', value: fkFixed(va, 2) + ' VA' }
+    ]);
+  }
+  function paintDay() {
+    var card = document.getElementById('poeday');
+    if (!card) return;
+    var v = fkRead(card);
+    fkSave('poeday', v);
+    var cams = fkNum(v.cams), day = fkNum(v.day), night = fkNum(v.night), hours = fkNum(v.hours), budget = fkNum(v.budget);
+    if (cams == null || day == null || night == null || hours == null || budget == null ||
+        cams < 0 || day < 0 || night < 0 || hours < 0 || hours > 24 || budget < 0) {
+      fkResult(card, [{ badge: 'Night hours are 0 to 24. Watts and the switch budget stay at or above 0.', bad: true }]);
+      return;
+    }
+    var avg = day * ((24 - hours) / 24) + night * (hours / 24);
+    var bump = v.pse === true || v.pse === 'true';
+    var total = avg * cams * (bump ? 1.2 : 1);
+    var spare = budget - total;
+    fkResult(card, [
+      { label: 'Average per camera', value: fkFixed(avg, 2) + ' W' },
+      { label: bump ? 'Switch side (×1.2)' : 'Cameras together', value: fkFixed(total, 1) + ' W' },
+      { label: 'Spare on the switch', value: fkFixed(spare, 1) + ' W', warn: spare < 0 },
+      { badge: spare < 0 ? 'Over the switch budget on this teaching average.' : 'Inside the switch budget on this teaching average.', bad: spare < 0 }
+    ]);
+  }
+  function paintRetain() {
+    var card = document.getElementById('retain');
+    if (!card) return;
+    var v = fkRead(card);
+    fkSave('retain', v);
+    var cams = fkNum(v.cams), mbps = fkNum(v.mbps), days = fkNum(v.days), hours = fkNum(v.hours), over = fkNum(v.over);
+    if (cams == null || mbps == null || days == null || hours == null || over == null ||
+        cams < 0 || mbps < 0 || days < 0 || hours < 0 || hours > 24 || over < 0) {
+      fkResult(card, [{ badge: 'Hours per day are 0 to 24. Overhead is a percent, 0 or more.', bad: true }]);
+      return;
+    }
+    var gb = cams * mbps * 3600 * hours * days / 8 / 1000;
+    gb = gb * (1 + over / 100);
+    fkResult(card, [
+      { label: 'Storage', value: fkFixed(gb, 0) + ' GB' },
+      { label: 'Decimal TB', value: fkFixed(gb / 1000, 2) + ' TB' }
+    ]);
+  }
+  function paintLoop() {
+    var card = document.getElementById('loopft');
+    if (!card) return;
+    var v = fkRead(card);
+    fkSave('loopft', v);
+    var awg = Number(v.awg);
+    var ohms = fkNum(v.ohms), eol = fkNum(v.eol);
+    var kft = OHM_KFT[awg];
+    if (!kft || ohms == null || eol == null || ohms < 0 || eol < 0) {
+      fkResult(card, [{ badge: 'Need AWG, loop ohms, and the EOL ohms inside that reading (0 if the resistor is lifted).', bad: true }]);
+      return;
+    }
+    var copper = ohms - eol;
+    if (copper <= 0) {
+      fkResult(card, [{ badge: 'The EOL is the whole reading. Copper feet stay hidden until the resistor is out of the number.', bad: true }]);
+      return;
+    }
+    var feet = copper * 1000 / (2 * kft);
+    fkResult(card, [
+      { label: 'One-way feet', value: fkFixed(feet, 0) + ' ft' },
+      { label: 'Copper in the reading', value: fkFixed(copper, 2) + ' Ω' }
+    ]);
+  }
+  function paintGf() {
+    var card = document.getElementById('gfvolt');
+    if (!card) return;
+    var v = fkRead(card);
+    fkSave('gfvolt', v);
+    var panel = fkNum(v.panel);
+    if (panel == null || panel <= 0) {
+      fkResult(card, [{ badge: 'Enter the panel voltage, such as 24 or 12.', bad: true }]);
+      return;
+    }
+    fkResult(card, [
+      { label: 'Each leg to earth, floating', value: 'about ' + fkFixed(panel / 2, 1) + ' V' },
+      { label: 'Hard ground, the other leg', value: 'toward ' + fkFixed(panel, 0) + ' V' }
+    ]);
+  }
+  function paintNacPtp() {
+    var card = document.getElementById('nac');
+    if (!card) return;
+    var stack = card.querySelector('.fk-ptp');
+    if (!stack) {
+      stack = el('div', 'result-stack fk-ptp');
+      card.appendChild(stack);
+    }
+    var cls = card.querySelector('select');
+    var countEl = null;
+    var maEl = null;
+    var awgEl = null;
+    var feetEl = null;
+    card.querySelectorAll('label').forEach(function (lab) {
+      var name = (lab.firstChild && lab.firstChild.textContent || '').trim();
+      if (name === 'Device count') countEl = lab.querySelector('input');
+      if (name === 'mA per device') maEl = lab.querySelector('input');
+      if (name === 'AWG') awgEl = lab.querySelector('select');
+      if (name === 'One-way feet') feetEl = lab.querySelector('input');
+    });
+    var box = card.querySelector('input[type="checkbox"]');
+    var id = cls ? cls.value : '';
+    var count = countEl ? fkNum(countEl.value) : null;
+    var ma = id === 'custom' ? (maEl ? fkNum(maEl.value) : null) : NAC_MA[id];
+    stack.textContent = '';
+    if (count == null || count <= 0 || ma == null || ma < 0) {
+      stack.appendChild(el('p', 'muted small', 'Point-to-point shows once the device class and count are filled.'));
+      return;
+    }
+    var head = el('p', 'muted small', 'Point-to-point: same devices spaced evenly along the one-way feet. The lump above stays the conservative check (every device at the far end).');
+    stack.appendChild(head);
+    if (!box || !box.checked || !awgEl || !feetEl) {
+      stack.appendChild(el('p', 'muted small', 'Turn on the voltage-drop note to see the even-spacing drop.'));
+      return;
+    }
+    var kft = OHM_KFT[Number(awgEl.value)];
+    var feet = fkNum(feetEl.value);
+    if (!kft || feet == null || feet < 0) return;
+    var each = ma / 1000;
+    var drop = (kft / 1000) * feet * each * (count + 1);
+    var at = 24 - drop;
+    var rows = [
+      { label: 'Point-to-point drop', value: fkFixed(drop, 2) + ' V', warn: drop / 24 > 0.1 },
+      { label: 'About at the last device', value: at < 0 ? 'below 0 V' : fkFixed(at, 2) + ' V', warn: at < 20.4 }
+    ];
+    rows.forEach(function (r) {
+      var line = el('div', 'result-box' + (r.warn ? ' warn-result' : ''));
+      line.appendChild(el('span', null, r.label));
+      line.appendChild(el('strong', null, r.value));
+      stack.appendChild(line);
+    });
+  }
+
+  function buildWatts() {
+    var saved = fkLoad('watts', { volts: '24', amps: '0.5', pf: '1' });
+    var sec = fkCard('watts', 'Watts and VA',
+      'Watts = volts × amps × power factor. VA = volts × amps. DC and a resistive load use power factor 1, so the two numbers match. A magnetic or switching supply can draw more VA than watts. Teaching estimate only — verify with the device sheet.');
+    fkPresets(sec, [
+      { label: 'Maglock 0.5 A @ 12 V', values: { volts: '12', amps: '0.5', pf: '1' } },
+      { label: 'Strike 0.35 A @ 24 V', values: { volts: '24', amps: '0.35', pf: '1' } },
+      { label: 'QEL 1 A @ 24 V', values: { volts: '24', amps: '1', pf: '1' } }
+    ], paintWatts);
+    var g = fkGrid(sec);
+    fkField(g, 'Volts', 'volts', saved.volts || '24');
+    fkField(g, 'Amps', 'amps', saved.amps || '0.5');
+    fkField(g, 'Power factor (1.0 = DC / resistive)', 'pf', saved.pf || '1');
+    return sec;
+  }
+  function buildDay() {
+    var saved = fkLoad('poeday', { cams: '8', day: '6', night: '12', hours: '10', budget: '123', pse: false });
+    var sec = fkCard('poeday', 'Day / night PoE',
+      'Average draw = day watts × (24 − night hours) / 24 + night watts × night hours / 24, then × cameras. These watts are what the camera draws (PD). The switch often reserves more (PSE). The 20% box is a teaching bump, not an 802.3 class table. The PoE budget card is the class table.');
+    fkPresets(sec, [
+      { label: '8 domes, IR at night', values: { cams: '8', day: '6', night: '12', hours: '10', budget: '123' } },
+      { label: '16 bullets, 370 W switch', values: { cams: '16', day: '8', night: '15', hours: '12', budget: '370' } }
+    ], paintDay);
+    var g = fkGrid(sec);
+    fkField(g, 'Cameras', 'cams', saved.cams || '8', 'numeric');
+    fkField(g, 'Day watts each (PD)', 'day', saved.day || '6');
+    fkField(g, 'Night / IR watts each (PD)', 'night', saved.night || '12');
+    fkField(g, 'Night hours', 'hours', saved.hours || '10');
+    fkField(g, 'Switch budget (W)', 'budget', saved.budget || '123');
+    fkCheck(sec, 'pse', 'Count a teaching PSE bump (×1.2) instead of PD watts', saved.pse);
+    return sec;
+  }
+  function buildRetain() {
+    var saved = fkLoad('retain', { cams: '16', mbps: '4', days: '30', hours: '24', over: '10' });
+    var sec = fkCard('retain', 'NVR retention',
+      'GB = cameras × Mbps × 3600 × hours/day × days / 8 / 1000, then × (1 + overhead%). 1 Mbps for 24 hours is about 10.8 GB. Decimal TB is GB / 1000, the way a drive label is sold. Constant-bitrate teaching math. Motion recording uses less. Not a recorder datasheet.');
+    fkPresets(sec, [
+      { label: '16 cams · 4 Mbps · 30 days', values: { cams: '16', mbps: '4', days: '30', hours: '24', over: '10' } },
+      { label: '32 cams · 2 Mbps · 14 days', values: { cams: '32', mbps: '2', days: '14', hours: '24', over: '10' } },
+      { label: '8 cams · 8 Mbps · 24/7 · 30 days', values: { cams: '8', mbps: '8', days: '30', hours: '24', over: '0' } }
+    ], paintRetain);
+    var g = fkGrid(sec);
+    fkField(g, 'Cameras', 'cams', saved.cams || '16', 'numeric');
+    fkField(g, 'Bitrate each (Mbps)', 'mbps', saved.mbps || '4');
+    fkField(g, 'Days', 'days', saved.days || '30', 'numeric');
+    fkField(g, 'Record hours per day', 'hours', saved.hours || '24');
+    fkField(g, 'Overhead %', 'over', saved.over || '10');
+    return sec;
+  }
+  function buildLoop() {
+    var saved = fkLoad('loopft', { awg: '18', ohms: '10', eol: '0' });
+    var sec = fkCard('loopft', 'Loop ohms to feet',
+      'One-way feet = (loop ohms − EOL ohms) × 1000 / (2 × ohms per kft). Same copper table as voltage drop, about 20 °C, round trip. Subtract the EOL only when that resistor is inside the meter reading. 2.2 kΩ is 2200 ohms, not 2.2. Teaching estimate — temperature, splices, and steel change it.');
+    var awgs = [10, 12, 14, 16, 18, 20, 22, 24].map(function (n) {
+      return [n, n + ' AWG (' + OHM_KFT[n] + ' Ω/kft)'];
+    });
+    fkPresets(sec, [
+      { label: '18 AWG, no EOL in the reading', values: { awg: '18', eol: '0' } },
+      { label: '22 AWG SLC pair', values: { awg: '22', eol: '0' } },
+      { label: 'EOL was 2.2 kΩ', values: { eol: '2200' } },
+      { label: 'EOL was 4.7 kΩ', values: { eol: '4700' } },
+      { label: 'EOL was 10 kΩ', values: { eol: '10000' } }
+    ], paintLoop);
+    var g = fkGrid(sec);
+    fkSelect(g, 'AWG', 'awg', saved.awg || '18', awgs);
+    fkField(g, 'Loop ohms (the meter)', 'ohms', saved.ohms || '10');
+    fkField(g, 'EOL ohms inside that reading (0 if lifted)', 'eol', saved.eol || '0');
+    return sec;
+  }
+  function buildGf() {
+    var saved = fkLoad('gfvolt', { panel: '24' });
+    var sec = fkCard('gfvolt', 'Ground-fault expected voltage',
+      'On a floating 24 V circuit, each leg to earth sits at about half the panel voltage. A hard ground pulls one leg toward 0 V and the other toward the full panel voltage. This is the picture to expect. It is not a test procedure, not an NFPA measurement, and not a reason to jumper a life-safety circuit.');
+    fkPresets(sec, [
+      { label: '24 V fire / NAC', values: { panel: '24' } },
+      { label: '12 V', values: { panel: '12' } }
+    ], paintGf);
+    var g = fkGrid(sec);
+    fkField(g, 'Panel voltage', 'panel', saved.panel || '24');
+    return sec;
+  }
+
+  function ensureFieldCalcs() {
+    var page = document.querySelector('.refs-page');
+    if (!page || document.getElementById('watts')) {
+      paintNacPtp();
+      return;
+    }
+    var ohm = document.getElementById('ohm');
+    var poe = document.getElementById('poe');
+    if (!ohm || !poe) return;
+    var watts = buildWatts();
+    var day = buildDay();
+    var retain = buildRetain();
+    var loop = buildLoop();
+    var gf = buildGf();
+    ohm.after(watts);
+    poe.after(day);
+    var tail = document.getElementById('rs485') || document.getElementById('nac') || poe;
+    tail.after(retain);
+    retain.after(loop);
+    loop.after(gf);
+    fkJump('watts', 'Watts / VA');
+    fkJump('poeday', 'Day / night PoE');
+    fkJump('retain', 'NVR retention');
+    fkJump('loopft', 'Loop feet');
+    fkJump('gfvolt', 'Ground-fault V');
+    paintWatts();
+    paintDay();
+    paintRetain();
+    paintLoop();
+    paintGf();
+    paintNacPtp();
+  }
+
+  function refreshFieldMath(ev) {
+    var t = ev && ev.target;
+    if (!t || !t.closest) return;
+    if (t.closest('#watts')) paintWatts();
+    if (t.closest('#poeday')) paintDay();
+    if (t.closest('#retain')) paintRetain();
+    if (t.closest('#loopft')) paintLoop();
+    if (t.closest('#gfvolt')) paintGf();
+    if (t.closest('#nac')) paintNacPtp();
+  }
+
+  function fitHomeAboveTab() {
+    if (!isLanding()) return;
+    if (!(window.matchMedia && window.matchMedia('(max-width: 860px)').matches)) return;
+    var row = document.querySelector('.fk-job-row');
+    var tab = document.querySelector('.fk-tabbar');
+    var page = document.querySelector('.start-page');
+    if (!row || !tab || !page) return;
+    var need = row.getBoundingClientRect().bottom - (tab.getBoundingClientRect().top - 12);
+    if (need <= 0) return;
+    page.classList.add('fk-home-tight');
+  }
+
   /* ---------------- enhance cycle ---------------- */
   function enhance() {
+    redirectDeadChecklist();
     syncHeaderHeight();
     ensureHeaderSearch();
     ensureFieldNav();
@@ -1080,6 +1542,8 @@
     enhanceChecklist();
     var refs = document.querySelector('.refs-page');
     if (refs) ensurePrintLetterhead(refs, 'Field calculators');
+    ensureFieldCalcs();
+    fitHomeAboveTab();
     maybeRecordVisit();
     syncStars();
   }
@@ -1153,6 +1617,11 @@
 
   function boot() {
     if (!document.body) { setTimeout(boot, 30); return; }
+    if (!window.__FK_FIELD_PASS) {
+      window.__FK_FIELD_PASS = true;
+      document.addEventListener('input', refreshFieldMath);
+      document.addEventListener('change', refreshFieldMath);
+    }
     enhance();
     var root = document.getElementById('root');
     if (root && window.MutationObserver) {

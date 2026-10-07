@@ -2139,7 +2139,7 @@
   }
 
   var TRADE_VIEWS = {
-    fire: { label: 'Fire', calls: ['nac-booster', 'bosch-lsn', 'ac-batt'], cheats: ['firelite-protocol', 'simplex-4100', 'resistor', 'readings'],
+    fire: { label: 'Fire', calls: ['fire-alarm-ground-fault-sectional', 'strobe-sync-compatibility-card', 'nac-booster', 'bosch-lsn', 'ac-batt'], cheats: ['firelite-protocol', 'simplex-4100', 'resistor', 'readings'],
       cats: ['fire'], lists: ['strobe-ts', 'fire-alarm-interface-free-egress'] },
     access: { label: 'Access', calls: ['maglock', 'door-latch', 'access-denied', 'reader-dead', 'verkada-door'], cheats: ['fail-safe', 'mercury-bus', 'pinouts'],
       cats: ['access'], lists: ['lock-voltage-under-load-buzz-card', 'rs485-keypad-bus-termination-health-card'] },
@@ -2181,10 +2181,20 @@
       sec.appendChild(list);
       page.appendChild(sec);
     }
-    function pageRows(ids, kind) {
+    function pageRows(ids) {
+      var L = window.__LAWSONITE__;
+      var cls = (L && L.checklists) || [];
+      var shortSub = {
+        'fire-alarm-ground-fault-sectional': 'Name the circuit, then halve it',
+        'strobe-sync-compatibility-card': 'Protocol family before you condemn heads'
+      };
       return ids.map(function (id) {
         var p = pageOf(id);
-        return p ? { href: '/guides/' + id, title: p.title, sub: p.hub || '', icon: p.icon } : null;
+        if (p) return { href: '/guides/' + id, title: p.title, sub: p.hub || '', icon: p.icon };
+        var c = null;
+        for (var i = 0; i < cls.length; i++) if (cls[i].id === id) c = cls[i];
+        if (!c) return null;
+        return { href: '/checklist/' + c.id, title: c.title, sub: shortSub[id] || 'Checklist', icon: 'bell' };
       }).filter(Boolean);
     }
     group('Trouble calls', pageRows(v.calls, 'Call'));
