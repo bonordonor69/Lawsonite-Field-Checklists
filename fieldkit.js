@@ -396,11 +396,12 @@
   function renderHomeHits(host, query) {
     buildIndex();
     var kindLabel = { list: 'List', calc: 'Calc', guide: 'Guide', call: 'Call', doc: 'Manual' };
-    var items = searchIndex(query).filter(function (r) {
+    var all = searchIndex(query, true);
+    var items = all.filter(function (r) {
       return r.kind !== 'step' && r.kind !== 'tip';
     }).slice(0, 12);
     var box = el('div', 'fk-hits');
-    box.appendChild(el('p', 'fk-hits-meta', items.length ? (items.length + ' result' + (items.length === 1 ? '' : 's')) : 'No matches'));
+    box.appendChild(el('p', 'fk-hits-meta', items.length ? ((all.partial ? 'Closest matches · ' : '') + items.length + ' result' + (items.length === 1 ? '' : 's')) : 'No matches'));
     if (!items.length) {
       var empty = el('p', 'fk-empty', 'Nothing for that. Try a model (Vista 128), a symptom, or a calc.');
       box.appendChild(empty);
@@ -702,14 +703,16 @@
         star.addEventListener('click', function () { toggleFav(m[1]); });
         filters.appendChild(star);
       }
-      toolbar.appendChild(filters);
+      var extras = page.querySelector('.runner-extras');
+      (extras || toolbar).appendChild(filters);
     } else if (toolbar) {
-      var starBtn = toolbar.querySelector('.fk-star-list');
+      var starBtn = page.querySelector('.fk-star-list');
       if (starBtn && m) starBtn.textContent = favIndex(m[1]) >= 0 ? '★' : '☆';
     }
 
     var sections = page.querySelectorAll('.checklist-section');
     if (toolbar && !page.querySelector('.fk-toc') && sections.length > 1) {
+      var tocAnchor = page.querySelector('.runner-extras') || toolbar;
       var toc = el('nav', 'fk-toc no-print');
       toc.setAttribute('aria-label', 'Jump to section');
       sections.forEach(function (sec, idx) {
@@ -720,8 +723,42 @@
         a.href = '#' + sec.id;
         toc.appendChild(a);
       });
-      toolbar.after(toc);
+      if (tocAnchor !== toolbar) tocAnchor.appendChild(toc); /* section chips share the scroll-away row */
+      else tocAnchor.after(toc);
     }
+
+    /* Phone: related Quick Refs chips ride in the same scroll-away row (originals stay for desktop). */
+    var xrow = page.querySelector('.runner-extras');
+    var rel = page.querySelector('.related-calcs');
+    if (xrow && rel && !xrow.querySelector('.fk-calc-clone')) {
+      var firstToc = xrow.querySelector('.fk-toc');
+      rel.querySelectorAll('a.related-calc-chip').forEach(function (a) {
+        var c = el('a', 'related-calc-chip fk-link fk-calc-clone', a.textContent);
+        c.href = a.getAttribute('href');
+        c.title = 'Quick Ref: ' + a.textContent;
+        if (firstToc) xrow.insertBefore(c, firstToc);
+        else xrow.appendChild(c);
+      });
+      xrow.classList.add('fk-has-calcs');
+    }
+
+    page.querySelectorAll('.page-header .lede, .page-header .inline-disclaimer').forEach(function (p) {
+      if (p.dataset.fkClamp) return;
+      if (!(window.matchMedia && window.matchMedia('(max-width: 640px)').matches)) return;
+      p.dataset.fkClamp = '1';
+      p.classList.add('fk-clamp');
+      p.setAttribute('tabindex', '0');
+      p.setAttribute('role', 'button');
+      p.setAttribute('aria-expanded', 'false');
+      p.setAttribute('title', 'Tap to show all');
+      function flip() {
+        var open = !p.classList.contains('is-open');
+        p.classList.toggle('is-open', open);
+        p.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      p.addEventListener('click', flip);
+      p.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
+    });
 
     page.querySelectorAll('.item-tip').forEach(function (p) {
       if (p.dataset.fk) return;
@@ -852,8 +889,26 @@
     return s;
   }
 
-  function searchIndex(q) {
+  function searchIndex(q, cardsOnly) {
     if (!pal.index) buildIndex();
+    var core = window.__LAWSONITE_SEARCH__;
+    if (core && String(q || '').trim()) {
+      var pool = cardsOnly ? pal.index.filter(function (r) { return r.kind !== 'step' && r.kind !== 'tip'; }) : pal.index;
+      /* Forgiving search (2026-10-07): stopwords/apostrophes ignored, synonyms, partial matches ranked by
+         how many terms hit, whole words first, trouble guides + checklists above product cards. */
+      var ranked = core.rank(pool, q);
+      var seenR = {};
+      var outR = [];
+      for (var ri = 0; ri < ranked.length && outR.length < 40; ri++) {
+        var rr = ranked[ri];
+        var kr = rr.kind + rr.href + rr.title;
+        if (seenR[kr]) continue;
+        seenR[kr] = 1;
+        outR.push(rr);
+      }
+      outR.partial = ranked.partial;
+      return outR;
+    }
     var tokens = q.toLowerCase().split(/[^a-z0-9+/]+/).filter(function (t) { return t.length > 0; });
     if (!tokens.length) {
       return pal.index.filter(function (r) { return r.kind === 'list' || r.kind === 'calc' || r.kind === 'guide' || r.kind === 'call'; }).slice(0, 14);
@@ -908,7 +963,7 @@
   function renderPalette(q) {
     var list = document.querySelector('.fk-pal-list');
     if (!list) return;
-    var items = searchIndex(q || '');
+    var items = searchIndex(q || '').slice(0, 18);
     pal.items = items;
     pal.active = 0;
     if (!items.length) {
@@ -970,8 +1025,21 @@
     if (scrim) scrim.classList.remove('is-open');
   }
 
+  /* Sticky checklist bar sits right under the real header height (header wraps on phones). */
+  var lastHeaderH = -1;
+  function syncHeaderHeight() {
+    var hd = document.querySelector('.app-header');
+    var h = hd ? Math.round(hd.getBoundingClientRect().height) : 0;
+    if (h > 0 && h !== lastHeaderH) {
+      lastHeaderH = h;
+      document.documentElement.style.setProperty('--lw-header-h', h + 'px');
+    }
+  }
+  window.addEventListener('resize', syncHeaderHeight);
+
   /* ---------------- enhance cycle ---------------- */
   function enhance() {
+    syncHeaderHeight();
     ensureHeaderSearch();
     ensureFieldNav();
     ensureTabbar();

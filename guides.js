@@ -32,6 +32,9 @@
     return String(s || '').toLowerCase().split(/[^a-z0-9+/]+/).filter(function (t) { return t.length > 0; });
   }
   function hayMatch(hay, q) {
+    /* 2026-10-07: shared forgiving core (stopwords, apostrophes, synonyms) when loaded. */
+    var core = window.__LAWSONITE_SEARCH__;
+    if (core && core.matchAll) return core.matchAll(hay, q);
     var tokens = tokensOf(q);
     if (!tokens.length) return true;
     hay = String(hay || '').toLowerCase();
