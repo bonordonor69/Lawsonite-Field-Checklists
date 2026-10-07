@@ -195,6 +195,22 @@
     afterJobChange();
     return job;
   }
+  function renameJob(id, name) {
+    name = String(name || '').trim();
+    if (!name) return null;
+    var s = loadJobsState();
+    var hit = null;
+    s.jobs.forEach(function (j) {
+      if (j.id !== id) return;
+      var old = j.name;
+      j.name = name;
+      if (!j.pack) j.pack = { title: name, ids: [] };
+      else if (!j.pack.title || j.pack.title === 'Job pack' || j.pack.title === old) j.pack.title = name;
+      hit = j;
+    });
+    saveJobsState(s);
+    return hit;
+  }
   function deleteJob(id) {
     var s = loadJobsState();
     if (s.jobs.length < 2) return;
@@ -428,6 +444,7 @@
     opts = opts || {};
     var id = shortId(p);
     var card = el('article', 'gd-product');
+    card.id = 'card-' + id;
     var top = el('div', 'gd-product-top');
     var tags = el('div', 'gd-product-tags');
     if (p.brand) tags.appendChild(el('span', 'gd-tag', p.brand));
@@ -601,17 +618,27 @@
     }
     return bar;
   }
-  function mount(node) {
+  function jobLine() {
+    var j = currentJob() || {};
+    var bar = el('div', 'gd-jobbar gd-jobline no-print');
+    bar.appendChild(el('span', 'gd-jobbar-lab', 'Job'));
+    bar.appendChild(el('strong', 'gd-jobline-name', j.name || 'Job'));
+    var a = el('a', 'gd-chip', 'Switch / new job on Job sheets');
+    a.href = '/jobsheets';
+    bar.appendChild(a);
+    return bar;
+  }
+  function mount(node, withJob) {
     root.innerHTML = '';
-    root.appendChild(jobBar());
+    if (withJob) root.appendChild(jobLine());
     root.appendChild(node);
     root.appendChild(studioFoot());
     window.scrollTo(0, 0);
   }
 
   function backLink(href, label) {
-    var a = el('a', 'gd-back fk-link', '← ' + (label || 'Field'));
-    a.href = href || '/field';
+    var a = el('a', 'gd-back fk-link', '← ' + (label || 'Library'));
+    a.href = href || '/library';
     return a;
   }
 
@@ -646,8 +673,8 @@
   function renderHub() {
     var page = el('div', 'page gd-page');
     var head = el('header', 'gd-hero');
-    head.appendChild(el('h1', null, 'Field'));
-    head.appendChild(el('p', 'gd-lede', 'Symptom, device, or brand — one search.'));
+    head.appendChild(el('h1', null, 'Guides & manuals'));
+    head.appendChild(el('p', 'gd-lede', 'Symptom, device, or brand.'));
     page.appendChild(head);
 
     var bar = el('div', 'gd-toolbar');
@@ -715,7 +742,7 @@
           if (filterKey !== 'all' && filterKey !== 'docs') return;
           if (!hayMatch(productHay(pr), f)) return;
           hits.push({
-            href: '/guides/manuals?q=' + encodeURIComponent(pr.title.split('/')[0].trim()),
+            href: '/guides/manuals?card=' + shortId(pr),
             title: pr.title,
             sub: pr.brand || 'Official docs',
             icon: 'book',
@@ -1032,6 +1059,8 @@
       var sp = new URLSearchParams(location.search);
       pre = sp.get('q') || '';
       tradeKey = sp.get('trade') || 'all';
+      var cardParam = sp.get('card') || (location.hash.indexOf('#card-') === 0 ? location.hash.slice(6) : '');
+      var onlyCard = cardParam ? productByShort(cardParam) : null;
     } catch (e) { pre = ''; }
     if (!TRADES.some(function (t) { return t.key === tradeKey; }) && tradeKey !== 'other') tradeKey = 'all';
     q.value = pre;
@@ -1099,6 +1128,16 @@
       host.textContent = '';
       var f = (q.value || '').trim();
       var shown = 0;
+      if (onlyCard) {
+        host.appendChild(productCard(onlyCard, { open: true, onPin: function () { paintPackBar(); } }));
+        meta.textContent = '1 card · ';
+        var all = el('button', 'gd-chip gd-showall', 'Show all product cards');
+        all.type = 'button';
+        all.addEventListener('click', function () { onlyCard = null; syncQuery(); paint(); });
+        meta.appendChild(all);
+        paintPackBar();
+        return;
+      }
       allItems.forEach(function (p) {
         var trade = productTrade(p);
         if (tradeKey !== 'all' && trade !== tradeKey) return;
@@ -1116,7 +1155,7 @@
       }
       paintPackBar();
     }
-    q.addEventListener('input', paint);
+    q.addEventListener('input', function () { onlyCard = null; paint(); });
     paint();
     paintPackBar();
     return wrap;
@@ -1335,7 +1374,7 @@
     var rows = padSheetRows(kind, forms[kind]);
     var pack = loadPack();
     var page = el('div', 'page gd-page gd-sheet-page');
-    page.appendChild(backLink('/field', 'Field'));
+    page.appendChild(backLink('/library', 'Library'));
     var origin = location.origin && location.origin !== 'null'
       ? location.origin
       : 'https://lawsonite.tomcatstudios.com';
@@ -1461,7 +1500,7 @@
   function renderHardware() {
     var H = window.__LAWSONITE_HARDWARE__;
     var page = el('div', 'page gd-page gd-hw-page');
-    page.appendChild(backLink('/field', 'Field'));
+    page.appendChild(backLink('/library', 'Library'));
     var pack = loadPack();
     var origin = location.origin && location.origin !== 'null'
       ? location.origin
@@ -2074,12 +2113,12 @@
     var p = pageOf(id);
     if (!p) {
       var miss = el('div', 'page gd-page');
-      miss.appendChild(backLink('/field', 'Field'));
+      miss.appendChild(backLink('/library', 'Library'));
       miss.appendChild(el('h1', null, 'Guide not found'));
       return miss;
     }
     var page = el('div', 'page gd-page');
-    page.appendChild(backLink('/field', 'Field'));
+    page.appendChild(backLink('/library', 'Library'));
     var lh = printLetterhead(p.title);
     lh.classList.add('only-print');
     page.appendChild(lh);
@@ -2096,6 +2135,72 @@
     var disc = el('p', 'gd-foot',
       'Educational job aide only — not code, manufacturer instructions, or AHJ approval. Confirm the device label, the panel programming, and the official sheet before you cut, land, or walk away.');
     page.appendChild(disc);
+    return page;
+  }
+
+  var TRADE_VIEWS = {
+    fire: { label: 'Fire', calls: ['nac-booster', 'bosch-lsn', 'ac-batt'], cheats: ['firelite-protocol', 'simplex-4100', 'resistor', 'readings'],
+      cats: ['fire'], lists: ['strobe-ts', 'fire-alarm-interface-free-egress'] },
+    access: { label: 'Access', calls: ['maglock', 'door-latch', 'access-denied', 'reader-dead', 'verkada-door'], cheats: ['fail-safe', 'mercury-bus', 'pinouts'],
+      cats: ['access'], lists: ['lock-voltage-under-load-buzz-card', 'rs485-keypad-bus-termination-health-card'] },
+    cameras: { label: 'Cameras', calls: ['camera-offline', 'no-link', 'verkada-blank', 'doorbell'], cheats: ['poe', 'ip', 'verkada-claim'],
+      cats: ['cameras'], lists: ['camera-offline-no-video-service', 'poe-night-ir-reboot-isolation', 'shielded-drop-ground-loop-camera', 'camera-vlan-secure-remote-access', 'cca-vs-solid-copper-poe-path', 'active-vs-passive-poe-match'] },
+    intrusion: { label: 'Intrusion', calls: ['zone-open', 'keypad-blank', 'wireless-sup', 'polling-trouble', 'no-comms', 'comms-takeover', 'ac-batt'], cheats: ['vista-128', 'wireless-5800', 'ecp-vplex', 'rj31x', 'keypad', 'bosch-sdi2', 'resistor'],
+      cats: [], lists: ['monitoring-dual-path-prove-out', 'takeover-existing-system-assessment', 'rs485-keypad-bus-termination-health-card', 'door-forced-held-open-diagnostics', 'multimeter-basics'] },
+    power: { label: 'Power', calls: ['ac-batt', 'nac-booster', 'doorbell'], cheats: ['readings', 'ampacity', 'resistor', 'fail-safe', 'poe'],
+      cats: [], lists: ['panel-power', 'lock-voltage-under-load-buzz-card', 'nac-voltage-drop-field-worksheet', 'nac-booster-power-extender-install', 'doorbell-transformer-chime-power-health', 'electric-power-transfer-ept-wiring', 'active-vs-passive-poe-match', 'multimeter-basics'] }
+  };
+  function renderTrade() {
+    var key = 'fire';
+    try { key = new URLSearchParams(location.search).get('t') || 'fire'; } catch (e) {}
+    if (!TRADE_VIEWS[key]) key = 'fire';
+    var v = TRADE_VIEWS[key];
+    var page = el('div', 'page gd-page gd-trade');
+    page.appendChild(backLink('/', 'Search'));
+    var head = el('header', 'gd-hero');
+        head.appendChild(el('h1', null, v.label + ': trouble guides & checklists'));
+    head.appendChild(el('p', 'gd-lede', 'Start from the symptom. Product cards for ' + v.label.toLowerCase() + ' are one tap down.'));
+    page.appendChild(head);
+    var chips = el('div', 'gd-chips gd-trade-chips');
+    Object.keys(TRADE_VIEWS).forEach(function (k) {
+      var a = el('a', 'gd-chip fk-link' + (k === key ? ' is-on' : ''), TRADE_VIEWS[k].label);
+      a.href = '/guides/trade?t=' + k;
+      if (k === key) a.setAttribute('aria-current', 'page');
+      chips.appendChild(a);
+    });
+    page.appendChild(chips);
+    function group(title, rows) {
+      if (!rows.length) return;
+      var sec = el('section', 'gd-section');
+      var h = el('div', 'gd-section-head');
+      h.appendChild(el('h2', null, title));
+      h.appendChild(el('span', null, String(rows.length)));
+      sec.appendChild(h);
+      var list = el('div', 'gd-list');
+      rows.forEach(function (r) { list.appendChild(toolRow(r)); });
+      sec.appendChild(list);
+      page.appendChild(sec);
+    }
+    function pageRows(ids, kind) {
+      return ids.map(function (id) {
+        var p = pageOf(id);
+        return p ? { href: '/guides/' + id, title: p.title, sub: p.hub || '', icon: p.icon } : null;
+      }).filter(Boolean);
+    }
+    group('Trouble calls', pageRows(v.calls, 'Call'));
+    var L = window.__LAWSONITE__;
+    var cls = (L && L.checklists) || [];
+    var seen = {};
+    var lists = [];
+    cls.forEach(function (c) { if (v.cats.indexOf(c.category) >= 0 && !seen[c.id]) { seen[c.id] = 1; lists.push(c); } });
+    v.lists.forEach(function (id) { cls.forEach(function (c) { if (c.id === id && !seen[c.id]) { seen[c.id] = 1; lists.push(c); } }); });
+    group('Checklists', lists.map(function (c) { return { href: '/checklist/' + c.id, title: c.title, sub: '', icon: 'check' }; }));
+    group('Cheat sheets', pageRows(v.cheats, 'Cheat'));
+    var docs = el('p', 'gd-trade-docs');
+    var da = el('a', 'gd-chip fk-link', 'Product cards & manuals for ' + v.label + ' →');
+    da.href = '/guides/manuals?trade=' + key;
+    docs.appendChild(da);
+    page.appendChild(docs);
     return page;
   }
 
@@ -2116,9 +2221,10 @@
     if (path === '/field' || path === '/guides') mount(renderHub());
     else {
       var id = path.split('/').pop();
-      if (id === 'pack') mount(renderPack());
-      else if (id === 'hardware') mount(renderHardware());
-      else if (JOB_SHEETS[id]) mount(renderJobSheet(id));
+      if (id === 'pack') mount(renderPack(), true);
+      else if (id === 'hardware') mount(renderHardware(), true);
+      else if (JOB_SHEETS[id]) mount(renderJobSheet(id), true);
+      else if (id === 'trade') mount(renderTrade());
       else mount(renderGuide(id));
     }
   }
@@ -2242,12 +2348,11 @@
         hay: 'bom pack list bill of materials adi anixter order hardware'
       });
       allProducts().forEach(function (pr) {
-        var q = encodeURIComponent((pr.title || '').split('/')[0].trim());
         rows.push({
           kind: 'doc',
           title: pr.title,
           sub: pr.brand || 'Official docs',
-          href: '/guides/manuals?q=' + q,
+          href: '/guides/manuals?card=' + shortId(pr),
           hay: productHay(pr).toLowerCase()
         });
       });
@@ -2259,6 +2364,7 @@
     current: currentJob,
     switchTo: switchJob,
     create: createJob,
-    remove: deleteJob
+    remove: deleteJob,
+    rename: renameJob
   };
 })();

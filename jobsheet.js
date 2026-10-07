@@ -93,6 +93,44 @@
     return null;
   }
 
+  /* ---------------- one job system (shared with pins, zone/door/camera paper, pack list) ---------------- */
+  var JOBS_KEY = 'lawsonite-jobs-v1';
+  function jobsApi() { return window.__LAWSONITE_JOBS__ || null; }
+  function jobsState() {
+    var api = jobsApi();
+    if (api && api.state) { try { return api.state(); } catch (e) {} }
+    try {
+      var s = JSON.parse(localStorage.getItem(JOBS_KEY) || 'null');
+      if (s && s.jobs && s.jobs.length) return s;
+    } catch (e) {}
+    return { current: null, jobs: [] };
+  }
+  function currentJobRec() {
+    var s = jobsState();
+    for (var i = 0; i < s.jobs.length; i++) if (s.jobs[i].id === s.current) return s.jobs[i];
+    return s.jobs[0] || null;
+  }
+  function isGenericJobName(n) {
+    n = String(n || '').trim();
+    return !n || /^job( \d+)?$/i.test(n) || n === 'Job pack';
+  }
+  /* Saving a sheet files it under a job: same-name job -> switch to it; unnamed current job -> name it for the site; else start a job for the site. */
+  function linkJob(site) {
+    var api = jobsApi();
+    if (!api || !api.state) return null;
+    var s = api.state();
+    var want = String(site).trim().toLowerCase();
+    for (var i = 0; i < s.jobs.length; i++) {
+      if (String(s.jobs[i].name || '').trim().toLowerCase() === want) {
+        if (s.current !== s.jobs[i].id) api.switchTo(s.jobs[i].id);
+        return s.jobs[i];
+      }
+    }
+    var cur = api.current();
+    if (cur && isGenericJobName(cur.name) && api.rename) return api.rename(cur.id, site) || api.current();
+    return api.create(site);
+  }
+
   function computeStatuses(cl) {
     // current saved progress for this checklist: {itemId: 'checked'|'na'|undefined}
     var stored = L.progressFor(cl.id);
@@ -161,6 +199,8 @@
       savedAt: null,
       exportedAt: null,
       notes: '',
+      jobId: null,
+      jobName: null,
       statuses: computeStatuses(cl),
       syncState: 'local'
     };
@@ -270,10 +310,20 @@
     inDate.value = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) +
       'T' + pad(now.getHours()) + ':' + pad(now.getMinutes());
 
+    var curJob = currentJobRec();
+    if (curJob && !isGenericJobName(curJob.name)) inSite.value = curJob.name;
     grid.appendChild(field('Site / account *', inSite));
     grid.appendChild(field('Tech (initials or number)', inTech));
     grid.appendChild(field('Date & time (device local)', inDate));
     formCard.appendChild(grid);
+    var jobHint = el('p', 'muted small js-job-hint');
+    function paintJobHint() {
+      var v = inSite.value.trim();
+      jobHint.textContent = v ? ('Files under job “' + v + '” with its pins, zone / door / camera sheets, and pack list.') : 'The site name is the job name. Pins, zone / door / camera sheets, and the pack list ride on the same job.';
+    }
+    inSite.addEventListener('input', paintJobHint);
+    paintJobHint();
+    formCard.appendChild(jobHint);
 
     // meta strip
     var meta = el('p', 'js-meta');
@@ -331,6 +381,10 @@
         rec.startedAt = inDate.value ? new Date(inDate.value).toISOString() : rec.startedAt;
         rec.savedAt = new Date().toISOString();
         rec.syncState = 'local';
+        try {
+          var job = linkJob(site);
+          if (job) { rec.jobId = job.id; rec.jobName = job.name; }
+        } catch (e) { console.error(e); }
         return dbPut(db, rec).then(function () {
           location.href = '/jobsheets';
         });
@@ -357,6 +411,8 @@
       head.appendChild(el('p', 'lede', 'Saved on this device. Open, print as a branded PDF, or delete.'));
       page.appendChild(head);
 
+      page.appendChild(jobPanel());
+
       var toolbar = el('div', 'js-list-toolbar no-print');
       var bNew = el('a', 'btn', 'New job sheet');
       bNew.href = '/jobsheets/new';
@@ -366,7 +422,7 @@
       if (!recs.length) {
         var empty = el('div', 'card js-card-pad js-empty');
         empty.appendChild(el('h2', null, 'No job sheets yet'));
-        empty.appendChild(el('p', null, 'Run any checklist, then tap “Job sheet” in the toolbar to capture the run as a timestamped job record.'));
+        empty.appendChild(el('p', null, 'Open any checklist and tap “Job sheet” in the row under the progress bar (next to Reset). It captures the run with site, tech, time, and notes, saved on this device. Or tap New job sheet and pick a checklist.'));
         page.appendChild(empty);
         mount(page);
         return;
@@ -382,7 +438,8 @@
         card.appendChild(top);
         card.appendChild(el('p', 'js-jobcard-meta',
           (r.checklistTitle || r.checklistId) + ' · ' + fmtDateTime(r.startedAt) +
-          (r.tech ? ' · Tech ' + r.tech : '')));
+          (r.tech ? ' · Tech ' + r.tech : '') +
+          (r.jobName && r.jobName !== r.site ? ' · Job ' + r.jobName : '')));
         var ids = [];
         var cl = findChecklist(r.checklistId);
         if (cl) cl.sections.forEach(function (s) { (s.items || []).forEach(function (it) { ids.push(it.id); }); });
@@ -419,6 +476,76 @@
       p.appendChild(el('p', 'js-msg js-msg-err', 'Could not open job sheets: ' + (e && e.message ? e.message : e)));
       mount(p);
     });
+  }
+
+  function jobPanel() {
+    var api = jobsApi();
+    var box = el('section', 'card js-card-pad js-jobpanel no-print');
+    box.setAttribute('aria-label', 'Current job');
+    var head = el('div', 'js-jobpanel-head');
+    head.appendChild(el('h2', 'js-jobpanel-title', 'Current job'));
+    box.appendChild(head);
+    if (!api || !api.state) {
+      box.appendChild(el('p', 'muted small', 'Jobs load with the field cards. Reload once if this stays empty.'));
+      return box;
+    }
+    var s = api.state();
+    var row = el('div', 'js-jobpanel-row');
+    var sel = document.createElement('select');
+    sel.className = 'js-input js-job-sel';
+    sel.setAttribute('aria-label', 'Current job');
+    s.jobs.forEach(function (j) {
+      var o = document.createElement('option');
+      o.value = j.id;
+      var pins = j.pack && j.pack.ids ? j.pack.ids.length : 0;
+      o.textContent = (j.name || 'Job') + (pins ? ' · ' + pins + ' pins' : '');
+      sel.appendChild(o);
+    });
+    sel.value = s.current;
+    sel.addEventListener('change', function () { api.switchTo(sel.value); renderList(); });
+    row.appendChild(sel);
+    var bAdd = el('button', 'btn ghost', '+ New job');
+    bAdd.type = 'button';
+    bAdd.addEventListener('click', function () {
+      var name = window.prompt('Name this job (site / account)', '');
+      if (name === null) return;
+      api.create(name.trim() || '');
+      renderList();
+    });
+    row.appendChild(bAdd);
+    if (api.rename) {
+      var bRen = el('button', 'btn ghost', 'Rename');
+      bRen.type = 'button';
+      bRen.addEventListener('click', function () {
+        var cur = api.current() || {};
+        var name = window.prompt('Rename this job', cur.name || '');
+        if (name === null || !name.trim()) return;
+        api.rename(cur.id, name.trim());
+        renderList();
+      });
+      row.appendChild(bRen);
+    }
+    if (s.jobs.length > 1) {
+      var bDel = el('button', 'btn reset-quiet', 'Delete job');
+      bDel.type = 'button';
+      bDel.addEventListener('click', function () {
+        var cur = api.current() || {};
+        if (!window.confirm('Delete job “' + (cur.name || 'Job') + '”? Its pins, zone / door / camera sheets, and pack list go with it. Saved job sheets below stay.')) return;
+        api.remove(cur.id);
+        renderList();
+      });
+      row.appendChild(bDel);
+    }
+    box.appendChild(row);
+    var links = el('div', 'js-jobpanel-links');
+    [['/guides/pack', 'Pack / QR'], ['/guides/zones', 'Zone list'], ['/guides/doors', 'Door sheet'], ['/guides/cameras', 'Cam directory'], ['/guides/hardware?tab=bom', 'Pack list']].forEach(function (l) {
+      var a = el('a', 'chip js-joblink', l[1]);
+      a.href = l[0];
+      links.appendChild(a);
+    });
+    box.appendChild(links);
+    box.appendChild(el('p', 'muted small', 'One job per site: job sheets you save, pinned cards, zone / door / camera sheets, and the hardware pack list all ride on the current job. Everything stays on this device.'));
+    return box;
   }
 
   function renderPrint(id) {

@@ -2,12 +2,12 @@
    Precache = exactly what index.html references + the overlay scripts the app injects.
    Old caches (incl. the previous Workbox precache) are deleted on activate. */
 'use strict';
-var VERSION = '2026-10-07-9e7d5ff139';
+var VERSION = '2026-10-07-r2-6bb49e4122';
 var CACHE = 'lawsonite-precache-' + VERSION;
 var PRECACHE = [
  {
   "url": "/index.html",
-  "rev": "353812cc858cfd78a04bacae33bf2efe"
+  "rev": "1fc0cb1a1c049522d26016d59df3e0af"
  },
  {
   "url": "/favicon.svg",
@@ -19,19 +19,19 @@ var PRECACHE = [
  },
  {
   "url": "/search-core.js",
-  "rev": "3ae81d19ed0d7fe252097faa1632d611"
+  "rev": "afd490ccc7a1d74a3507281a922f8251"
  },
  {
   "url": "/fieldkit.css",
-  "rev": "c5e9379c580af23f17d903bc6490bdf4"
+  "rev": "79b7bbdb57464fb2ef88c2814564b68f"
  },
  {
   "url": "/guides.css",
   "rev": "53dda7acf3fde90a221afc554129228b"
  },
  {
-  "url": "/assets/index-ltXaumfy.js",
-  "rev": "75784b4120518b05ccd22df308b2bf20"
+  "url": "/assets/index-C4Buzm74.js",
+  "rev": "239c5c6a2b0643a96c550dac6e8fcb11"
  },
  {
   "url": "/assets/index-d2IG0WUH.css",
@@ -47,19 +47,19 @@ var PRECACHE = [
  },
  {
   "url": "/guides-data.js",
-  "rev": "99e6ae5ff68b4ac59d9450d0bca70037"
+  "rev": "3864bdcc11be8b4f730a59be517a0fe0"
  },
  {
   "url": "/guides.js",
-  "rev": "b05a3b21495f53f3e45266ddb649d85e"
+  "rev": "4293e3697348953f4bd445c2564feeea"
  },
  {
   "url": "/jobsheet.js",
-  "rev": "a01c24c57cb4eeeb7c81b94ee41261c7"
+  "rev": "821d716ead2525c2215e2cefde5e4336"
  },
  {
   "url": "/fieldkit.js",
-  "rev": "d6d9ffd5abc27ebed98a2cda0f7f1c5c"
+  "rev": "da93eee9f9125455c63bd6cd2b37e9d3"
  },
  {
   "url": "/qrcode.js",

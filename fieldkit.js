@@ -24,7 +24,6 @@
   ];
 
   var CALLS = [
-    { href: '/checklist/false-alarm-symptom-tree', title: 'Alarm went off', sub: 'No fire / no break-in in sight', icon: 'bell' },
     { href: '/checklist/poe-night-ir-reboot-isolation', title: 'Camera dies at night', sub: 'PoE, IR, under-load reboot', icon: 'cam' },
     { href: '/checklist/strobe-ts', title: 'Strobe dead / no sync', sub: 'NAC / notification appliances', icon: 'strobe' },
     { href: '/guides/reader-dead', title: 'Reader dead / no beep', sub: 'Power, Wiegand, OSDP', icon: 'access' }
@@ -155,15 +154,28 @@
       recordVisit('pack', { href: p + location.search, title: ptitle });
       return;
     }
+    if (gid === 'trade') {
+      var tk = '';
+      try { tk = new URLSearchParams(location.search).get('t') || ''; } catch (e) {}
+      recordVisit('trade:' + tk, { href: p + location.search, title: (tk.charAt(0).toUpperCase() + tk.slice(1)) + ' guides & checklists' });
+      return;
+    }
     if (gid === 'manuals') {
       var trade = '';
       var q = '';
+      var card = '';
       try {
         var sp = new URLSearchParams(location.search);
         trade = sp.get('trade') || '';
         q = sp.get('q') || '';
+        card = sp.get('card') || '';
       } catch (e) {}
       var title = 'Product cards';
+      if (card) {
+        var cp = productByShortFk(card);
+        recordVisit('manuals:card:' + card, { href: p + location.search, title: cp ? cp.title : 'Product card' });
+        return;
+      }
       if (q) title = q;
       else if (trade) title = trade.charAt(0).toUpperCase() + trade.slice(1) + ' products';
       recordVisit('manuals:' + (q || trade || 'all'), { href: p + location.search, title: title });
@@ -175,6 +187,21 @@
 
   function pathOf() {
     return location.pathname.replace(/\/+$/, '') || '/';
+  }
+  /* same id as guides.js shortId() so a product row can deep-link one card */
+  function productByShortFk(id) {
+    var G = window.__LAWSONITE_GUIDES__;
+    var list = (G && G.products) || [];
+    if (!list.length && G && G.pages && G.pages.manuals) {
+      (G.pages.manuals.sections || []).forEach(function (s) { if (s.type === 'products') list = s.items || []; });
+    }
+    for (var i = 0; i < list.length; i++) {
+      var s = String((list[i].brand || '') + ' ' + (list[i].title || '')).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 48);
+      var h = 5381;
+      for (var k = 0; k < s.length; k++) h = ((h << 5) + h + s.charCodeAt(k)) >>> 0;
+      if (h.toString(36) === id) return list[i];
+    }
+    return null;
   }
   function isLanding() {
     var p = pathOf();
@@ -329,10 +356,10 @@
       dash.appendChild(ul);
     }
 
-    dash.appendChild(block('Field', 'Guides & manuals'));
+    dash.appendChild(block('Guides & manuals', 'Meters, pinouts, paper'));
     var grow = el('div', 'fk-chip-row');
     [
-      { href: '/field', title: 'All tools' },
+      { href: '/guides', title: 'All guides' },
       { href: '/guides/meter', title: 'Meter' },
       { href: '/guides/pinouts', title: 'Pinouts' },
       { href: '/guides/manuals', title: 'Manuals' },
@@ -475,41 +502,22 @@
   function appendJobSwitcher(dash) {
     var api = window.__LAWSONITE_JOBS__;
     var row = el('div', 'fk-chip-row fk-job-row');
-    if (api && api.state) {
-      var s = api.state();
-      var cur = api.current() || {};
+    var cur = null;
+    if (api && api.current) cur = api.current();
+    else {
+      var js0 = readJSON('lawsonite-jobs-v1', null);
+      if (js0 && js0.jobs && js0.jobs.length) cur = js0.jobs.filter(function (j) { return j.id === js0.current; })[0] || js0.jobs[0];
+    }
+    if (cur) {
       var n = cur.pack && cur.pack.ids ? cur.pack.ids.length : 0;
       dash.appendChild(block('This job', (cur.name || 'Job') + (n ? ' · ' + n + ' pins' : '')));
-      var sel = document.createElement('select');
-      sel.className = 'fk-job-sel';
-      sel.setAttribute('aria-label', 'Current job');
-      s.jobs.forEach(function (j) {
-        var o = document.createElement('option');
-        o.value = j.id;
-        var pins = j.pack && j.pack.ids ? j.pack.ids.length : 0;
-        o.textContent = (j.name || 'Job') + (pins ? ' · ' + pins : '');
-        sel.appendChild(o);
-      });
-      sel.value = s.current;
-      sel.addEventListener('change', function () {
-        api.switchTo(sel.value);
-        enhanceLanding();
-        renderDash(true);
-      });
-      row.appendChild(sel);
-      var add = el('button', 'fk-text-chip', '+ Job');
-      add.type = 'button';
-      add.addEventListener('click', function () {
-        var name = window.prompt('Name this job', '');
-        if (name === null) return;
-        api.create(name.trim() || '');
-        enhanceLanding();
-        renderDash(true);
-      });
-      row.appendChild(add);
     } else {
-      dash.appendChild(block('This job', 'Pins, sheets, pack list'));
+      dash.appendChild(block('This job', 'Job sheets, pins, paper, pack list'));
     }
+    var js = el('a', 'fk-text-chip fk-link', 'Job sheets');
+    js.href = '/jobsheets';
+    js.title = 'Saved job sheets, plus switch or start a job';
+    row.appendChild(js);
     var pa = el('a', 'fk-text-chip fk-link', 'Open pack / QR');
     pa.href = '/guides/pack';
     row.appendChild(pa);
@@ -519,7 +527,7 @@
   function renderLandingDash(host) {
     var dash = el('div', 'fk-dash start-dash');
 
-    dash.appendChild(block('Or pick a trade', 'Product cards'));
+    dash.appendChild(block('Or pick a trade', 'Trouble guides & checklists'));
     var row = el('div', 'fk-chip-row start-trades');
     [
       { trade: 'fire', label: 'Fire' },
@@ -529,7 +537,7 @@
       { trade: 'power', label: 'Power' }
     ].forEach(function (t) {
       var a = el('a', 'fk-text-chip fk-link', t.label);
-      a.href = '/guides/manuals?trade=' + t.trade;
+      a.href = '/guides/trade?t=' + t.trade;
       row.appendChild(a);
     });
     dash.appendChild(row);
@@ -742,6 +750,29 @@
       xrow.classList.add('fk-has-calcs');
     }
 
+    var dec = page.querySelector('details.fk-decides');
+    var dchip = xrow && xrow.querySelector('.fk-decides-chip');
+    if (dchip && (!dec || dchip._dec !== dec)) { dchip.remove(); dchip = null; }
+    if (xrow && dec && !dchip) {
+      dchip = el('button', 'btn ghost fk-decides-chip', 'Decides the call');
+      dchip.type = 'button';
+      dchip._dec = dec;
+      var syncChip = function () {
+        dchip.setAttribute('aria-expanded', dec.open ? 'true' : 'false');
+        dchip.classList.toggle('is-on', dec.open);
+      };
+      dchip.addEventListener('click', function () {
+        dec.open = !dec.open;
+        syncChip();
+        if (dec.open) dec.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      });
+      dec.addEventListener('toggle', syncChip);
+      syncChip();
+      var jsb = xrow.querySelector('.runner-jobsheet');
+      if (jsb && jsb.nextSibling) xrow.insertBefore(dchip, jsb.nextSibling);
+      else xrow.appendChild(dchip);
+    }
+
     page.querySelectorAll('.page-header .lede, .page-header .inline-disclaimer').forEach(function (p) {
       if (p.dataset.fkClamp) return;
       if (!(window.matchMedia && window.matchMedia('(max-width: 640px)').matches)) return;
@@ -760,12 +791,12 @@
       p.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flip(); } });
     });
 
-    page.querySelectorAll('.item-tip').forEach(function (p) {
-      if (p.dataset.fk) return;
-      p.dataset.fk = '1';
-      p.textContent = (p.textContent || '').replace(/^Tip:\s*/i, '');
-    });
   }
+
+  /* print: open the 'decides the call' strip (collapsed on phones) */
+  window.addEventListener('beforeprint', function () {
+    document.querySelectorAll('details.fk-decides').forEach(function (d) { d.open = true; });
+  });
 
   function syncStars() {
     var stars = document.querySelectorAll('button.card-star[data-fav]');

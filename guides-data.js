@@ -87,7 +87,7 @@ window.__LAWSONITE_GUIDES__ = {
     hub: 'Before you climb, before you swap parts',
     lede: 'Most callbacks start in the first five minutes: nobody wrote down the zone text, nobody checked AC, and somebody reset the panel before looking.',
     tags: ['process', 'service', 'intake', 'newbie'],
-    related: [{ href: '/guides/safety', label: 'Don’t make it worse' }, { href: '/guides/meter', label: 'Meter course' }, { href: '/jobsheets', label: 'Job sheet' }],
+    related: [{ href: '/guides/safety', label: 'Don’t make it worse' }, { href: '/guides/meter', label: 'Meter course' }, { href: '/jobsheets', label: 'Job sheets' }],
     sections: [
       {
         type: 'checks', title: 'Do these before you touch a device',
@@ -101,7 +101,7 @@ window.__LAWSONITE_GUIDES__ = {
           'If you are going to drop a maglock or a fire-interface door, know the egress path before you do it.'
         ]
       },
-      { type: 'tip', text: 'A job sheet with site, time, and the panel text takes 40 seconds and saves the next visit. Use Lawsonite’s Job sheet from the checklist toolbar.' }
+      { type: 'tip', text: 'A job sheet with site, time, and the panel text takes 40 seconds and saves the next visit. Open the checklist and tap “Job sheet” in the row under the progress bar (next to Reset). It saves to Job sheets on this device.' }
     ]
   };
 
@@ -178,8 +178,8 @@ window.__LAWSONITE_GUIDES__ = {
       },
       {
         type: 'svg',
-        caption: 'T568B looking at the jack: 1 white/orange, 2 orange, 3 white/green, 4 blue, 5 white/blue, 6 green, 7 white/brown, 8 brown.',
-        svg: '<svg viewBox="0 0 320 150" role="img" aria-label="T568B pair colors"><rect x="30" y="20" width="260" height="90" rx="8" fill="none" stroke="currentColor" stroke-width="2"/><g font-size="9" font-weight="700" text-anchor="middle"><rect x="46" y="36" width="22" height="50" fill="#f8e0b0"/><text x="57" y="64" fill="#333">w/O</text><rect x="78" y="36" width="22" height="50" fill="#e67e22"/><text x="89" y="64" fill="#fff">O</text><rect x="110" y="36" width="22" height="50" fill="#d5f5e3"/><text x="121" y="64" fill="#333">w/G</text><rect x="142" y="36" width="22" height="50" fill="#3498db"/><text x="153" y="64" fill="#fff">Bl</text><rect x="174" y="36" width="22" height="50" fill="#d6eaf8"/><text x="185" y="64" fill="#333">w/B</text><rect x="206" y="36" width="22" height="50" fill="#1e8449"/><text x="217" y="64" fill="#fff">G</text><rect x="238" y="36" width="22" height="50" fill="#f5e6d3"/><text x="249" y="64" fill="#333">w/Br</text><rect x="270" y="36" width="22" height="50" fill="#6e2c00"/><text x="281" y="64" fill="#fff">Br</text></g><text x="160" y="132" text-anchor="middle" font-size="11" fill="currentColor">Pin 1 left → pin 8 right (clip down, facing you)</text></svg>'
+        caption: 'T568B, looking at the plug (clip down, facing you): 1 white/orange, 2 orange, 3 white/green, 4 blue, 5 white/blue, 6 green, 7 white/brown, 8 brown.',
+        svg: '<svg viewBox="0 0 320 150" role="img" aria-label="T568B pair colors"><rect x="30" y="20" width="260" height="90" rx="8" fill="none" stroke="currentColor" stroke-width="2"/><g font-size="9" font-weight="700" text-anchor="middle"><rect x="46" y="36" width="22" height="50" fill="#f8e0b0"/><text x="57" y="64" fill="#333">w/O</text><rect x="78" y="36" width="22" height="50" fill="#e67e22"/><text x="89" y="64" fill="#fff">O</text><rect x="110" y="36" width="22" height="50" fill="#d5f5e3"/><text x="121" y="64" fill="#333">w/G</text><rect x="142" y="36" width="22" height="50" fill="#3498db"/><text x="153" y="64" fill="#fff">Bl</text><rect x="174" y="36" width="22" height="50" fill="#d6eaf8"/><text x="185" y="64" fill="#333">w/B</text><rect x="206" y="36" width="22" height="50" fill="#1e8449"/><text x="217" y="64" fill="#fff">G</text><rect x="238" y="36" width="22" height="50" fill="#f5e6d3"/><text x="249" y="64" fill="#333">w/Br</text><rect x="270" y="36" width="22" height="50" fill="#6e2c00"/><text x="281" y="64" fill="#fff">Br</text></g><text x="160" y="132" text-anchor="middle" font-size="11" fill="currentColor">Plug: pin 1 left → pin 8 right (clip down, facing you)</text></svg>'
       },
       {
         type: 'table', title: 'PoE on that same jack',
@@ -214,7 +214,7 @@ window.__LAWSONITE_GUIDES__ = {
           ['+V / GND', '12–24 V per label, sized for the run'],
           ['A / B (twisted pair)', 'RS-485. Swap A/B if it will not poll — first trick, not a new reader.'],
           ['Shield', 'Single-end ground. Grounding both ends is how you build a ground loop.'],
-          ['EOL', '120 Ω at the far end of a multi-drop bus, not on every reader by default']
+          ['EOL', '120 Ω at both physical ends of the bus (first and last device on the run), not on every reader in the middle']
         ]
       },
       {
@@ -287,15 +287,19 @@ window.__LAWSONITE_GUIDES__ = {
     sections: [
       {
         type: 'table',
-        headers: ['Name', 'IEEE', 'Rough watts at PD', 'Typical'],
+        headers: ['Class', 'IEEE', 'PSE port (switch)', 'PD max (camera)', 'Typical'],
         rows: [
-          ['Class 0 / 3  (af)', '802.3af Type 1', '~13 W', 'Small indoor camera, VoIP phone'],
-          ['Class 4  (at / PoE+)', '802.3at Type 2', '~25.5 W', 'IR turret, small PTZ, some heaters'],
-          ['Class 5–6 (bt)', '802.3bt Type 3', '~51–60 W', 'PTZ, multi-sensor, heater + IR'],
-          ['Class 7–8 (bt)', '802.3bt Type 4', '~71–90 W', 'Big PTZ / lighting / high-draw'],
-          ['Passive 12 / 24 V', 'not IEEE', 'Whatever the brick is', 'Some radios, some “PoE” injectors from a junk drawer']
+          ['Class 1 (af)', '802.3af Type 1', '4 W', '3.84 W', 'Low-draw sensors'],
+          ['Class 2 (af)', '802.3af Type 1', '7 W', '6.49 W', 'Small fixed camera, phone'],
+          ['Class 0 / 3 (af)', '802.3af Type 1', '15.4 W', '13 W', 'Small indoor camera, VoIP phone'],
+          ['Class 4 (at / PoE+)', '802.3at Type 2', '30 W', '25.5 W', 'IR turret, small PTZ, some heaters'],
+          ['Class 5 (bt)', '802.3bt Type 3', '45 W', '40 W', 'Multi-sensor, heater + IR'],
+          ['Class 6 (bt)', '802.3bt Type 3', '60 W', '51 W', 'PTZ, multi-sensor, heater + IR'],
+          ['Class 7 (bt)', '802.3bt Type 4', '75 W', '62 W', 'Big PTZ / high-draw'],
+          ['Class 8 (bt)', '802.3bt Type 4', '90 W', '71.3 W', 'Big PTZ / lighting / high-draw'],
+          ['Passive 12 / 24 V', 'not IEEE', '—', 'Whatever the brick is', 'Some radios, some “PoE” injectors from a junk drawer']
         ],
-        foot: 'PSE (switch/injector) must meet or exceed the PD (camera). A 15 W port and a 25 W camera is a night-time reboot waiting to happen.'
+        foot: 'PSE watts are what the switch port reserves; PD watts are what the camera can count on at its end after cable loss. Budget the switch in PSE watts; match the camera’s PD class. A 15 W port and a 25 W camera is a night-time reboot waiting to happen.'
       },
       {
         type: 'steps', title: 'Match check in 30 seconds',
@@ -338,7 +342,7 @@ window.__LAWSONITE_GUIDES__ = {
     title: 'Camera network mini',
     hub: 'Link light, IP, VLAN, the 30-second version',
     lede: 'You do not need to be IT. You do need to know why a camera is dark when the PoE light is green.',
-    tags: ['IP', 'VLAN', 'DHCP', 'camera', 'ONVIF', 'subnet'],
+    tags: ['IP', 'IP address', 'VLAN', 'DHCP', 'camera', 'ONVIF', 'subnet'],
     related: [{ href: '/guides/camera-offline', label: 'Camera offline' }, { href: '/guides/no-link', label: 'No link light' }],
     sections: [
       {
@@ -396,7 +400,7 @@ window.__LAWSONITE_GUIDES__ = {
   ts('camera-offline', 'cam', 'Camera has no picture / offline',
     'Link, power, IP — in that order',
     'Do not start in the NVR software if the Ethernet jack is dark. Copper first, then power, then IP.',
-    ['camera', 'PoE', 'offline', 'NVR', 'IR'],
+    ['camera', 'PoE', 'offline', 'NVR', 'IR', 'no IP address', 'DHCP'],
     [
       { type: 'warn', text: 'If this is a life-safety or evidence camera (casino, custody, ER), say so up front and do not factory-reset anything without the owner.' },
       { type: 'steps', title: '1. Physical / link', items: [
@@ -444,7 +448,7 @@ window.__LAWSONITE_GUIDES__ = {
   ts('maglock', 'lock', 'Maglock won’t lock or won’t release',
     'Power, drop, REX, fire, bond',
     'Won’t lock: no power, drop, or the armature is not making. Won’t release: REX/fire not actually interrupting the coil, or someone jumpered it.',
-    ['maglock', 'REX', 'bond', 'fail-safe'],
+    ['maglock', 'REX', 'bond', 'fail-safe', 'fire alarm release', 'fire relay', 'release'],
     [
       { type: 'warn', text: 'Know the egress path before you drop or force a maglock. If it is fire-released, restoring it wrong can lock people in or leave a door unlatched.' },
       { type: 'steps', title: 'Will not lock / weak', items: [
@@ -543,7 +547,7 @@ window.__LAWSONITE_GUIDES__ = {
         'Smoke / heat / glass: power-cycle and maintenance per the device. A dirty chamber is not a new detector until you look.'
       ]}
     ],
-    [{ href: '/guides/resistor', label: 'EOL / resistor' }, { href: '/checklist/false-alarm-symptom-tree', label: 'False alarm tree' }, { href: '/checklist/device-class-symptom-quickref', label: 'Device class' }]
+    [{ href: '/guides/resistor', label: 'EOL / resistor' }, { href: '/checklist/slc-vs-idc-field-identifier-card', label: 'SLC vs IDC card' }]
   );
 
   ts('no-link', 'net', 'No link light',
@@ -615,9 +619,9 @@ window.__LAWSONITE_GUIDES__ = {
               'A blown output fuse looks like a dead maglock. Check the ACM before you buy a lock.',
               'Do not mix lock power and reader power on the same output “because it is 12 V.” Noise and brownouts.'
             ],
-            href: 'https://www.altronix.com/resources',
-            linkLabel: 'Altronix resources / install sheets',
-            linkSub: 'Search ACM8 or ACM4 on altronix.com',
+            href: 'https://www.altronix.com/products/ACM8',
+            linkLabel: 'Altronix ACM8 product page (docs)',
+            linkSub: 'ACM4: altronix.com/products/ACM4',
             tags: ['ACM8', 'fire drop']
           },
           {
@@ -819,9 +823,9 @@ window.__LAWSONITE_GUIDES__ = {
               'Ground fault LEDs mean a real field problem. Do not clear and leave.',
               'Use Bosch’s documentation portal for the exact firmware + hardware pair.'
             ],
-            href: 'https://www.boschsecurity.com/us/en/support/datasheets-and-documents/',
-            linkLabel: 'Bosch datasheets & documents',
-            linkSub: 'boschsecurity.com support',
+            href: 'https://www.keenfinity-group.com/us/en/support/',
+            linkLabel: 'Keenfinity (ex-Bosch Security) support',
+            linkSub: 'Bosch intrusion / video / access docs moved to Keenfinity',
             tags: ['Bosch']
           },
           {
@@ -985,7 +989,7 @@ window.__LAWSONITE_GUIDES__ = {
             ],
             href: 'https://www.altronix.com/products/AL600ULACM',
             linkLabel: 'Altronix AL600ULACM',
-            linkSub: 'Also Maximal3 and Trove2 on altronix.com/resources',
+            linkSub: 'Also altronix.com/products/Maximal3 and /products/Trove2',
             tags: ['al600', 'al600ulacm', 'maximal', 'trove', 'trove2', 'lock power']
           },
           {
@@ -1165,9 +1169,9 @@ window.__LAWSONITE_GUIDES__ = {
               'Ground fault LED means a real field problem.',
               'RPS / Remote Programming Software is how you do this — not *20.'
             ],
-            href: 'https://www.boschsecurity.com/us/en/support/datasheets-and-documents/',
-            linkLabel: 'Bosch D9412 / B-series docs',
-            linkSub: 'boschsecurity.com — D9412GV4, B8512G, B5512',
+            href: 'https://commerce.keenfinity.tech/xl/en/IP-control-panel-8-areas-99-points/p/F.01U.416.974/',
+            linkLabel: 'B8512G product page (Keenfinity, ex-Bosch)',
+            linkSub: 'D9412GV4 / B5512 and support docs: keenfinity-group.com support',
             tags: ['d9412', 'd9412gv4', 'b8512', 'b5512', 'gv4', 'bosch panel']
           },
           {
@@ -1232,7 +1236,7 @@ window.__LAWSONITE_GUIDES__ = {
             gotchas: [
               'If the shorting plug is pulled and the panel cord is out, house phones go dead. Put the plug back before you leave a “quick test.”',
               'VOIP ATAs and fiber ONTs break seizure. “No comms” on POTS after an ISP swap is often this, not the panel.',
-              'See the RJ31X field card in Field brain for the pin story.'
+              'Search “rj31x” for the RJ31X field card and the pin story.'
             ],
             href: '/guides/rj31x',
             linkLabel: 'Lawsonite RJ31X field card',
@@ -1255,7 +1259,7 @@ window.__LAWSONITE_GUIDES__ = {
           },
           {
             brand: 'Fire-Lite / Honeywell Fire', title: 'ES-200X / ES-50X / MS-9200UDLS',
-            use: 'The small-commercial addressable FACP you trip over in retail, churches, and strip malls. ES-200X replaced a pile of MS-9200UDLS jobs. LiteSpeed vs CLIP vs SS protocol is not mix-and-match.',
+            use: 'The small-commercial addressable FACP you trip over in retail, churches, and strip malls. ES-200X replaced a pile of MS-9200UDLS jobs. ES loops run LiteSpeed or CLIP, one per loop. SWIFT is the wireless side through a W-GATE gateway, not a third loop protocol.',
             look: 'Model on the door. SLC device count. Built-in IPOTS / DACT. NAC sync jumper (System Sensor / Wheelock / Gentex).',
             gotchas: [
               'Protocol cannot be split on one loop. A leftover CLIP head on a LiteSpeed panel is a trouble, not a “bad detector.”',
@@ -1265,7 +1269,7 @@ window.__LAWSONITE_GUIDES__ = {
             href: 'https://www.firelite.com',
             linkLabel: 'Fire-Lite manuals & datasheets',
             linkSub: 'firelite.com — ES-200X, ES-50X, MS-9200UDLS',
-            tags: ['es-200x', 'es-50x', 'ms-9200udls', 'ms9200', 'fire-lite', 'firelite', 'litespeed', 'facp', 'commercial fire']
+            tags: ['es-200x', 'es-50x', 'ms-9200udls', 'ms9200', 'fire-lite', 'firelite', 'litespeed', 'clip', 'swift', 'facp', 'commercial fire']
           },
           {
             brand: 'Simplex / Johnson Controls', title: '4100ES / 4010ES FACP',
@@ -1512,11 +1516,11 @@ window.__LAWSONITE_GUIDES__ = {
             gotchas: [
               'AUTODOME heaters and PTZ motors are a PoE+ / midspan conversation. Do not feed a PTZ like a 4 W spy cam.',
               'Project Assistant / Configuration Manager beat a random YouTube reset.',
-              'boschsecurity.com for the exact FLEXIDOME / AUTODOME datasheet.'
+              'Keenfinity (formerly Bosch Security) support for the exact FLEXIDOME / AUTODOME datasheet.'
             ],
-            href: 'https://www.boschsecurity.com/us/en/support/datasheets-and-documents/',
-            linkLabel: 'Bosch FLEXIDOME / AUTODOME docs',
-            linkSub: 'boschsecurity.com — FLEXIDOME, AUTODOME, Configuration Manager',
+            href: 'https://www.keenfinity-group.com/us/en/support/',
+            linkLabel: 'FLEXIDOME / AUTODOME docs (Keenfinity, ex-Bosch)',
+            linkSub: 'keenfinity-group.com support — FLEXIDOME, AUTODOME, Configuration Manager',
             tags: ['flexidome', 'autodome', 'bosch camera', 'ptz', 'camera', 'commercial camera']
           },
           {
@@ -1596,11 +1600,11 @@ window.__LAWSONITE_GUIDES__ = {
             gotchas: [
               'AMC2 is not a Mercury board. Addressing and bus termination are on the Bosch sheet.',
               'APE vs BIS vs AMS is different software. Do not assume a laptop “Bosch tool” talks to every vintage.',
-              'boschsecurity.com — AMC2 install / AMS docs.'
+              'Keenfinity (formerly Bosch Security) support — AMC2 install / AMS docs.'
             ],
-            href: 'https://www.boschsecurity.com/us/en/support/datasheets-and-documents/',
-            linkLabel: 'Bosch AMC2 / access control docs',
-            linkSub: 'boschsecurity.com — AMC2, AMS, Access Professional Edition',
+            href: 'https://www.keenfinity-group.com/us/en/support/',
+            linkLabel: 'AMC2 / access control docs (Keenfinity, ex-Bosch)',
+            linkSub: 'keenfinity-group.com support — AMC2, AMS, Access Professional Edition',
             tags: ['amc2', 'bosch access', 'ams', 'ape', 'bis', 'access', 'commercial access']
           },
           {
@@ -2130,9 +2134,9 @@ window.__LAWSONITE_GUIDES__ = {
               'Desigo / Cerberus tools are licensed. A laptop with “a Siemens program” is not the right one.',
               'Siemens Building fire docs for that exact Cerberus / XLS CPU. Impairment process still applies.'
             ],
-            href: 'https://www.siemens.com/global/en/products/buildings/fire.html',
-            linkLabel: 'Siemens Cerberus / FireFinder docs',
-            linkSub: 'siemens.com — Cerberus PRO, FireFinder XLS, FC922',
+            href: 'https://cache.industry.siemens.com/dl/files/579/109787579/att_1044333/v2/A6V10238846.pdf',
+            linkLabel: 'Siemens FireFinder XLS data sheet (PDF)',
+            linkSub: 'Cerberus PRO / FC922 manuals: sid.siemens.com doc portal · siemens.com/en-us/solutions/fire-safety',
             tags: ['siemens', 'cerberus', 'firefinder', 'xls', 'fc922', 'fc924', 'desigo', 'facp', 'commercial fire']
           },
           {
@@ -2419,17 +2423,17 @@ window.__LAWSONITE_GUIDES__ = {
           },
           {
             brand: 'Bosch', title: 'FPA-1000 / FPA-5000 / Modular fire',
-            use: 'Bosch addressable fire. FPA-1000 is the smaller US panel. FPA-5000 / Modular is the big networked one (FPA-5000, AVENAR in some markets). Not a B-series burglar can.',
-            look: 'FPA-1000 vs 5000 on the door. LSN / LSN improved loop. NAC. Battery size. Remote keypad / panel controllers.',
+            use: 'Bosch addressable fire. FPA-1000 is the smaller US panel and runs analog addressable SLC loops (its own 325-series devices). FPA-5000 / Modular is the big networked one (AVENAR in some markets) and runs LSN / LSN improved loops. Not a B-series burglar can.',
+            look: 'FPA-1000 vs 5000 on the door. FPA-1000: SLC loop(s) / SLC module. FPA-5000: LSN loop cards. NAC. Battery size. Remote keypad / panel controllers.',
             gotchas: [
-              'Impairment / fire watch may be required before you disable LSN or NAC. Photograph, then follow site process.',
-              'LSN devices are Bosch protocol. A System Sensor CLIP head will not poll. Do not megger the loop.',
-              'RPS / FSP-5000-RPS is the tool. A laptop with “a Bosch program” is not automatically the fire one.',
-              'boschsecurity.com datasheets for the exact FPA CPU. This app is orientation, not the panel manual.'
+              'Impairment / fire watch may be required before you disable a loop or NAC. Photograph, then follow site process.',
+              'LSN devices (FPA-5000) and FPA-1000 SLC devices are each their own family. A System Sensor CLIP head will not poll on either. Do not megger the loop.',
+              'FSP-5000-RPS is the FPA-5000 tool; use the tool the FPA-1000 sheet names. A laptop with “a Bosch program” is not automatically the fire one.',
+              'Keenfinity (formerly Bosch) datasheets for the exact FPA CPU. This app is orientation, not the panel manual.'
             ],
-            href: 'https://www.boschsecurity.com/us/en/support/datasheets-and-documents/',
-            linkLabel: 'Bosch FPA fire docs',
-            linkSub: 'boschsecurity.com — FPA-1000, FPA-5000, Modular, LSN',
+            href: 'https://commerce.keenfinity.tech/xl/en/Fire-panel-2-SLC-networking/p/F.01U.213.945/',
+            linkLabel: 'FPA-1000-V2 product page (Keenfinity, ex-Bosch)',
+            linkSub: 'FPA-5000 / AVENAR (LSN): boschbuildingtechnologies.com life safety',
             tags: ['fpa-1000', 'fpa-5000', 'fpa1000', 'bosch fire', 'lsn', 'avenar', 'facp', 'commercial fire']
           },
           {
@@ -2440,11 +2444,11 @@ window.__LAWSONITE_GUIDES__ = {
               'Operator Client vs Config Client. The guard PC with Operator will not let you add a camera.',
               'License after a motherboard swap: the box looks empty until you re-host. Photograph the license before you image a drive.',
               'Camera firmware vs BVMS version — an old CPP4 on a new BVMS can sit “offline” with a green link.',
-              'boschsecurity.com — BVMS, DIVAR IP, Configuration Manager.'
+              'Keenfinity (formerly Bosch Security) support — BVMS, DIVAR IP, Configuration Manager.'
             ],
-            href: 'https://www.boschsecurity.com/us/en/support/datasheets-and-documents/',
-            linkLabel: 'Bosch BVMS / DIVAR docs',
-            linkSub: 'boschsecurity.com — BVMS, DIVAR IP, DIVAR, Configuration Manager',
+            href: 'https://www.keenfinity-group.com/us/en/support/',
+            linkLabel: 'BVMS / DIVAR docs (Keenfinity, ex-Bosch)',
+            linkSub: 'keenfinity-group.com support — BVMS, DIVAR IP, DIVAR, Configuration Manager',
             tags: ['bvms', 'divar', 'divar ip', 'bosch vms', 'configuration manager', 'nvr', 'camera', 'commercial camera']
           },
           {
@@ -2455,11 +2459,11 @@ window.__LAWSONITE_GUIDES__ = {
               'Receiver inside the metal can = supervision fail on every point. Same rule as a 5881. Mount it.',
               'SDI2 vs legacy SDI. A GV4 RADION story is not a B8512 story. Bring the right receiver.',
               'Jam / RF noise next to a 2.4 GHz AP. Move one of them.',
-              'boschsecurity.com — RADION, B810 install.'
+              'Keenfinity (formerly Bosch Security) support — RADION, B810 install.'
             ],
-            href: 'https://www.boschsecurity.com/us/en/support/datasheets-and-documents/',
-            linkLabel: 'Bosch RADION / B810 docs',
-            linkSub: 'boschsecurity.com — RADION wireless, B810 receiver',
+            href: 'https://www.keenfinity-group.com/us/en/support/',
+            linkLabel: 'RADION / B810 docs (Keenfinity, ex-Bosch)',
+            linkSub: 'keenfinity-group.com support — RADION wireless, B810 receiver',
             tags: ['radion', 'b810', 'bosch wireless', 'sdi2', 'intrusion']
           },
           {
@@ -2999,7 +3003,7 @@ window.__LAWSONITE_GUIDES__ = {
           'Document hunt: 800-06903 class install/setup for BPT; FBPT has its own R800- / 800-09617 class numbers. Match the revision date on the board.'
         ]
       },
-      { type: 'tip', text: 'Search Field brain for “vista 128” — it should now hit this card and the product manuals. Open the Resideo literature for the exact SKU on the door.' }
+      { type: 'tip', text: 'Search “vista 128” from the home search — it hits this card and the product manuals. Open the Resideo literature for the exact SKU on the door.' }
     ]
   };
 
@@ -3204,15 +3208,15 @@ window.__LAWSONITE_GUIDES__ = {
 
   ts('bosch-lsn', 'bell', 'Bosch FPA / LSN loop trouble',
     'Do not megger it. Sectionalize.',
-    'FPA-1000 / FPA-5000 talk LSN (or LSN improved), not CLIP and not a B-series keypad bus. The wrong laptop tool is how you spend a day.',
-    ['bosch', 'fpa-1000', 'fpa-5000', 'lsn', 'rps', 'fire'],
+    'FPA-5000 talks LSN (or LSN improved); FPA-1000 runs analog addressable SLC loops. Neither is CLIP or a B-series keypad bus. The wrong laptop tool is how you spend a day.',
+    ['bosch', 'fpa-1000', 'fpa-5000', 'avenar', 'lsn', 'slc', 'rps', 'fire'],
     [
-      { type: 'warn', text: 'Do not insulation-test (megger) an LSN loop. You will destroy devices. Impairment / fire watch may be required before you disable anything.' },
+      { type: 'warn', text: 'Do not insulation-test (megger) an LSN or SLC loop. You will destroy devices. Impairment / fire watch may be required before you disable anything.' },
       { type: 'steps', items: [
         'Photograph the panel, the trouble text, and the loop card. Then follow site impairment process. This is life-safety, not a burg can.',
-        'RPS / FSP-5000-RPS is the fire tool. A laptop with “a Bosch program” (RPS for intrusion, Configuration Manager for cameras) is not automatically the right one.',
-        'Whole loop down: lift the field pair at the panel. Healthy at the board = field. Split the run. A single shorted module can take a chunk of LSN.',
-        'Protocol: LSN devices on an LSN loop. A leftover System Sensor CLIP head will not poll. Match the sheet to the can.',
+        'FSP-5000-RPS is the FPA-5000 fire tool; the FPA-1000 has its own - use what its sheet names. A laptop with “a Bosch program” (RPS for intrusion, Configuration Manager for cameras) is not automatically the right one.',
+        'Whole loop down: lift the field pair at the panel. Healthy at the board = field. Split the run. A single shorted module can take a chunk of the loop.',
+        'Protocol: LSN devices on an FPA-5000 LSN loop; FPA-1000 SLC devices on an FPA-1000. A leftover System Sensor CLIP head will not poll. Match the sheet to the can.',
         'Ground fault: sectionalize. Do not shotgun detectors. Same as Notifier.',
         'AC / battery troubles are still voltage. Measure the batteries off the charger before you condemn the CPU.'
       ]}
@@ -3311,7 +3315,7 @@ window.__LAWSONITE_GUIDES__ = {
         items: [
           'One RS-485 pair, daisy-chained, shield single-end. Stars and T-taps are intermittent ghosts.',
           'Unique addresses on every MR52 / MR16IN. Two boards on address 0 = random downstream death.',
-          'Termination at the far end (and only the far end, plus the intelligent controller). Two extra jumpers in the middle kill the bus.',
+          'Termination at both physical ends of the bus: the intelligent controller end and the last board on the run. Two extra jumpers in the middle kill the bus.',
           'Reader port: 12 vs 24, Wiegand vs OSDP. The jumper is how you pick. Wrong jumper + 24 V = dead reader.',
           'After a power cycle wait for a full boot before you declare a downstream MR dead.',
           'Software (OnGuard, Access It!, DNA Fusion, Keep) is a download. A “dead door” after a server upgrade is often firmware mismatch, not a new LP1502.'
@@ -3344,22 +3348,22 @@ window.__LAWSONITE_GUIDES__ = {
 
   P['firelite-protocol'] = {
     id: 'firelite-protocol', icon: 'bell', kind: 'cheat', eyebrow: 'Cheat sheet',
-    title: 'Fire-Lite LiteSpeed vs CLIP vs SS',
+    title: 'Fire-Lite LiteSpeed vs CLIP (and SWIFT wireless)',
     hub: 'Protocol is not mix-and-match',
     lede: 'ES-200X / ES-50X replaced a pile of MS-9200UDLS jobs. The loop protocol is the whole ticket. You cannot split protocols on one SLC.',
-    tags: ['fire-lite', 'es-200x', 'ms-9200udls', 'litespeed', 'clip', 'slc'],
+    tags: ['fire-lite', 'es-200x', 'es-50x', 'es-1000x', 'ms-9200udls', 'litespeed', 'clip', 'swift', 'w-gate', 'slc'],
     related: [{ href: '/guides/manuals?q=ES-200X', label: 'ES-200X card' }, { href: '/guides/manuals?trade=fire', label: 'Fire cards' }],
     sections: [
       {
         type: 'table',
         headers: ['Panel', 'Protocol', 'Do not'],
         rows: [
-          ['ES-50X / ES-200X / ES-1000X', 'SS, LiteSpeed, or CLIP (pick one per loop)', 'Mix a leftover CLIP head on a LiteSpeed loop'],
+          ['ES-50X / ES-200X / ES-1000X', 'LiteSpeed or CLIP (pick one per loop). SWIFT wireless enters through a W-GATE(A) LiteSpeed gateway.', 'Mix a leftover CLIP head on a LiteSpeed loop. Many 365-series heads are LiteSpeed only (the -IV versions also run CLIP) - check the device sheet.'],
           ['MS-9200UDLS / MS-9600LS', 'LiteSpeed or CLIP', 'Assume ES auto-learn will fix address collisions'],
           ['MS-9200 / MS-9050UD vintage', 'CLIP only', 'Drop LiteSpeed detectors on a CLIP-only panel']
         ]
       },
-      { type: 'tip', text: 'Address collisions still happen after auto-learn. Walk the map. Impairment process still applies before you disable the SLC.' }
+      { type: 'tip', text: 'Address collisions still happen after auto-learn. Walk the map. Impairment process still applies before you disable the SLC. Source: Fire-Lite data sheets DF-60953 (ES-50X), DF-60957 (ES-200X), DF-60961 (ES-1000X) on buildings.honeywell.com.' }
     ]
   };
 })(window.__LAWSONITE_GUIDES__.pages);

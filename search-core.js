@@ -179,6 +179,8 @@
       if (s.all) anyAll = true;
       var sc = s.matched * 1000 + s.qual * 6 + s.inTitle * 30 + (s.inTitle === ts.length ? 50 : 0) + (KIND_BOOST[r.kind] || 0);
       if (hasDigitTerm && r.kind === 'doc' && s.inTitle) sc += 90; /* model-number lookups land on the product card */
+      else if (r.kind === 'doc') sc -= 600; /* symptom searches: at equal term hits, calls / checklists / guides / calcs rank above product cards; a card that hits more terms (e.g. 'zone list') still wins */
+      else if (r.kind === 'tip' || r.kind === 'step') sc -= 1500;
       res.push({ r: r, sc: sc });
     }
     res.sort(function (a, b) { return b.sc - a.sc; });

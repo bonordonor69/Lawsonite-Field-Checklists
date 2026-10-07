@@ -757,3 +757,110 @@ h1 { letter-spacing: -0.03em; }
     padding-bottom: calc(11.5rem + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
+
+/* ===== Round 2 (2026-10-07) ===== */
+/* 7: desktop nav contrast. Bundle CSS loads later and sets .main-nav a{color:var(--muted)} (#2f2b27 on the black header, ~1.4:1). */
+.app-header .main-nav a:not(.active) { color: #d4cfc9; }
+.app-header .main-nav a:not(.active):hover { color: #fff; }
+
+/* 5: tip prints once. The "Field tip" heading stays; the bundle's "Tip" pill is kept for screen readers only. */
+.item-tip .item-tip-label {
+  position: absolute !important;
+  width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.item-tip::before { content: "Field tip" / ""; }
+@media print {
+  .item-tip::before { content: "Tip"; }
+}
+
+/* 1: Job sheet button in the scroll-away toolbar row */
+.runner-extras .runner-jobsheet {
+  min-height: 44px;
+  white-space: nowrap;
+  border-color: var(--brand, #fb4f14);
+  font-weight: 800;
+}
+
+/* 5: "what decides the call" strip on long packs */
+details.fk-decides {
+  border: 1px solid var(--line, #d9d0c7);
+  border-left: 4px solid var(--brand, #fb4f14);
+  border-radius: 10px;
+  background: var(--card, #fff);
+  margin: 0.4rem 0 0.9rem;
+  padding: 0 0.8rem;
+}
+details.fk-decides > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 0.95rem;
+  list-style: none;
+}
+details.fk-decides > summary::-webkit-details-marker { display: none; }
+details.fk-decides > summary::after { content: "Show \25BE"; margin-left: auto; font-size: 0.82rem; color: var(--brand-deep, #c4320a); }
+details.fk-decides[open] > summary::after { content: "Hide \25B4"; }
+details.fk-decides ul { margin: 0 0 0.7rem; padding-left: 1.15rem; }
+details.fk-decides li { margin: 0.25rem 0; line-height: 1.4; }
+@media print {
+  details.fk-decides { break-inside: avoid; border-left-width: 2px; }
+  details.fk-decides > summary::after { content: none; }
+}
+
+/* 8c: phones put Done / N/A right under the step text; the tip follows */
+@media (max-width: 640px) {
+  .checklist-runner .item-body { display: flex; flex-direction: column; }
+  .checklist-runner .item-body .item-text { order: 1; }
+  .checklist-runner .item-body .item-actions { order: 2; }
+  .checklist-runner .item-body .item-tip { order: 3; }
+}
+
+/* 8b: the clamped lede ("… More ▾") gets a 44px tap box without moving anything */
+@media (max-width: 640px) {
+  .checklist-runner .page-header .lede.fk-clamp {
+    border-top: 14px solid transparent;
+    border-bottom: 8px solid transparent;
+    margin-top: -8.4px;   /* original 0.35rem (5.6px) minus the 14px border */
+    margin-bottom: -8px; /* original 0 minus the 8px border (box ends where the notice starts: 14 + 23 + 8 = 45px tap box) */
+    background-clip: padding-box;
+  }
+}
+
+/* 1: job panel on /jobsheets; slim job line on pack / paper / hardware pages */
+.js-jobpanel { margin-bottom: 1rem; }
+.js-jobpanel-title { margin: 0 0 0.5rem; font-size: 1.05rem; }
+.js-jobpanel-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.js-jobpanel-row .js-job-sel { flex: 1 1 12rem; min-height: 44px; }
+.js-jobpanel-row .btn { min-height: 44px; }
+.js-jobpanel-links { display: flex; flex-wrap: wrap; gap: 0.45rem; margin: 0.7rem 0 0.3rem; }
+.js-jobpanel-links .js-joblink { min-height: 44px; display: inline-flex; align-items: center; text-decoration: none; }
+.js-job-hint { margin: 0.4rem 0 0.2rem; }
+.gd-jobline { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.gd-jobline .gd-chip { min-height: 44px; display: inline-flex; align-items: center; }
+.gd-showall { min-height: 44px; }
+.gd-trade-chips { margin: 0.2rem 0 0.8rem; }
+.gd-trade-chips .gd-chip { min-height: 44px; display: inline-flex; align-items: center; }
+.gd-trade-docs { margin: 1rem 0; }
+.gd-trade-docs .gd-chip { min-height: 44px; display: inline-flex; align-items: center; }
+
+/* 8c: first screen at 360x780 — decides strip folds into a chip, STRONG NOTICE previews 2 lines (tap "More"), tighter rhythm */
+.fk-decides-chip { min-height: 44px; white-space: nowrap; }
+.fk-decides-chip.is-on { border-color: var(--brand, #fb4f14); }
+@media (min-width: 641px) { .runner-extras .fk-decides-chip { display: none; } }
+@media (max-width: 640px) {
+  .checklist-runner details.fk-decides:not([open]) { display: none; }
+  .checklist-runner .page-header .inline-disclaimer.fk-clamp:not(.is-open) { -webkit-line-clamp: 2; }
+  .page.checklist-runner { row-gap: 4px !important; }
+  .checklist-runner .page-header { padding-top: 8px !important; padding-bottom: 4px !important; }
+  .checklist-runner .page-header .inline-disclaimer { margin-bottom: 4px !important; }
+  .checklist-runner .checklist-section { padding-top: 2px !important; }
+  .checklist-runner .item-list { margin-top: 2px !important; }
+  .checklist-runner .item-row { padding-top: 10px !important; padding-bottom: 10px !important; }
+  .checklist-runner .item-row .item-actions { margin-top: 6px !important; }
+}
+
+/* Desktop: long section-chip rows no longer widen the checklist grid past the viewport (pre-existing overflow on long packs) */
+.page.checklist-runner > * { min-width: 0; }
