@@ -1,8 +1,8 @@
-/* Lawsonite service worker (generated 2026-10-09, revision r9 for conduit jacket scope, Company plan, unknown URLs, and sheet headers).
+/* Lawsonite service worker (generated 2026-10-09, revision r10 for the door-bundle cable, fill-note scope, and the sheet/pack/clear fixes).
    Precache = exactly what index.html references + the overlay scripts the app injects.
    Old caches (incl. the previous Workbox precache) are deleted on activate. */
 'use strict';
-var VERSION = '2026-10-09-r9-49807760d0';
+var VERSION = '2026-10-09-r10-1e5a4b422b';
 var CACHE = 'lawsonite-precache-' + VERSION;
 var PRECACHE = [
  {
@@ -23,11 +23,11 @@ var PRECACHE = [
  },
  {
   "url": "/fieldkit.css",
-  "rev": "c7d451b1d103166ab0f6558b6a3b801b"
+  "rev": "897f597d7c1a5d99f43d2ec1fe625160"
  },
  {
   "url": "/guides.css",
-  "rev": "4d51081dab4b84af698a43b4ece392b3"
+  "rev": "065f69b3428e3053b1ff3b1dc8a9f819"
  },
  {
   "url": "/assets/index-C4Buzm74.js",
@@ -51,7 +51,7 @@ var PRECACHE = [
  },
  {
   "url": "/guides.js",
-  "rev": "897b4b65a9639b88a16350fe173949f5"
+  "rev": "275a748dc6e62fbf8ccce97bc7376963"
  },
  {
   "url": "/jobsheet.js",
@@ -59,7 +59,7 @@ var PRECACHE = [
  },
  {
   "url": "/fieldkit.js",
-  "rev": "49807760d0df2d9745e0241f9aab2121"
+  "rev": "1e5a4b422bf7e647fbedd85f9f5ffaa7"
  },
  {
   "url": "/qrcode.js",
@@ -67,7 +67,7 @@ var PRECACHE = [
  },
  {
   "url": "/hardware-data.js",
-  "rev": "2cd719ef5032d1761747c0b88b4ec73b"
+  "rev": "1fa0a3782fa5eee98a9ada5b968341c2"
  },
  {
   "url": "/pwa-192.png",
@@ -138,6 +138,20 @@ self.addEventListener('fetch', function (event) {
 
   event.respondWith(
     caches.open(CACHE).then(function (cache) {
+      var entry = null;
+      var i;
+      for (i = 0; i < PRECACHE.length; i++) {
+        if (PRECACHE[i].url === url.pathname) { entry = PRECACHE[i]; break; }
+      }
+      if (entry) {
+        return cache.match(entry.url).then(function (hit) {
+          if (hit) return hit;
+          return fetch(new Request(entry.url + '?__lw=' + entry.rev, { cache: 'reload' })).then(function (res) {
+            if (res && res.ok) cache.put(entry.url, res.clone());
+            return res;
+          });
+        });
+      }
       return cache.match(req, { ignoreSearch: true }).then(function (hit) {
         return hit || fetch(req);
       });

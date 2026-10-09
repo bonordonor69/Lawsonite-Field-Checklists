@@ -2,6 +2,7 @@
    Offline, localStorage only. Replaces the leftover favorites/pro overlay. */
 (function () {
   'use strict';
+  window.__FK_REV = '2026-10-09-r10';
 
   var FAV_KEY = 'lawsonite-favorites-v1';
   var RECENT_KEY = 'lawsonite-recents-v1';
@@ -1950,6 +1951,9 @@
     });
     return found;
   }
+  var DOOR_CABLE = 'Access composite (banana / reverse twist)';
+  var DOOR_AREA = 0.14;
+  var DOOR_NOTE = 'Four legs: 18/4 lock, 22/6 OAS reader (overall shield), 22/4 REX, 22/2 DPS. A banana peel has no overall jacket, so once you split it the pipe sees four cables. Until then, fill it as one fat bundle. Check the cable sheet.';
   function fillCableName(card) {
     var sel = fkControl(card, 'Cable type');
     if (!sel) return '';
@@ -1959,18 +1963,94 @@
     }
     return shown;
   }
-  function paintFillGuard(card) {
-    var stack = card.querySelector('.result-stack');
-    var cable = fillCableName(card);
-    var isCat = cable.indexOf('Cat5') >= 0 || cable.indexOf('Cat6') >= 0;
-    if (!stack || !isCat) {
-      card.querySelectorAll('.fk-fillwarn').forEach(function (node) { node.remove(); });
-      return;
+  function isCatCable(name) {
+    return name.indexOf('Cat5') >= 0 || name.indexOf('Cat6') >= 0;
+  }
+  function isDoorCable(name) {
+    return name === DOOR_CABLE || name.indexOf('banana') >= 0 || name.indexOf('reverse twist') >= 0;
+  }
+  function ensureDoorOption(card) {
+    var sel = fkControl(card, 'Cable type');
+    if (!sel) return null;
+    if (!sel.id) sel.id = 'fk-fill-cable';
+    var i, has = false;
+    for (i = 0; i < sel.options.length; i++) {
+      if (sel.options[i].value === DOOR_CABLE) { has = true; break; }
     }
+    if (!has) {
+      var opt = document.createElement('option');
+      opt.value = DOOR_CABLE;
+      opt.textContent = DOOR_CABLE;
+      sel.appendChild(opt);
+    }
+    var count = fkNum(fkLabeled(card, 'Cable count'));
+    var conduit = fkLabeled(card, 'Conduit') || '';
+    var lost = card.dataset.fkFillReady === '1' && count != null && count >= 0 && !!FILL_AREA[conduit] && !card.querySelector('.result-stack');
+    if (sel.dataset.fkCable === DOOR_CABLE && sel.value !== DOOR_CABLE) {
+      sel.value = DOOR_CABLE;
+    } else if (lost && !sel.dataset.fkCable && sel.value !== DOOR_CABLE) {
+      sel.value = DOOR_CABLE;
+      sel.dataset.fkCable = DOOR_CABLE;
+    }
+    if (card.querySelector('.result-stack')) card.dataset.fkFillReady = '1';
+    return sel;
+  }
+  function paintDoorFill(card) {
     var conduit = fkLabeled(card, 'Conduit') || '';
     var count = fkNum(fkLabeled(card, 'Cable count'));
     var area = FILL_AREA[conduit];
-    if (!area || count == null || count <= 0) {
+    var own = card.querySelector(':scope > .fk-fillown');
+    if (!area || count == null || count < 0) {
+      if (own) own.remove();
+      return;
+    }
+    if (!own) {
+      own = el('div', 'result-stack fk-keep fk-fillown');
+      card.appendChild(own);
+    }
+    var used = DOOR_AREA * count;
+    var pct = used / area * 100;
+    var limit = count <= 1 ? 53 : count === 2 ? 31 : 40;
+    var within = pct <= limit;
+    var noun = count === 1 ? 'cable' : 'cables';
+    var badge = within
+      ? ('Within ' + limit + '% fill limit for ' + count + ' ' + noun)
+      : ('Over ' + limit + '% fill limit for ' + count + ' ' + noun + '. Check the real cable sheet.');
+    var pctText = parseFloat(pct.toFixed(1)).toString() + ' %';
+    var usedText = 'Used ~' + used.toFixed(3) + ' in^2 of ~' + area.toFixed(3) + ' in^2';
+    own.textContent = '';
+    var box = el('div', 'result-box');
+    box.appendChild(el('span', null, 'About this full'));
+    box.appendChild(el('strong', null, pctText));
+    own.appendChild(box);
+    own.appendChild(el('p', within ? 'badge ok' : 'badge bad', badge));
+    own.appendChild(el('p', 'muted small', usedText));
+    fkKeep(own, 'fk-filllegs', DOOR_NOTE, false);
+  }
+  function paintFillGuard(card) {
+    if (!card) return;
+    ensureDoorOption(card);
+    var cable = fillCableName(card);
+    var isCat = isCatCable(cable);
+    var isDoor = isDoorCable(cable);
+    if (!isCat) card.querySelectorAll('.fk-fillwarn').forEach(function (node) { node.remove(); });
+    if (isDoor) {
+      card.querySelectorAll('.result-stack:not(.fk-fillown)').forEach(function (node) {
+        node.setAttribute('hidden', '');
+      });
+      paintDoorFill(card);
+      return;
+    }
+    card.querySelectorAll('.fk-fillown').forEach(function (node) { node.remove(); });
+    card.querySelectorAll('.result-stack[hidden]').forEach(function (node) {
+      node.removeAttribute('hidden');
+    });
+    if (!isCat) return;
+    var stack = card.querySelector('.result-stack');
+    var conduit = fkLabeled(card, 'Conduit') || '';
+    var count = fkNum(fkLabeled(card, 'Cable count'));
+    var area = FILL_AREA[conduit];
+    if (!stack || !area || count == null || count <= 0) {
       card.querySelectorAll('.fk-fillwarn').forEach(function (node) { node.remove(); });
       return;
     }
@@ -1982,11 +2062,9 @@
       var jacket = Math.PI * (od / 2) * (od / 2);
       return jacket * count / area * 100;
     }
-    var at22 = pct(0.22);
-    var at25 = pct(0.25);
     var text = 'The fill percent above is a thin jacket, about 0.20 in across. At 0.22 in, this count is about ' +
-      at22.toFixed(0) + '% full. At 0.25 in, about ' +
-      at25.toFixed(0) + '% full. The limit for this count is ' + limitWords +
+      pct(0.22).toFixed(0) + '% full. At 0.25 in, about ' +
+      pct(0.25).toFixed(0) + '% full. The limit for this count is ' + limitWords +
       '. Check the cable sheet before you pick the pipe.';
     fkKeep(stack, 'fk-fillwarn', text, false);
   }
@@ -1995,6 +2073,25 @@
     if (!card || card.dataset.fkFillWatch || !window.MutationObserver) return;
     card.dataset.fkFillWatch = '1';
     var timer = 0;
+    function later() {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        var c = document.getElementById('fill');
+        if (c) paintFillGuard(c);
+      }, 40);
+    }
+    card.addEventListener('change', function (ev) {
+      card.dataset.fkFillReady = '1';
+      var sel = fkControl(card, 'Cable type');
+      if (sel && ev.target === sel) sel.dataset.fkCable = sel.value;
+      paintFillGuard(card);
+      later();
+    });
+    card.addEventListener('input', function () {
+      card.dataset.fkFillReady = '1';
+      paintFillGuard(card);
+      later();
+    });
     new MutationObserver(function (muts) {
       var i, t, matters = false;
       for (i = 0; i < muts.length; i++) {
@@ -2002,17 +2099,13 @@
         if (!t || !t.closest || !t.closest('.fk-keep')) { matters = true; break; }
       }
       if (!matters) return;
-      clearTimeout(timer);
-      timer = setTimeout(function () {
-        var c = document.getElementById('fill');
-        if (c) paintFillGuard(c);
-      }, 40);
+      later();
     }).observe(card, {
       subtree: true,
       childList: true,
       characterData: true,
       attributes: true,
-      attributeFilter: ['value']
+      attributeFilter: ['value', 'class']
     });
   }
   function paintCalcGuards(page) {
@@ -2448,6 +2541,42 @@
         b.dataset.fkResetOk = '1';
         b.click();
         delete b.dataset.fkResetOk;
+      }, true);
+      document.addEventListener('click', function (ev) {
+        if (pathOf() !== '/portal') return;
+        var b = ev.target && ev.target.closest && ev.target.closest('button');
+        if (!b || b.dataset.fkClearOk) return;
+        if ((b.textContent || '').trim() !== 'Clear all') return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (!window.confirm('Clear every company doc saved on this phone?')) return;
+        b.dataset.fkClearOk = '1';
+        var keys = Object.keys(b);
+        var props = null;
+        var k;
+        for (k = 0; k < keys.length; k++) {
+          if (keys[k].indexOf('__reactProps') === 0) props = b[keys[k]];
+        }
+        if (props && typeof props.onClick === 'function') {
+          try { props.onClick({ type: 'click', preventDefault: function () {}, stopPropagation: function () {} }); }
+          catch (e) { b.click(); }
+        } else {
+          b.click();
+        }
+        delete b.dataset.fkClearOk;
+        var tries = 0;
+        function finishClear() {
+          var danger = document.querySelector('.modal-card .btn.danger');
+          if (danger && (danger.textContent || '').trim() === 'Confirm clear') {
+            danger.click();
+            return;
+          }
+          if (tries < 12) {
+            tries += 1;
+            setTimeout(finishClear, 40);
+          }
+        }
+        setTimeout(finishClear, 40);
       }, true);
     }
     enhance();

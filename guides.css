@@ -539,6 +539,9 @@ a.gd-chip {
   margin-bottom: 0.15rem;
 }
 .gd-sheet-page .gd-sheet-banner { display: none; }
+@media screen {
+  .gd-pack.gd-pack-empty .gd-letterhead { display: none; }
+}
 .gd-letterhead-with-qr {
   display: flex;
   align-items: center;

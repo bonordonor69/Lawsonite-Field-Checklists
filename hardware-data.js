@@ -73,7 +73,8 @@
       { key: 'coax', label: 'Security / coax / siamese', wide: false },
       { key: 'fplp', label: 'FPLP / FPLR fire cable', wide: false, fire: true },
       { key: 'control', label: '18/2 – 22/6 control', wide: false },
-      { key: 'composite', label: 'Composite / multi-run bundle', wide: true }
+      { key: 'composite', label: 'Composite / multi-run bundle', wide: true },
+      { key: 'access-composite', label: 'Access composite (banana / reverse twist)', wide: true }
     ],
     substrates: [
       { key: 'ibeam', label: 'Structural steel I-beam', flange: true, family: 'steel' },
@@ -101,7 +102,7 @@
     cheat: [
       ['Hammer-on flange clip (4Z34 / 4Z46 / 4Z58)', 'I-beam, bar joist, purlin flange', 'Fastest steel attach — no drill', 'Pair with a J-hook. Match flange thickness. Not for crumbling paint or 1″+ flange.'],
       ['Pressed / malleable beam clamp (BC)', 'Thicker, painted, or uneven steel flange', 'When a hammer-on will not seat', '1/4-20 or 3/8-16. Snug, do not crush the beam.'],
-      ['Wide-base J-hook (CAT##HP)', 'Any 1/4-20 point', 'Cat5e/6, Cat6A, fiber, composite', '~15 / 50 / 80 by size (CAT16 / 32 / 64). Fill, do not pile.'],
+      ['Wide-base J-hook (CAT##HP)', 'Any 1/4-20 point', 'Cat5e/6, Cat6A, fiber, composite, access composite (banana / reverse twist)', '~15 / 50 / 80 by size (CAT16 / 32 / 64). Fill, do not pile.'],
       ['Standard J-hook (CAT##)', 'Any 1/4-20 point', 'Cat5e/6, coax, control, FPLP', 'Same counts. Prefer HP saddles for Cat6A / fiber.'],
       ['Bridle ring, standard', 'Rod, beam, structure', 'Coax / control only', 'Light. TIA-568 fails a skinny ring on Cat6A or fiber.'],
       ['Batwing / T-grid clip (4ACS)', 'Acoustical tee', 'Light data in a drop ceiling', 'Small–medium. Do not screw the tile. Fire cable often needs independent support.'],
@@ -246,7 +247,9 @@
       warnings.push('Do not hang from a fire-sprinkler rod unless the engineer/AHJ said you can. Dedicated 1/4-20 or 3/8-16 is the default.');
     }
 
-    if (wide) {
+    if (cable.key === 'access-composite') {
+      warnings.push('Four legs: 18/4 lock, 22/6 OAS reader (overall shield), 22/4 REX, 22/2 DPS. Size the hook for a fat door bundle, not for one 22/6.');
+    } else if (wide) {
       warnings.push('TIA-568: Cat6A and fiber need a wide-base support or saddle. A standard skinny bridle ring kinks the cable and fails inspection. Use CAT##HP J-hooks, not 4BR/6BR rings.');
     }
     if (cable.key === 'cat6' && (sel.size === 'l' || sel.size === 'xl')) {

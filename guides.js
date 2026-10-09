@@ -1482,6 +1482,7 @@
       paintRows();
     });
     clearBtn.addEventListener('click', function () {
+      if (!window.confirm('Clear every row on this sheet?')) return;
       rows = padSheetRows(kind, []);
       persist();
       paintRows();
@@ -1761,6 +1762,9 @@
       if (spec.flange) path.push(spec.flange.label);
       path.push(spec.size.label);
       card.appendChild(el('h2', null, path.join(' · ')));
+      if (spec.cable && spec.cable.key === 'access-composite') {
+        card.appendChild(el('p', 'gd-spec-legs', 'Four legs: 18/4 lock, 22/6 OAS reader (overall shield), 22/4 REX, 22/2 DPS. Size the hook for a fat door bundle, not for one 22/6.'));
+      }
 
       function block(title, item, extra) {
         var b = el('div', 'gd-spec-block');
@@ -1864,7 +1868,7 @@
       chipRow('4 · Box / mount style', H.boxes, 'box');
       var spec = H.resolveMount && H.resolveMount(sel);
       if (!spec) {
-        host.appendChild(el('p', 'gd-empty', 'Walk the four steps. Box, pipe, and fasteners fill in as you go.'));
+        host.appendChild(el('p', 'gd-empty', 'Pick device and wall. Raceway and box fill in the spec.'));
         return;
       }
       var card = el('article', 'gd-spec');
@@ -1965,7 +1969,8 @@
       try { history.replaceState({}, '', packHref(ids, title)); } catch (e) {}
     }
 
-    var page = el('div', 'page gd-page gd-pack');
+    var emptyPack = !packOk && !missingIds.length;
+    var page = el('div', 'page gd-page gd-pack' + (emptyPack ? ' gd-pack-empty' : ''));
     page.appendChild(backLink('/guides/manuals', 'Product cards'));
     var url = packOk ? packQrUrl(ids, title) : '';
     if (packOk) {
@@ -2053,16 +2058,14 @@
       identText.appendChild(el('p', 'gd-pack-url', url));
       identText.appendChild(el('p', 'muted', 'Tape the QR on the can. Anyone who scans it gets this pack.'));
       ident.appendChild(identText);
-    } else {
+    } else if (missingIds.length) {
       ident.classList.add('gd-pack-ident-empty');
-      ident.appendChild(el('p', 'gd-empty', missingIds.length
-        ? ('No matching cards for: ' + missingIds.join(', ') + '.')
-        : 'Nothing pinned yet.'));
+      ident.appendChild(el('p', 'gd-empty', 'No matching cards for: ' + missingIds.join(', ') + '.'));
       var go = el('a', 'gd-chip fk-link', 'Open Product cards');
       go.href = '/guides/manuals';
       ident.appendChild(go);
     }
-    page.appendChild(ident);
+    if (packOk || missingIds.length) page.appendChild(ident);
 
     if (packOk) {
       titleInput.addEventListener('change', function () {
@@ -2095,7 +2098,7 @@
 
     var list = el('div', 'gd-product-list gd-pack-cards');
     if (!rawIds.length) {
-      list.appendChild(el('p', 'gd-empty', 'Nothing pinned yet. Star a product card.'));
+      if (!emptyPack) list.appendChild(el('p', 'gd-empty', 'Nothing pinned yet. Star a product card.'));
     } else if (!packOk) {
       list.appendChild(el('p', 'gd-empty', 'No cards — this pack link does not match any product cards. Do not tape a QR from an empty pack.'));
     } else {
@@ -2111,7 +2114,7 @@
         }));
       });
     }
-    page.appendChild(list);
+    if (list.childNodes.length) page.appendChild(list);
     page.appendChild(el('p', 'gd-foot',
       'Educational job aide only — not code, manufacturer instructions, or AHJ approval. Confirm the device label, the panel programming, and the official sheet.'));
     var sign = el('div', 'gd-pack-sign only-print');

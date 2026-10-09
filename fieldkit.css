@@ -734,6 +734,13 @@ body.fk-jobsheets .disclaimer-banner { display: none !important; }
 .js-empty {
   border-left: 3px solid var(--brand);
 }
+a.js-pick-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.28rem;
+}
+.js-pick-title { display: block; }
 .card {
   background: var(--card);
   border: 1px solid var(--line);
@@ -1015,7 +1022,8 @@ body.fk-miss-on #root { display: none !important; }
 .start-page .fk-dash { gap: 0.75rem; }
 .fk-quiet-note { display: none !important; }
 .refs-page .result-stack p.fk-hot,
-.refs-page .result-stack p.fk-fillwarn {
+.refs-page .result-stack p.fk-fillwarn,
+.refs-page .result-stack p.fk-filllegs {
   margin: 0.7rem 0 0;
   padding: 0.55rem 0.7rem;
   border: 1px solid var(--warn-line, #f0d9a0);
