@@ -2,7 +2,7 @@
    Offline, localStorage only. Replaces the leftover favorites/pro overlay. */
 (function () {
   'use strict';
-  window.__FK_REV = '2026-10-09-r10';
+  window.__FK_REV = '2026-10-09-r11';
 
   var FAV_KEY = 'lawsonite-favorites-v1';
   var RECENT_KEY = 'lawsonite-recents-v1';
@@ -1258,7 +1258,7 @@
     var head = el('div', 'calc-card-head');
     head.appendChild(el('h2', null, title));
     sec.appendChild(head);
-    sec.appendChild(el('p', 'calc-note warn', note));
+    sec.appendChild(el('p', 'calc-note', note));
     return sec;
   }
   function fkGrid(sec) {
@@ -1436,6 +1436,7 @@
       { label: 'Each wire to ground, no short', value: 'about ' + fkFixed(panel / 2, 1) + ' V' },
       { label: 'Other wire if one is shorted', value: 'toward ' + fkFixed(panel, 0) + ' V' }
     ]);
+    paintGfBite();
   }
   function paintNacPtp() {
     var card = document.getElementById('nac');
@@ -1466,7 +1467,7 @@
       stack.appendChild(el('p', 'muted small', 'Even spacing shows once the device type and the count are filled in.'));
       return;
     }
-    var head = el('p', 'muted small', 'Even spacing: the same devices spread along the one-way feet. The number above still treats every device as if it sits at the far end, which reads high on purpose.');
+    var head = el('p', 'muted small', 'Even spacing: the same devices spread along the one-way feet.');
     stack.appendChild(head);
     if (!box || !box.checked || !awgEl || !feetEl) {
       stack.appendChild(el('p', 'muted small', 'Turn on the voltage-drop check to see the even-spacing number.'));
@@ -1493,7 +1494,7 @@
   function buildWatts() {
     var saved = fkLoad('watts', { volts: '24', amps: '0.5', pf: '1' });
     var sec = fkCard('watts', 'Watts and VA',
-      'Watts are volts times amps times a power factor. VA is volts times amps, with no factor. On DC, a maglock or a strike has a power factor of 1, so the two numbers match. A plug-in supply can draw more VA than watts. Check the device sheet before you size the supply.');
+      'Watts are volts times amps times a power factor. VA is volts times amps, and on DC the power factor is 1, so the two numbers match.');
     fkPresets(sec, [
       { label: 'Maglock 0.5 A @ 12 V', values: { volts: '12', amps: '0.5', pf: '1' } },
       { label: 'Strike 0.35 A @ 24 V', values: { volts: '24', amps: '0.35', pf: '1' } },
@@ -1508,7 +1509,7 @@
   function buildDay() {
     var saved = fkLoad('poeday', { cams: '8', day: '6', night: '12', hours: '10', budget: '123', pse: false });
     var sec = fkCard('poeday', 'Day / night camera power',
-      'Cameras pull more when the infrared lights come on. Type the day watts, the night watts, and how many hours those lights run. This averages that and lines it up against the switch budget. The watts here are what the camera uses. The switch often holds some extra back. The PoE card lists the class watts.');
+      'Cameras pull more when the infrared lights come on. Type the day watts, the night watts, and the hours those lights run, then line the average up against the switch budget.');
     fkPresets(sec, [
       { label: '8 domes, IR at night', values: { cams: '8', day: '6', night: '12', hours: '10', budget: '123' } },
       { label: '16 bullets, 370 W switch', values: { cams: '16', day: '8', night: '15', hours: '12', budget: '370' } }
@@ -1525,7 +1526,7 @@
   function buildRetain() {
     var saved = fkLoad('retain', { cams: '16', mbps: '4', days: '30', hours: '24', over: '10' });
     var sec = fkCard('retain', 'Disk for these cameras',
-      'How much drive for this many cameras, recording the whole time at one speed. Motion-only recording uses less. One camera at 4 Mbps, day and night, is about 40 GB a day before spare room. The TB number matches a drive label.');
+      'How much drive for this many cameras, recording the whole time at one speed. The TB number matches a drive label, and motion-only recording uses less.');
     fkPresets(sec, [
       { label: '16 cams · 4 Mbps · 30 days', values: { cams: '16', mbps: '4', days: '30', hours: '24', over: '10' } },
       { label: '32 cams · 2 Mbps · 14 days', values: { cams: '32', mbps: '2', days: '14', hours: '24', over: '10' } },
@@ -1542,7 +1543,7 @@
   function buildLoop() {
     var saved = fkLoad('loopft', { awg: '18', ohms: '10', eol: '0' });
     var sec = fkCard('loopft', 'How far is this wire?',
-      'Take the end-of-line resistor off the pair. At the far end, twist the two wires together. At this end, read the ohms. Type that reading and the wire size. This guesses the one-way footage. The copper numbers match the voltage-drop card, at about 68°F. A splice, a cold morning, or steel in the path will move the number. When the resistor stays on the pair, it already joins the two wires. Type its ohms in the last box (2200, 4700, or 10000) and leave the far end as it is. Type 0 when the resistor is off and the far end is twisted.');
+      'Take the resistor off the pair, twist the far end, and read the ohms at this end. If the resistor stays on, type its ohms and leave the far end as it is.');
     var awgs = [10, 12, 14, 16, 18, 20, 22, 24].map(function (n) {
       return [n, n + ' AWG — ' + OHM_KFT[n] + ' ohms per 1,000 ft'];
     });
@@ -1562,7 +1563,7 @@
   function buildGf() {
     var saved = fkLoad('gfvolt', { panel: '24' });
     var sec = fkCard('gfvolt', 'What a ground fault looks like',
-      'On a normal fire circuit, each wire to ground sits at about half the panel voltage. On 24 volts that is about 12 volts. When one wire is shorted to ground, that wire falls toward 0 and the other rises toward the full panel voltage. This is the picture to expect. It is not a test you run on a live alarm, and it is not a reason to jumper a life-safety circuit.');
+      'On a normal fire circuit, each wire to ground sits at about half the panel voltage.');
     fkPresets(sec, [
       { label: '24 V fire / NAC', values: { panel: '24' } },
       { label: '12 V', values: { panel: '12' } }
@@ -1574,15 +1575,15 @@
 
   var PLAIN_NOTE = {
     ohm: 'Volts equal amps times ohms. Pick the one you want to find, then type the other two.',
-    vd: 'Copper wire, counted both ways (out and back). The ohms per 1,000 feet are for room temperature, about 68°F. A hot ceiling runs higher, and the result says so. One-way feet is the length of the run, not the round trip. A blank box or a minus sign clears the answer. This is a teaching estimate. Check the device sheet before you treat the drop as good.',
-    wire: 'Type the amps, the one-way feet, and how much drop you can live with. The 12 V and 24 V chips set the same supply as the buttons under them. The result names that voltage. This picks the smallest copper size from the same table as voltage drop, at about 68°F. A hot ceiling runs higher. A blank box or a minus sign clears the answer. Teaching estimate. Check the device sheet.',
-    fill: 'A rough check of how full the pipe is. One cable can use about 53 percent of the pipe. Two cables can use about 31 percent. Three or more can use about 40 percent. Sizes are in inches, and the areas are in square inches. When the cable is Cat5e/Cat6, the result also checks a thicker jacket. Other cables do not use that check. This is not a pipe decision until you read the cable sheet.',
-    poe: 'The switch sets aside watts for each port by class. That reserved number is what the switch holds. The camera can use less than that after the cable eats some. Each class in the list shows both numbers. Switches do not all keep the same spare. Teaching estimate. Check the switch sheet.',
-    battery: 'Standby amps times the standby hours, plus alarm amps times the alarm hours, then times a spare factor. 1.25 means 25 percent extra, and that is the teaching default. A lot of panel sheets use 1.2, which is 20 percent extra. Use the factor on that panel\'s own battery sheet. The result rounds up to a common sealed-battery size. It does not add spare for a cold room, an occupancy table, or a 15-minute voice alarm. This is a teaching estimate, not a code-stamped battery calc.',
-    eol: 'Common end-of-line resistors, including the Vista 2,200 ohm, plus pairs for panels that want two resistors. Where the resistor sits, and what the panel expects, changes by panel. Read that panel\'s book for the zone. Teaching estimate.',
-    nac: 'Device count times the current for that horn or strobe. The voltage drop treats every device as if it sits at the far end of the one-way feet, which reads high on purpose. These currents are rough teaching numbers. Do not hand this milliamp to the inspector. Use the sheet for that horn or strobe, at that brightness and that tone. This is not the device listing, not a light-coverage calc, and not a fire-circuit design.',
-    lock: 'Holding amps times the number of doors. A motor latch pulls extra for a moment when it moves. Size the power supply for that short hit, not just the holding number printed on the lock. Teaching estimate. Check the lock sheet.',
-    rs485: 'Run the cable as one chain, from device to device. Ground the shield at one end only. Put a 120 ohm resistor at each of the two ends, not on a reader in the middle. A star, a missing end resistor, or A and B swapped will fail a short run. The longer footage is a teaching speed limit on decent twisted pair. The shorter footage is a device-count guess, not the wire limit, and not a reason to add a repeater. Check how many devices the controller allows.'
+    vd: 'Copper wire, counted both ways, at about 68°F. One-way feet is the length of the run, and a blank or a minus clears the answer.',
+    wire: 'Type the amps, the one-way feet, and the drop you can allow. The 12 V and 24 V chips use the same 68°F table, and the result names that voltage.',
+    fill: 'One cable can use about 53 percent of the pipe, two about 31, and three or more about 40. Sizes are in inches, and the areas are in square inches.',
+    poe: 'The switch sets aside watts for each port by class, and that reserved number is what it holds. Each class in the list shows the camera watts beside it.',
+    battery: 'Standby amps times the standby hours, plus alarm amps times the alarm hours, then times a spare factor. 1.25 is 25 percent extra, and a lot of panel sheets use 1.2.',
+    eol: 'Common end-of-line resistors, including the Vista 2,200 ohm, plus pairs for panels that want two. Where the resistor sits changes by panel, so read that panel\'s book for the zone.',
+    nac: 'Device count times the current for that horn or strobe. Turn on the voltage-drop check to estimate the drop on a 24 volt run.',
+    lock: 'Holding amps times the number of doors. A motor latch pulls extra for a moment when it moves.',
+    rs485: 'Run the cable as one chain, from device to device. Ground the shield at one end only, and put a 120 ohm resistor at each of the two ends.'
   };
   var PLAIN_RESULT = {
     'Voltage drop': 'Volts lost on the wire',
@@ -1803,6 +1804,7 @@
       for (i = 0; i < notes.length; i++) {
         if (notes[i].closest('.result-stack')) continue;
         fkSetText(notes[i], PLAIN_NOTE[id]);
+        notes[i].classList.remove('warn');
         break;
       }
     });
@@ -1843,6 +1845,33 @@
     'PVC 1"': 0.832
   };
   var HOT_LINE = 'These ohms are for about 68°F. A hot ceiling runs higher. Around 167°F, 18 AWG is closer to 8 ohms per 1,000 ft than 6.39.';
+  var NAC_BITE = 'The milliamp is a teaching number, not the device listing. The drop treats every device as if it sits at the far end, so it reads high on purpose.';
+  var NAC_BITE_MA = 'The milliamp is a teaching number, not the device listing. Use the sheet for that horn or strobe.';
+  var LOCK_BITE = 'Startup does not fit in the holding number. Size the supply for the short hit when the lock moves.';
+  var BUS_BITE = 'The shorter footage is a device-count guess, not the wire limit. The longer footage is the speed limit on the pair.';
+  var BAT_BITE = 'This is a teaching estimate, not a code calc. It does not add spare for a cold room, an occupancy table, or a 15-minute voice alarm.';
+  var GF_BITE = 'This is the picture to expect. It is not a test you run on a live alarm, and it is not a reason to jumper a life-safety circuit.';
+  function stackOver(stack) {
+    return !!(stack && stack.querySelector('.warn-result, .badge.bad, p.calc-note.warn'));
+  }
+  function paintHot(stack) {
+    if (!stack) return;
+    if (stackOver(stack)) {
+      var hot = stack.querySelector(':scope > .fk-hot');
+      if (hot) hot.remove();
+      return;
+    }
+    fkKeep(stack, 'fk-hot', HOT_LINE, false);
+  }
+  function paintBite(stack, text) {
+    if (!stack) return;
+    if (!text || stackOver(stack)) {
+      var old = stack.querySelector(':scope > .fk-bite');
+      if (old) old.remove();
+      return;
+    }
+    fkKeep(stack, 'fk-bite', text, false);
+  }
   function fkLabeled(card, starts) {
     var found = null;
     card.querySelectorAll('label').forEach(function (lab) {
@@ -1892,7 +1921,7 @@
       if (note) note.remove();
       return;
     }
-    if (!note) card.appendChild(el('p', 'calc-note warn fk-keep fk-blank', text));
+    if (!note) card.appendChild(el('p', 'calc-note fk-keep fk-blank', text));
     else if (note.textContent !== text) note.textContent = text;
   }
   function wireVoltsLabel(card) {
@@ -1926,7 +1955,7 @@
     fkBlank(card, '');
     if (!stack) return;
     fkSupplyBox(stack, wireVoltsLabel(card));
-    fkKeep(stack, 'fk-hot', HOT_LINE, false);
+    paintHot(stack);
   }
   function paintDropGuard(card) {
     var stack = card.querySelector('.result-stack');
@@ -1941,7 +1970,7 @@
       return;
     }
     fkBlank(card, '');
-    if (stack) fkKeep(stack, 'fk-hot', HOT_LINE, false);
+    if (stack) paintHot(stack);
   }
   function fkControl(card, starts) {
     var found = null;
@@ -2025,7 +2054,7 @@
     own.appendChild(box);
     own.appendChild(el('p', within ? 'badge ok' : 'badge bad', badge));
     own.appendChild(el('p', 'muted small', usedText));
-    fkKeep(own, 'fk-filllegs', DOOR_NOTE, false);
+    if (within) fkKeep(own, 'fk-filllegs', DOOR_NOTE, false);
   }
   function paintFillGuard(card) {
     if (!card) return;
@@ -2050,7 +2079,7 @@
     var conduit = fkLabeled(card, 'Conduit') || '';
     var count = fkNum(fkLabeled(card, 'Cable count'));
     var area = FILL_AREA[conduit];
-    if (!stack || !area || count == null || count <= 0) {
+    if (!stack || !area || count == null || count <= 0 || card.querySelector('.badge.bad')) {
       card.querySelectorAll('.fk-fillwarn').forEach(function (node) { node.remove(); });
       return;
     }
@@ -2108,7 +2137,88 @@
       attributeFilter: ['value', 'class']
     });
   }
+  function stripIntroWarn(page) {
+    if (!page) return;
+    page.querySelectorAll('.calc-card > p.calc-note').forEach(function (note) {
+      note.classList.remove('warn');
+    });
+  }
+  function demoteWarningBadges(page) {
+    if (!page) return;
+    page.querySelectorAll('.badge.ok').forEach(function (badge) {
+      var text = (badge.textContent || '').trim();
+      if (/^(Over|Past)\b/.test(text) || text.indexOf('does not') >= 0 || text.indexOf('not a ') >= 0 || text.indexOf('not the ') >= 0) {
+        badge.classList.remove('ok');
+        badge.classList.add('bad');
+      }
+    });
+  }
+  function paintNacBite() {
+    var card = document.getElementById('nac');
+    if (!card) return;
+    card.querySelectorAll(':scope > p.muted.small').forEach(function (node) {
+      node.classList.add('fk-quiet-note');
+    });
+    var stack = card.querySelector('.result-stack:not(.fk-ptp)');
+    if (!stack) return;
+    var lump = null;
+    stack.querySelectorAll(':scope > p.muted.small').forEach(function (node) {
+      if (node.classList.contains('fk-keep')) return;
+      var text = node.textContent || '';
+      if (text.indexOf('last device') >= 0 || text.indexOf('reads high') >= 0 || text.indexOf('wire size') >= 0) lump = node;
+    });
+    if (stackOver(stack)) {
+      paintBite(stack, '');
+      if (lump) lump.classList.remove('fk-quiet-note');
+      return;
+    }
+    if (lump) lump.classList.add('fk-quiet-note');
+    var drop = false;
+    stack.querySelectorAll('.result-box span').forEach(function (span) {
+      var text = span.textContent || '';
+      if (text.indexOf('Rough') >= 0 || text.indexOf('lost') >= 0 || text.indexOf('last device') >= 0) drop = true;
+    });
+    paintBite(stack, drop ? NAC_BITE : NAC_BITE_MA);
+  }
+  function paintLockBite() {
+    var card = document.getElementById('lock');
+    if (!card) return;
+    var stack = card.querySelector('.result-stack');
+    if (!stack) return;
+    var note = null;
+    stack.querySelectorAll(':scope > p.muted.small').forEach(function (node) {
+      if (!node.classList.contains('fk-keep')) note = node;
+    });
+    if (stackOver(stack)) {
+      paintBite(stack, '');
+      if (note) note.classList.remove('fk-quiet-note');
+      return;
+    }
+    if (note) note.classList.add('fk-quiet-note');
+    paintBite(stack, LOCK_BITE);
+  }
+  function paintBusBite() {
+    var card = document.getElementById('rs485');
+    if (!card) return;
+    paintBite(card.querySelector('.result-stack'), BUS_BITE);
+  }
+  function paintBatBite() {
+    var card = document.getElementById('battery');
+    if (!card) return;
+    paintBite(card.querySelector('.result-stack'), BAT_BITE);
+  }
+  function paintGfBite() {
+    var card = document.getElementById('gfvolt');
+    if (!card) return;
+    var stack = card.querySelector('.result-stack');
+    if (!stack || stack.querySelector('.badge')) {
+      if (stack) paintBite(stack, '');
+      return;
+    }
+    paintBite(stack, GF_BITE);
+  }
   function paintCalcGuards(page) {
+    stripIntroWarn(page);
     var wire = document.getElementById('wire');
     var vd = document.getElementById('vd');
     var fill = document.getElementById('fill');
@@ -2118,6 +2228,12 @@
       watchFillCard();
       paintFillGuard(fill);
     }
+    paintNacBite();
+    paintLockBite();
+    paintBusBite();
+    paintBatBite();
+    paintGfBite();
+    demoteWarningBadges(page);
   }
   function schedulePlainCalcs() {
     if (!window.__FK_PLAIN) {

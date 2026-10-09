@@ -1021,9 +1021,19 @@ body.fk-miss-on #root { display: none !important; }
 }
 .start-page .fk-dash { gap: 0.75rem; }
 .fk-quiet-note { display: none !important; }
+.refs-page .calc-card > p.calc-note.warn {
+  color: var(--muted, #6b6258) !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-left: 0 !important;
+  border-radius: 0 !important;
+  font-weight: 450 !important;
+  padding: 0 !important;
+}
 .refs-page .result-stack p.fk-hot,
 .refs-page .result-stack p.fk-fillwarn,
-.refs-page .result-stack p.fk-filllegs {
+.refs-page .result-stack p.fk-filllegs,
+.refs-page .result-stack p.fk-bite {
   margin: 0.7rem 0 0;
   padding: 0.55rem 0.7rem;
   border: 1px solid var(--warn-line, #f0d9a0);
