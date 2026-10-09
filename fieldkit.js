@@ -1537,15 +1537,15 @@
 
   var PLAIN_NOTE = {
     ohm: 'Volts equal amps times ohms. Pick the one you want to find, then type the other two.',
-    vd: 'Copper wire, counted both ways (out and back). The ohms per 1,000 feet are for room temperature, about 68°F. One-way feet is the length of the run, not the round trip. This is a teaching estimate. Check the device sheet before you treat the drop as good.',
-    wire: 'Type the amps, the one-way feet, and how much drop you can live with. This picks the smallest copper size from the same table as voltage drop, at about 68°F. Teaching estimate. Check the device sheet.',
-    fill: 'A rough check of how full the pipe is. One cable can use about 53 percent of the pipe. Two cables can use about 31 percent. Three or more can use about 40 percent. Sizes are in inches, and the areas are in square inches. This is a teaching estimate. Check the cable sheet and the local rules.',
+    vd: 'Copper wire, counted both ways (out and back). The ohms per 1,000 feet are for room temperature, about 68°F. A hot ceiling runs higher, and the result says so. One-way feet is the length of the run, not the round trip. A blank box or a minus sign clears the answer. This is a teaching estimate. Check the device sheet before you treat the drop as good.',
+    wire: 'Type the amps, the one-way feet, and how much drop you can live with. The 12 V and 24 V chips set the same supply as the buttons under them. The result names that voltage. This picks the smallest copper size from the same table as voltage drop, at about 68°F. A hot ceiling runs higher. A blank box or a minus sign clears the answer. Teaching estimate. Check the device sheet.',
+    fill: 'A rough check of how full the pipe is. One cable can use about 53 percent of the pipe. Two cables can use about 31 percent. Three or more can use about 40 percent. Sizes are in inches, and the areas are in square inches. The Cat5e/Cat6 choice is a thin jacket. A lot of Cat6 is thicker, and the result shows that check. This is not a pipe decision until you read the cable sheet.',
     poe: 'The switch sets aside watts for each port by class. That reserved number is what the switch holds. The camera can use less than that after the cable eats some. Each class in the list shows both numbers. Switches do not all keep the same spare. Teaching estimate. Check the switch sheet.',
-    battery: 'Standby amps times the standby hours, plus alarm amps times the alarm hours, then times a spare factor. 1.25 means 25 percent extra, and that is the teaching default. A lot of panel sheets use 1.2, which is 20 percent extra. Use the factor on that panel\'s own battery sheet. The result rounds up to a common sealed-battery size. This is a teaching estimate, not a code-stamped battery calc.',
+    battery: 'Standby amps times the standby hours, plus alarm amps times the alarm hours, then times a spare factor. 1.25 means 25 percent extra, and that is the teaching default. A lot of panel sheets use 1.2, which is 20 percent extra. Use the factor on that panel\'s own battery sheet. The result rounds up to a common sealed-battery size. It does not add spare for a cold room, an occupancy table, or a 15-minute voice alarm. This is a teaching estimate, not a code-stamped battery calc.',
     eol: 'Common end-of-line resistors, including the Vista 2,200 ohm, plus pairs for panels that want two resistors. Where the resistor sits, and what the panel expects, changes by panel. Read that panel\'s book for the zone. Teaching estimate.',
-    nac: 'Device count times the current for that horn or strobe. The voltage drop treats every device as if it sits at the far end of the one-way feet, which reads high on purpose. These currents are rough teaching numbers. They are not the device listing, not a light-coverage calc, and not a fire-circuit design.',
+    nac: 'Device count times the current for that horn or strobe. The voltage drop treats every device as if it sits at the far end of the one-way feet, which reads high on purpose. These currents are rough teaching numbers. Do not hand this milliamp to the inspector. Use the sheet for that horn or strobe, at that brightness and that tone. This is not the device listing, not a light-coverage calc, and not a fire-circuit design.',
     lock: 'Holding amps times the number of doors. A motor latch pulls extra for a moment when it moves. Size the power supply for that short hit, not just the holding number printed on the lock. Teaching estimate. Check the lock sheet.',
-    rs485: 'A teaching length limit for this speed, on decent twisted pair, in feet. Run the cable as one chain, from device to device. Ground the shield at one end only. Put a 120 ohm resistor at each of the two ends of the wire. This is a teaching estimate, not a standards worksheet.'
+    rs485: 'Run the cable as one chain, from device to device. Ground the shield at one end only. Put a 120 ohm resistor at each of the two ends, not on a reader in the middle. A star, a missing end resistor, or A and B swapped will fail a short run. The longer footage is a teaching speed limit on decent twisted pair. The shorter footage is a device-count guess, not the wire limit, and not a reason to add a repeater. Check how many devices the controller allows.'
   };
   var PLAIN_RESULT = {
     'Voltage drop': 'Volts lost on the wire',
@@ -1559,8 +1559,8 @@
     'Holding load': 'Holding amps',
     'Inrush load': 'Startup amps',
     'Spare (holding)': 'Spare while holding',
-    'Teaching max': 'Length limit (feet)',
-    'Derated for nodes': 'Shorter limit for this many devices',
+    'Teaching max': 'Speed limit on the pair (feet)',
+    'Derated for nodes': 'Device-count guess (feet)',
     'Standby AH': 'Standby amp-hours',
     'Alarm AH': 'Alarm amp-hours',
     'Raw AH': 'Amp-hours before the spare factor',
@@ -1675,8 +1675,8 @@
     'Daisy-chain only. Stars and T-taps are intermittent ghosts.': 'Run one chain, device to device. A star or a T in the middle will act up.',
     'Shield single-end. 120 Ω termination at the two physical ends — not on every MR52 in the middle.': 'Ground the shield at one end only. Put 120 ohms at the two ends of the wire, not on a reader in the middle.',
     'No termination: expect retries on longer runs. Land 120 Ω at both physical ends of the bus (first and last device), not in the middle.': 'With no end resistors, a long run will retry. Put 120 ohms at the first device and the last device.',
-    'Node count is getting busy. Confirm the controller’s device limit, not just the copper.': 'That is a lot of devices. Check how many the controller allows. The wire length is only half of that check.',
-    'Over the teaching length. Slow the baud, shorten the run, or add a repeater / second bus.': 'Longer than this teaching limit. Slow the speed, shorten the run, or split the devices onto a second wire.',
+    'Node count is getting busy. Confirm the controller’s device limit, not just the copper.': 'That is a lot of devices. Check how many the controller allows. The footage guess is not that limit.',
+    'Over the teaching length. Slow the baud, shorten the run, or add a repeater / second bus.': 'Past the device-count guess, not necessarily past the wire. The speed limit is the longer footage. Check how many devices the panel allows. A star, a missing 120 ohm at the two ends, or A and B swapped will fail a short run before the footage will.',
     'Within teaching length. ': 'Inside the teaching length. ',
     ' - resistor at the ': ' sits at the ',
     ' device. Closed N/C path shows ~EOL at the panel; open = trouble.': ' device. With the contact closed, the panel reads about the resistor value. An open wire reads as trouble.',
@@ -1722,6 +1722,14 @@
       return;
     }
     var next = value;
+    var phraseKeys = Object.keys(PLAIN_EXACT).filter(function (k) { return k.length >= 40; });
+    phraseKeys.sort(function (a, b) { return b.length - a.length; });
+    phraseKeys.forEach(function (k) {
+      if (next.indexOf(k) >= 0) next = next.split(k).join(PLAIN_EXACT[k]);
+    });
+    if (next.indexOf('Within teaching length. ') >= 0) {
+      next = next.split('Within teaching length. ').join('Inside the teaching length. ');
+    }
     next = next.replace(/ohms\/kft/g, 'ohms per 1,000 ft');
     next = next.replace(/~20 deg C/g, 'about 68°F');
     next = next.replace(/\bkft\b/g, '1,000 ft');
@@ -1783,9 +1791,152 @@
     while ((node = walker.nextNode())) batch.push(node);
     batch.forEach(function (n) {
       if (fkInSvg(n)) return;
-      if (n.parentNode && n.parentNode.closest && n.parentNode.closest('.fk-field-calc')) return;
+      if (n.parentNode && n.parentNode.closest && n.parentNode.closest('.fk-field-calc, .fk-keep')) return;
       fkRewriteNode(n);
     });
+    paintCalcGuards(page);
+  }
+  var FILL_AREA = {
+    'EMT 1/2"': 0.304,
+    'EMT 3/4"': 0.533,
+    'EMT 1"': 0.864,
+    'EMT 1-1/4"': 1.496,
+    'PVC 1/2"': 0.285,
+    'PVC 3/4"': 0.508,
+    'PVC 1"': 0.832
+  };
+  var HOT_LINE = 'These ohms are for about 68°F. A hot ceiling runs higher. Around 167°F, 18 AWG is closer to 8 ohms per 1,000 ft than 6.39.';
+  function fkLabeled(card, starts) {
+    var found = null;
+    card.querySelectorAll('label').forEach(function (lab) {
+      var name = (lab.firstChild && lab.firstChild.textContent || '').trim();
+      if (found == null && name.indexOf(starts) === 0) {
+        var input = lab.querySelector('input, select');
+        if (input) found = input.value;
+      }
+    });
+    return found;
+  }
+  function fkBadNum(value) {
+    if (value == null) return 'blank';
+    var text = String(value).trim();
+    if (!text) return 'blank';
+    var n = Number(text);
+    if (!isFinite(n)) return 'blank';
+    if (n < 0) return 'minus';
+    return '';
+  }
+  function fkKeep(parent, cls, text, first) {
+    if (!parent) return;
+    var node = parent.querySelector(':scope > .' + cls);
+    if (!node) {
+      node = el('p', 'muted small fk-keep ' + cls, text);
+      if (first && parent.firstChild) parent.insertBefore(node, parent.firstChild);
+      else parent.appendChild(node);
+    } else if (node.textContent !== text) node.textContent = text;
+    if (first && parent.firstChild !== node) parent.insertBefore(node, parent.firstChild);
+  }
+  function fkSupplyBox(stack, volts) {
+    var box = stack.querySelector(':scope > .fk-supply');
+    if (!box) {
+      box = el('div', 'result-box fk-keep fk-supply');
+      box.appendChild(el('span', null, 'Supply this size uses'));
+      box.appendChild(el('strong', null, volts));
+      stack.insertBefore(box, stack.firstChild);
+    } else {
+      var strong = box.querySelector('strong');
+      if (strong && strong.textContent !== volts) strong.textContent = volts;
+      if (stack.firstChild !== box) stack.insertBefore(box, stack.firstChild);
+    }
+  }
+  function fkBlank(card, text) {
+    var note = card.querySelector(':scope > .fk-blank');
+    if (!text) {
+      if (note) note.remove();
+      return;
+    }
+    if (!note) card.appendChild(el('p', 'calc-note warn fk-keep fk-blank', text));
+    else if (note.textContent !== text) note.textContent = text;
+  }
+  function wireVoltsLabel(card) {
+    var seg = card.querySelector('.seg-btn.active');
+    var mode = seg ? seg.textContent.trim() : '24 V';
+    if (mode === '12 V') return '12 volts';
+    if (mode === '24 V') return '24 volts';
+    var n = fkNum(fkLabeled(card, 'Supply'));
+    if (n == null) return 'the custom supply';
+    return (n % 1 ? fkFixed(n, 1) : fkFixed(n, 0)) + ' volts';
+  }
+  function paintWireGuard(card) {
+    card.querySelectorAll('.preset-chip').forEach(function (b) {
+      var t = b.textContent.trim();
+      if (t !== '12 V' && t !== '24 V') return;
+      var on = !!card.querySelector('.seg-btn.active') && card.querySelector('.seg-btn.active').textContent.trim() === t;
+      if (b.classList.contains('active') !== on) b.classList.toggle('active', on);
+    });
+    var stack = card.querySelector('.result-stack');
+    var loadBad = fkBadNum(fkLabeled(card, 'Load'));
+    var feetBad = fkBadNum(fkLabeled(card, 'One-way'));
+    var dropBad = fkBadNum(fkLabeled(card, 'Drop you can allow'));
+    var hasResult = stack && stack.querySelector('.result-box:not(.fk-supply)');
+    if (!hasResult && (loadBad || feetBad || dropBad)) {
+      var why = (loadBad === 'minus' || feetBad === 'minus' || dropBad === 'minus')
+        ? 'The answer cleared because a box is below 0. Type the amps, the one-way feet, and the drop you can allow, all more than 0.'
+        : 'The answer cleared because a box is empty. Type the amps, the one-way feet, and the drop you can allow.';
+      fkBlank(card, why);
+      return;
+    }
+    fkBlank(card, '');
+    if (!stack) return;
+    fkSupplyBox(stack, wireVoltsLabel(card));
+    fkKeep(stack, 'fk-hot', HOT_LINE, false);
+  }
+  function paintDropGuard(card) {
+    var stack = card.querySelector('.result-stack');
+    var loadBad = fkBadNum(fkLabeled(card, 'Load'));
+    var feetBad = fkBadNum(fkLabeled(card, 'One-way'));
+    var hasResult = stack && stack.querySelector('.result-box');
+    if (!hasResult && (loadBad || feetBad)) {
+      var why = (loadBad === 'minus' || feetBad === 'minus')
+        ? 'The answer cleared because a box is below 0. Type the amps and the one-way feet as 0 or more, and type the supply volts.'
+        : 'The answer cleared because a box is empty. Type the amps, the one-way feet, and the supply volts.';
+      fkBlank(card, why);
+      return;
+    }
+    fkBlank(card, '');
+    if (stack) fkKeep(stack, 'fk-hot', HOT_LINE, false);
+  }
+  function paintFillGuard(card) {
+    var stack = card.querySelector('.result-stack');
+    if (!stack) return;
+    var cable = fkLabeled(card, 'Cable type') || '';
+    var conduit = fkLabeled(card, 'Conduit') || '';
+    var count = fkNum(fkLabeled(card, 'Cable count'));
+    var area = FILL_AREA[conduit];
+    if (cable.indexOf('Cat6') < 0 && cable.indexOf('Cat5') < 0 || !area || count == null || count <= 0) {
+      var old = stack.querySelector(':scope > .fk-fillwarn');
+      if (old) old.remove();
+      return;
+    }
+    var limit = count <= 1 ? 53 : count === 2 ? 31 : 40;
+    function pct(od) {
+      var jacket = Math.PI * (od / 2) * (od / 2);
+      return jacket * count / area * 100;
+    }
+    var thin = pct(0.22);
+    var fat = pct(0.25);
+    var text = 'The percent above uses a thin jacket, about 0.20 in across. A lot of Cat6 is 0.22 to 0.25 in across. At 0.22 in, ' +
+      count + ' cables are about ' + thin.toFixed(0) + '% full. At 0.25 in, about ' + fat.toFixed(0) +
+      '% full. The limit for this count is ' + limit + '%. Check the cable sheet before you pick the pipe.';
+    fkKeep(stack, 'fk-fillwarn', text, false);
+  }
+  function paintCalcGuards(page) {
+    var wire = document.getElementById('wire');
+    var vd = document.getElementById('vd');
+    var fill = document.getElementById('fill');
+    if (wire) paintWireGuard(wire);
+    if (vd) paintDropGuard(vd);
+    if (fill) paintFillGuard(fill);
   }
   function schedulePlainCalcs() {
     if (window.__FK_PLAIN) return;
@@ -2037,6 +2188,19 @@
       });
       document.addEventListener('click', function (ev) {
         if (ev.target && ev.target.closest && ev.target.closest('.refs-page')) schedulePlainCalcs();
+      });
+      document.addEventListener('click', function (ev) {
+        var b = ev.target && ev.target.closest && ev.target.closest('#wire .preset-chip');
+        if (!b) return;
+        var want = b.textContent.trim();
+        if (want !== '12 V' && want !== '24 V') return;
+        requestAnimationFrame(function () {
+          var seg = null;
+          document.querySelectorAll('#wire .seg-btn').forEach(function (s) {
+            if (s.textContent.trim() === want) seg = s;
+          });
+          if (seg && !seg.classList.contains('active')) seg.click();
+        });
       });
       document.addEventListener('click', function (ev) {
         var b = ev.target && ev.target.closest && ev.target.closest('.checklist-runner .reset-quiet');

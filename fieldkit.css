@@ -994,6 +994,16 @@ details.fk-decides li { margin: 0.25rem 0; line-height: 1.4; }
 }
 .start-page .fk-dash { gap: 0.75rem; }
 .fk-quiet-note { display: none !important; }
+.refs-page .result-stack p.fk-hot,
+.refs-page .result-stack p.fk-fillwarn {
+  margin: 0.7rem 0 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--warn-line, #f0d9a0);
+  border-radius: 10px;
+  background: var(--warn-bg, #fff7e8);
+  color: var(--warn-text, #6a4b00);
+  line-height: 1.4;
+}
 .checklist-runner .pro-badge { display: none !important; }
 .checklist-runner .reset-quiet {
   color: var(--ink, #1a100c);
@@ -1096,6 +1106,7 @@ details.fk-decides li { margin: 0.25rem 0; line-height: 1.4; }
   a.gd-chip.is-on,
   .gd-chip.is-on,
   .chip.active,
+  .preset-chip.active,
   .seg-btn.active {
     background: #fb4f14 !important;
     color: #1a100c !important;
