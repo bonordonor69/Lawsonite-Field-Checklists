@@ -1,8 +1,8 @@
-/* Lawsonite service worker (generated 2026-10-07, revision r4 for the phone UX pass).
+/* Lawsonite service worker (generated 2026-10-07, revision r5 for calc jumps and plain calc copy).
    Precache = exactly what index.html references + the overlay scripts the app injects.
    Old caches (incl. the previous Workbox precache) are deleted on activate. */
 'use strict';
-var VERSION = '2026-10-07-r4-443b841c74';
+var VERSION = '2026-10-07-r5-2e37fd3e0c';
 var CACHE = 'lawsonite-precache-' + VERSION;
 var PRECACHE = [
  {
@@ -23,7 +23,7 @@ var PRECACHE = [
  },
  {
   "url": "/fieldkit.css",
-  "rev": "82a987cf1c7b33890f88a96196929982"
+  "rev": "afa103004052d4c8c6421c693b988965"
  },
  {
   "url": "/guides.css",
@@ -59,7 +59,7 @@ var PRECACHE = [
  },
  {
   "url": "/fieldkit.js",
-  "rev": "443b841c742101a38371322e1c96d217"
+  "rev": "2e37fd3e0c3a56078af540af344ec292"
  },
  {
   "url": "/qrcode.js",

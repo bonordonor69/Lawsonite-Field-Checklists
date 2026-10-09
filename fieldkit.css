@@ -545,12 +545,31 @@ body.fk-filter-tips .item-row:not(:has(.item-tip)) { display: none; }
 /* ---- Calcs ---- */
 .refs-page .calc-jump {
   position: sticky;
-  top: calc(4.35rem + env(safe-area-inset-top, 0px));
+  top: var(--lw-header-h, 4.35rem);
   z-index: 9;
-  background: color-mix(in srgb, var(--paper) 86%, transparent);
+  flex-wrap: nowrap !important;
+  overflow-x: auto;
+  background: color-mix(in srgb, var(--paper) 92%, transparent);
   backdrop-filter: blur(10px);
   padding: 0.45rem 0;
   margin: 0;
+  scrollbar-width: thin;
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 1.75rem), transparent);
+}
+.refs-page .calc-jump a { flex: 0 0 auto !important; }
+@media (min-width: 861px) {
+  .refs-page .calc-jump {
+    flex-wrap: wrap !important;
+    overflow: visible;
+    mask-image: none;
+  }
+}
+.refs-page .calc-card,
+.refs-page #cheats {
+  scroll-margin-top: calc(var(--lw-header-h, 4.6rem) + var(--lw-jump-h, 3.4rem) + 8px);
+}
+.refs-page {
+  padding-bottom: calc(var(--lw-header-h, 5rem) + var(--lw-jump-h, 3.4rem) + 1.5rem);
 }
 .calc-card {
   border-left: 3px solid var(--brand);

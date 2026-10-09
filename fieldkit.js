@@ -24,8 +24,8 @@
     { id: 'watts', label: 'Watts / VA', hint: 'V × I × PF', href: '/refs#watts' },
     { id: 'poeday', label: 'Day / night PoE', hint: 'IR budget', href: '/refs#poeday' },
     { id: 'retain', label: 'NVR retention', hint: 'Cameras × bitrate × days', href: '/refs#retain' },
-    { id: 'loopft', label: 'Loop ohms to feet', hint: 'Pair resistance', href: '/refs#loopft' },
-    { id: 'gfvolt', label: 'Ground-fault voltage', hint: 'About half to earth', href: '/refs#gfvolt' }
+    { id: 'loopft', label: 'Wire feet', hint: 'Ohms on a pair', href: '/refs#loopft' },
+    { id: 'gfvolt', label: 'Ground fault', hint: 'About half to ground', href: '/refs#gfvolt' }
   ];
 
   var CALLS = [
@@ -1131,7 +1131,7 @@
       document.documentElement.style.setProperty('--lw-header-h', h + 'px');
     }
   }
-  window.addEventListener('resize', syncHeaderHeight);
+  window.addEventListener('resize', function () { syncHeaderHeight(); syncJumpOffset(); });
 
   /* ---------------- field pass: rows, calcs, dead route ---------------- */
   var OHM_KFT = { 10: 1, 12: 1.59, 14: 2.53, 16: 4.02, 18: 6.39, 20: 10.15, 22: 16.14, 24: 25.67 };
@@ -1339,9 +1339,9 @@
     var spare = budget - total;
     fkResult(card, [
       { label: 'Average per camera', value: fkFixed(avg, 2) + ' W' },
-      { label: bump ? 'Switch side (×1.2)' : 'Cameras together', value: fkFixed(total, 1) + ' W' },
+      { label: bump ? 'With 20% held back' : 'Cameras together', value: fkFixed(total, 1) + ' W' },
       { label: 'Spare on the switch', value: fkFixed(spare, 1) + ' W', warn: spare < 0 },
-      { badge: spare < 0 ? 'Over the switch budget on this teaching average.' : 'Inside the switch budget on this teaching average.', bad: spare < 0 }
+      { badge: spare < 0 ? 'Over the switch budget.' : 'Inside the switch budget.', bad: spare < 0 }
     ]);
   }
   function paintRetain() {
@@ -1352,14 +1352,14 @@
     var cams = fkNum(v.cams), mbps = fkNum(v.mbps), days = fkNum(v.days), hours = fkNum(v.hours), over = fkNum(v.over);
     if (cams == null || mbps == null || days == null || hours == null || over == null ||
         cams < 0 || mbps < 0 || days < 0 || hours < 0 || hours > 24 || over < 0) {
-      fkResult(card, [{ badge: 'Hours per day are 0 to 24. Overhead is a percent, 0 or more.', bad: true }]);
+      fkResult(card, [{ badge: 'Hours per day are 0 to 24. Spare room is a percent, 0 or more.', bad: true }]);
       return;
     }
     var gb = cams * mbps * 3600 * hours * days / 8 / 1000;
     gb = gb * (1 + over / 100);
     fkResult(card, [
-      { label: 'Storage', value: fkFixed(gb, 0) + ' GB' },
-      { label: 'Decimal TB', value: fkFixed(gb / 1000, 2) + ' TB' }
+      { label: 'Disk', value: fkFixed(gb, 0) + ' GB' },
+      { label: 'Drive label', value: fkFixed(gb / 1000, 2) + ' TB' }
     ]);
   }
   function paintLoop() {
@@ -1371,18 +1371,18 @@
     var ohms = fkNum(v.ohms), eol = fkNum(v.eol);
     var kft = OHM_KFT[awg];
     if (!kft || ohms == null || eol == null || ohms < 0 || eol < 0) {
-      fkResult(card, [{ badge: 'Need AWG, loop ohms, and the EOL ohms inside that reading (0 if the resistor is lifted).', bad: true }]);
+      fkResult(card, [{ badge: 'Type the ohms from the meter. If the resistor is still on the pair, type its ohms too. Type 0 if you took it off.', bad: true }]);
       return;
     }
     var copper = ohms - eol;
     if (copper <= 0) {
-      fkResult(card, [{ badge: 'The EOL is the whole reading. Copper feet stay hidden until the resistor is out of the number.', bad: true }]);
+      fkResult(card, [{ badge: 'That reading is basically the resistor. Take the resistor off the pair and meter the wire again.', bad: true }]);
       return;
     }
     var feet = copper * 1000 / (2 * kft);
     fkResult(card, [
-      { label: 'One-way feet', value: fkFixed(feet, 0) + ' ft' },
-      { label: 'Copper in the reading', value: fkFixed(copper, 2) + ' Ω' }
+      { label: 'One-way length', value: fkFixed(feet, 0) + ' ft' },
+      { label: 'Ohms that were the wire', value: fkFixed(copper, 2) + ' Ω' }
     ]);
   }
   function paintGf() {
@@ -1396,8 +1396,8 @@
       return;
     }
     fkResult(card, [
-      { label: 'Each leg to earth, floating', value: 'about ' + fkFixed(panel / 2, 1) + ' V' },
-      { label: 'Hard ground, the other leg', value: 'toward ' + fkFixed(panel, 0) + ' V' }
+      { label: 'Each wire to ground, no short', value: 'about ' + fkFixed(panel / 2, 1) + ' V' },
+      { label: 'Other wire if one is shorted', value: 'toward ' + fkFixed(panel, 0) + ' V' }
     ]);
   }
   function paintNacPtp() {
@@ -1456,7 +1456,7 @@
   function buildWatts() {
     var saved = fkLoad('watts', { volts: '24', amps: '0.5', pf: '1' });
     var sec = fkCard('watts', 'Watts and VA',
-      'Watts = volts × amps × power factor. VA = volts × amps. DC and a resistive load use power factor 1, so the two numbers match. A magnetic or switching supply can draw more VA than watts. Teaching estimate only — verify with the device sheet.');
+      'Watts = volts × amps × power factor. VA = volts × amps. A maglock or a strike on DC is power factor 1, so both numbers match. A plug-in supply can draw more VA than watts. Check the device sheet before you size the supply.');
     fkPresets(sec, [
       { label: 'Maglock 0.5 A @ 12 V', values: { volts: '12', amps: '0.5', pf: '1' } },
       { label: 'Strike 0.35 A @ 24 V', values: { volts: '24', amps: '0.35', pf: '1' } },
@@ -1465,30 +1465,30 @@
     var g = fkGrid(sec);
     fkField(g, 'Volts', 'volts', saved.volts || '24');
     fkField(g, 'Amps', 'amps', saved.amps || '0.5');
-    fkField(g, 'Power factor (1.0 = DC / resistive)', 'pf', saved.pf || '1');
+    fkField(g, 'Power factor (1 for DC)', 'pf', saved.pf || '1');
     return sec;
   }
   function buildDay() {
     var saved = fkLoad('poeday', { cams: '8', day: '6', night: '12', hours: '10', budget: '123', pse: false });
-    var sec = fkCard('poeday', 'Day / night PoE',
-      'Average draw = day watts × (24 − night hours) / 24 + night watts × night hours / 24, then × cameras. These watts are what the camera draws (PD). The switch often reserves more (PSE). The 20% box is a teaching bump, not an 802.3 class table. The PoE budget card is the class table.');
+    var sec = fkCard('poeday', 'Day / night camera power',
+      'Cameras pull more when the infrared comes on. Type the day watts, the night watts, and how many hours the infrared runs. This averages that and lines it up against the switch budget. The watts here are what the camera uses. The switch often holds some extra back. The PoE card is the class table.');
     fkPresets(sec, [
       { label: '8 domes, IR at night', values: { cams: '8', day: '6', night: '12', hours: '10', budget: '123' } },
       { label: '16 bullets, 370 W switch', values: { cams: '16', day: '8', night: '15', hours: '12', budget: '370' } }
     ], paintDay);
     var g = fkGrid(sec);
     fkField(g, 'Cameras', 'cams', saved.cams || '8', 'numeric');
-    fkField(g, 'Day watts each (PD)', 'day', saved.day || '6');
-    fkField(g, 'Night / IR watts each (PD)', 'night', saved.night || '12');
-    fkField(g, 'Night hours', 'hours', saved.hours || '10');
-    fkField(g, 'Switch budget (W)', 'budget', saved.budget || '123');
-    fkCheck(sec, 'pse', 'Count a teaching PSE bump (×1.2) instead of PD watts', saved.pse);
+    fkField(g, 'Day watts each', 'day', saved.day || '6');
+    fkField(g, 'Night watts each (infrared on)', 'night', saved.night || '12');
+    fkField(g, 'Hours the infrared is on', 'hours', saved.hours || '10');
+    fkField(g, 'Switch budget (watts)', 'budget', saved.budget || '123');
+    fkCheck(sec, 'pse', 'Add 20% for what the switch holds back', saved.pse);
     return sec;
   }
   function buildRetain() {
     var saved = fkLoad('retain', { cams: '16', mbps: '4', days: '30', hours: '24', over: '10' });
-    var sec = fkCard('retain', 'NVR retention',
-      'GB = cameras × Mbps × 3600 × hours/day × days / 8 / 1000, then × (1 + overhead%). 1 Mbps for 24 hours is about 10.8 GB. Decimal TB is GB / 1000, the way a drive label is sold. Constant-bitrate teaching math. Motion recording uses less. Not a recorder datasheet.');
+    var sec = fkCard('retain', 'Disk for these cameras',
+      'How much drive for this many cameras, recording the whole time at one bitrate. Motion recording uses less. One camera at 4 Mbps, day and night, is about 40 GB a day before spare room. The TB number matches a drive label.');
     fkPresets(sec, [
       { label: '16 cams · 4 Mbps · 30 days', values: { cams: '16', mbps: '4', days: '30', hours: '24', over: '10' } },
       { label: '32 cams · 2 Mbps · 14 days', values: { cams: '32', mbps: '2', days: '14', hours: '24', over: '10' } },
@@ -1498,40 +1498,40 @@
     fkField(g, 'Cameras', 'cams', saved.cams || '16', 'numeric');
     fkField(g, 'Bitrate each (Mbps)', 'mbps', saved.mbps || '4');
     fkField(g, 'Days', 'days', saved.days || '30', 'numeric');
-    fkField(g, 'Record hours per day', 'hours', saved.hours || '24');
-    fkField(g, 'Overhead %', 'over', saved.over || '10');
+    fkField(g, 'Hours recorded per day', 'hours', saved.hours || '24');
+    fkField(g, 'Spare room %', 'over', saved.over || '10');
     return sec;
   }
   function buildLoop() {
     var saved = fkLoad('loopft', { awg: '18', ohms: '10', eol: '0' });
-    var sec = fkCard('loopft', 'Loop ohms to feet',
-      'One-way feet = (loop ohms − EOL ohms) × 1000 / (2 × ohms per kft). Same copper table as voltage drop, about 20 °C, round trip. Subtract the EOL only when that resistor is inside the meter reading. 2.2 kΩ is 2200 ohms, not 2.2. Teaching estimate — temperature, splices, and steel change it.');
+    var sec = fkCard('loopft', 'How far is this wire?',
+      'Meter the pair and pick the wire size. This turns that ohms reading into a one-way footage guess. Same copper numbers as voltage drop, at room temperature. A splice, a cold morning, or steel in the path will move it. Take the end-of-line resistor off the pair before you meter. If it is still on there, type its ohms in the last box: 2200, 4700, or 10000. Type 0 if the resistor is off the pair.');
     var awgs = [10, 12, 14, 16, 18, 20, 22, 24].map(function (n) {
-      return [n, n + ' AWG (' + OHM_KFT[n] + ' Ω/kft)'];
+      return [n, n + ' AWG — ' + OHM_KFT[n] + ' ohms per 1000 ft'];
     });
     fkPresets(sec, [
-      { label: '18 AWG, no EOL in the reading', values: { awg: '18', eol: '0' } },
-      { label: '22 AWG SLC pair', values: { awg: '22', eol: '0' } },
-      { label: 'EOL was 2.2 kΩ', values: { eol: '2200' } },
-      { label: 'EOL was 4.7 kΩ', values: { eol: '4700' } },
-      { label: 'EOL was 10 kΩ', values: { eol: '10000' } }
+      { label: '18 AWG, resistor off', values: { awg: '18', eol: '0' } },
+      { label: '22 AWG fire pair', values: { awg: '22', eol: '0' } },
+      { label: 'Resistor was 2.2k', values: { eol: '2200' } },
+      { label: 'Resistor was 4.7k', values: { eol: '4700' } },
+      { label: 'Resistor was 10k', values: { eol: '10000' } }
     ], paintLoop);
     var g = fkGrid(sec);
-    fkSelect(g, 'AWG', 'awg', saved.awg || '18', awgs);
-    fkField(g, 'Loop ohms (the meter)', 'ohms', saved.ohms || '10');
-    fkField(g, 'EOL ohms inside that reading (0 if lifted)', 'eol', saved.eol || '0');
+    fkSelect(g, 'Wire size', 'awg', saved.awg || '18', awgs);
+    fkField(g, 'Ohms on the meter', 'ohms', saved.ohms || '10');
+    fkField(g, 'Resistor still on the pair (ohms)', 'eol', saved.eol || '0');
     return sec;
   }
   function buildGf() {
     var saved = fkLoad('gfvolt', { panel: '24' });
-    var sec = fkCard('gfvolt', 'Ground-fault expected voltage',
-      'On a floating 24 V circuit, each leg to earth sits at about half the panel voltage. A hard ground pulls one leg toward 0 V and the other toward the full panel voltage. This is the picture to expect. It is not a test procedure, not an NFPA measurement, and not a reason to jumper a life-safety circuit.');
+    var sec = fkCard('gfvolt', 'What a ground fault looks like',
+      'On a normal 24 volt fire circuit, each wire to ground sits at about half. That is about 12 volts. If one wire is shorted to ground, that wire falls toward 0 and the other rises toward the full 24. This is the picture to expect. It is not a test you run on a live alarm, and it is not a reason to jumper a life-safety circuit.');
     fkPresets(sec, [
       { label: '24 V fire / NAC', values: { panel: '24' } },
       { label: '12 V', values: { panel: '12' } }
     ], paintGf);
     var g = fkGrid(sec);
-    fkField(g, 'Panel voltage', 'panel', saved.panel || '24');
+    fkField(g, 'Panel volts', 'panel', saved.panel || '24');
     return sec;
   }
 
@@ -1559,6 +1559,45 @@
       var i;
       for (i = front.length - 1; i >= 0; i--) nav.insertBefore(front[i], nav.firstChild);
     });
+    syncJumpOffset();
+    bindCalcJumps();
+  }
+
+  function syncJumpOffset() {
+    var nav = document.querySelector('.refs-page .calc-jump');
+    if (!nav) return;
+    document.documentElement.style.setProperty('--lw-jump-h', Math.ceil(nav.getBoundingClientRect().height) + 'px');
+  }
+
+  function calcJumpGap() {
+    var header = document.querySelector('.app-header');
+    var nav = document.querySelector('.refs-page .calc-jump');
+    return (header ? header.getBoundingClientRect().height : 0) + (nav ? nav.getBoundingClientRect().height : 0) + 10;
+  }
+
+  function scrollCalcTarget(target) {
+    syncHeaderHeight();
+    syncJumpOffset();
+    var y = target.getBoundingClientRect().top + window.pageYOffset - calcJumpGap();
+    var max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: Math.max(0, Math.min(y, max)), behavior: reduce ? 'auto' : 'smooth' });
+  }
+
+  function bindCalcJumps() {
+    if (window.__FK_JUMPS) return;
+    window.__FK_JUMPS = true;
+    document.addEventListener('click', function (ev) {
+      var a = ev.target && ev.target.closest && ev.target.closest('.refs-page .calc-jump a');
+      if (!a || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+      var id = (a.getAttribute('href') || '').split('#').pop();
+      var target = id && document.getElementById(id);
+      if (!target) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      if (history.replaceState) history.replaceState(null, '', '#' + id);
+      scrollCalcTarget(target);
+    }, true);
   }
 
   function ensureFieldCalcs() {
@@ -1584,10 +1623,10 @@
     retain.after(loop);
     loop.after(gf);
     fkJump('watts', 'Watts / VA');
-    fkJump('poeday', 'Day / night PoE');
-    fkJump('retain', 'NVR retention');
-    fkJump('loopft', 'Loop feet');
-    fkJump('gfvolt', 'Ground-fault V');
+    fkJump('poeday', 'Day / night');
+    fkJump('retain', 'Disk');
+    fkJump('loopft', 'Wire feet');
+    fkJump('gfvolt', 'Ground fault');
     paintWatts();
     paintDay();
     paintRetain();
