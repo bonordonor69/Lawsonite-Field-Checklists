@@ -1,8 +1,8 @@
-/* Lawsonite service worker (generated 2026-10-09, revision r7 for wire-size supply, footage labels, and result warnings).
+/* Lawsonite service worker (generated 2026-10-09, revision r8 for footage, conduit jacket, and cleared voltage-drop boxes).
    Precache = exactly what index.html references + the overlay scripts the app injects.
    Old caches (incl. the previous Workbox precache) are deleted on activate. */
 'use strict';
-var VERSION = '2026-10-09-r7-edda1ee64d';
+var VERSION = '2026-10-09-r8-a19d58f931';
 var CACHE = 'lawsonite-precache-' + VERSION;
 var PRECACHE = [
  {
@@ -59,7 +59,7 @@ var PRECACHE = [
  },
  {
   "url": "/fieldkit.js",
-  "rev": "edda1ee64df23475b1bc9ee378d1452d"
+  "rev": "a19d58f9313bc6e8ed4bfb000c61f15d"
  },
  {
   "url": "/qrcode.js",

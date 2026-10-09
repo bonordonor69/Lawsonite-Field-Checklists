@@ -1362,23 +1362,43 @@
       { label: 'Drive label', value: fkFixed(gb / 1000, 2) + ' TB' }
     ]);
   }
+  function loopClearReason(ohmsBad, eolBad) {
+    var bits = [];
+    if (ohmsBad === 'blank') bits.push('the meter box is empty');
+    if (ohmsBad === 'minus') bits.push('the meter box is below 0');
+    if (eolBad === 'blank') bits.push('the resistor box is empty');
+    if (eolBad === 'minus') bits.push('the resistor box is below 0');
+    if (!bits.length) return 'The footage cleared. Type the ohms from the meter, and type the resistor ohms or 0.';
+    return 'The footage cleared because ' + bits.join(' and ') + '.';
+  }
   function paintLoop() {
     var card = document.getElementById('loopft');
     if (!card) return;
     var v = fkRead(card);
     fkSave('loopft', v);
     var awg = Number(v.awg);
-    var ohms = fkNum(v.ohms), eol = fkNum(v.eol);
     var kft = OHM_KFT[awg];
-    if (!kft || ohms == null || eol == null || ohms < 0 || eol < 0) {
-      fkResult(card, [{ badge: 'Type the ohms from the meter. When the resistor stays on the pair, type its ohms too. Type 0 when the resistor is off and the far end is twisted.', bad: true }]);
+    var ohmsBad = fkBadNum(v.ohms);
+    var eolBad = fkBadNum(v.eol);
+    if (!kft || ohmsBad || eolBad) {
+      fkResult(card, [{ badge: loopClearReason(ohmsBad, eolBad), bad: true }]);
+      return;
+    }
+    var ohms = fkNum(v.ohms);
+    var eol = fkNum(v.eol);
+    // A reading at or under the resistor is not footage. Close means resistor tolerance
+    // (about 2% or 50 ohms, whichever is larger). Farther under is a short or a wrong box.
+    // A reading over the resistor is wire, even when the extra ohms are small.
+    if (eol > 0 && ohms <= eol) {
+      var allowance = Math.max(eol * 0.02, 50);
+      if (eol - ohms <= allowance) {
+        fkResult(card, [{ badge: 'That reading is basically the resistor. Take it off, twist the two wires at the far end, and read the ohms at this end.', bad: true }]);
+        return;
+      }
+      fkResult(card, [{ badge: 'The reading is much smaller than the resistor you typed. The resistor is off the pair, the pair is shorted ahead of it, or the resistor box is wrong.', bad: true }]);
       return;
     }
     var copper = ohms - eol;
-    if (copper <= 0) {
-      fkResult(card, [{ badge: 'That reading is basically the resistor. Take it off, twist the two wires at the far end, and read the ohms at this end.', bad: true }]);
-      return;
-    }
     var feet = copper * 1000 / (2 * kft);
     fkResult(card, [
       { label: 'One-way length', value: fkFixed(feet, 0) + ' ft' },
@@ -1539,7 +1559,7 @@
     ohm: 'Volts equal amps times ohms. Pick the one you want to find, then type the other two.',
     vd: 'Copper wire, counted both ways (out and back). The ohms per 1,000 feet are for room temperature, about 68°F. A hot ceiling runs higher, and the result says so. One-way feet is the length of the run, not the round trip. A blank box or a minus sign clears the answer. This is a teaching estimate. Check the device sheet before you treat the drop as good.',
     wire: 'Type the amps, the one-way feet, and how much drop you can live with. The 12 V and 24 V chips set the same supply as the buttons under them. The result names that voltage. This picks the smallest copper size from the same table as voltage drop, at about 68°F. A hot ceiling runs higher. A blank box or a minus sign clears the answer. Teaching estimate. Check the device sheet.',
-    fill: 'A rough check of how full the pipe is. One cable can use about 53 percent of the pipe. Two cables can use about 31 percent. Three or more can use about 40 percent. Sizes are in inches, and the areas are in square inches. The Cat5e/Cat6 choice is a thin jacket. A lot of Cat6 is thicker, and the result shows that check. This is not a pipe decision until you read the cable sheet.',
+    fill: 'A rough check of how full the pipe is. One cable can use about 53 percent of the pipe. Two cables can use about 31 percent. Three or more can use about 40 percent. Sizes are in inches, and the areas are in square inches. When the cable is Cat5e/Cat6, the result also checks a thicker jacket. Other cables do not use that check. This is not a pipe decision until you read the cable sheet.',
     poe: 'The switch sets aside watts for each port by class. That reserved number is what the switch holds. The camera can use less than that after the cable eats some. Each class in the list shows both numbers. Switches do not all keep the same spare. Teaching estimate. Check the switch sheet.',
     battery: 'Standby amps times the standby hours, plus alarm amps times the alarm hours, then times a spare factor. 1.25 means 25 percent extra, and that is the teaching default. A lot of panel sheets use 1.2, which is 20 percent extra. Use the factor on that panel\'s own battery sheet. The result rounds up to a common sealed-battery size. It does not add spare for a cold room, an occupancy table, or a 15-minute voice alarm. This is a teaching estimate, not a code-stamped battery calc.',
     eol: 'Common end-of-line resistors, including the Vista 2,200 ohm, plus pairs for panels that want two resistors. Where the resistor sits, and what the panel expects, changes by panel. Read that panel\'s book for the zone. Teaching estimate.',
@@ -1906,28 +1926,53 @@
     fkBlank(card, '');
     if (stack) fkKeep(stack, 'fk-hot', HOT_LINE, false);
   }
+  function fkControl(card, starts) {
+    var found = null;
+    card.querySelectorAll('label').forEach(function (lab) {
+      var name = (lab.firstChild && lab.firstChild.textContent || '').trim();
+      if (found == null && name.indexOf(starts) === 0) found = lab.querySelector('input, select');
+    });
+    return found;
+  }
+  function fillCableName(card) {
+    var sel = fkControl(card, 'Cable type');
+    if (!sel) return '';
+    var shown = sel.value || '';
+    if (sel.options && sel.selectedIndex >= 0 && sel.options[sel.selectedIndex]) {
+      shown = sel.options[sel.selectedIndex].text || shown;
+    }
+    return shown;
+  }
   function paintFillGuard(card) {
     var stack = card.querySelector('.result-stack');
-    if (!stack) return;
-    var cable = fkLabeled(card, 'Cable type') || '';
+    var cable = fillCableName(card);
+    var isCat = cable.indexOf('Cat5') >= 0 || cable.indexOf('Cat6') >= 0;
+    if (!stack || !isCat) {
+      card.querySelectorAll('.fk-fillwarn').forEach(function (node) { node.remove(); });
+      return;
+    }
     var conduit = fkLabeled(card, 'Conduit') || '';
     var count = fkNum(fkLabeled(card, 'Cable count'));
     var area = FILL_AREA[conduit];
-    if (cable.indexOf('Cat6') < 0 && cable.indexOf('Cat5') < 0 || !area || count == null || count <= 0) {
-      var old = stack.querySelector(':scope > .fk-fillwarn');
-      if (old) old.remove();
+    if (!area || count == null || count <= 0) {
+      card.querySelectorAll('.fk-fillwarn').forEach(function (node) { node.remove(); });
       return;
     }
-    var limit = count <= 1 ? 53 : count === 2 ? 31 : 40;
+    card.querySelectorAll('.fk-fillwarn').forEach(function (node) {
+      if (node.parentNode !== stack) node.remove();
+    });
+    var limitWords = count <= 1 ? '53% for 1 cable' : count === 2 ? '31% for 2 cables' : '40% for 3 or more';
     function pct(od) {
       var jacket = Math.PI * (od / 2) * (od / 2);
       return jacket * count / area * 100;
     }
-    var thin = pct(0.22);
-    var fat = pct(0.25);
-    var text = 'The percent above uses a thin jacket, about 0.20 in across. A lot of Cat6 is 0.22 to 0.25 in across. At 0.22 in, ' +
-      count + ' cables are about ' + thin.toFixed(0) + '% full. At 0.25 in, about ' + fat.toFixed(0) +
-      '% full. The limit for this count is ' + limit + '%. Check the cable sheet before you pick the pipe.';
+    var at22 = pct(0.22);
+    var at25 = pct(0.25);
+    var noun = count === 1 ? '1 cable is' : count + ' cables are';
+    var text = 'The fill percent above is a thin jacket, about 0.20 in across. At 0.22 in, ' +
+      noun + ' about ' + at22.toFixed(0) + '% full. At 0.25 in, about ' +
+      at25.toFixed(0) + '% full. The limit for this count is ' + limitWords +
+      '. Check the cable sheet before you pick the pipe.';
     fkKeep(stack, 'fk-fillwarn', text, false);
   }
   function paintCalcGuards(page) {
@@ -1939,11 +1984,19 @@
     if (fill) paintFillGuard(fill);
   }
   function schedulePlainCalcs() {
-    if (window.__FK_PLAIN) return;
-    window.__FK_PLAIN = requestAnimationFrame(function () {
-      window.__FK_PLAIN = 0;
+    if (!window.__FK_PLAIN) {
+      window.__FK_PLAIN = requestAnimationFrame(function () {
+        window.__FK_PLAIN = 0;
+        plainCalcCopy();
+      });
+    }
+    // React restores a controlled box to the previous value until it commits.
+    // A second pass after that commit corrects a cleared box or a cable change.
+    clearTimeout(window.__FK_PLAIN_LATE);
+    window.__FK_PLAIN_LATE = setTimeout(function () {
+      window.__FK_PLAIN_LATE = 0;
       plainCalcCopy();
-    });
+    }, 0);
   }
 
   function polishRefs(page) {
