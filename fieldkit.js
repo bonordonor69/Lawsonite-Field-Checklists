@@ -1371,12 +1371,12 @@
     var ohms = fkNum(v.ohms), eol = fkNum(v.eol);
     var kft = OHM_KFT[awg];
     if (!kft || ohms == null || eol == null || ohms < 0 || eol < 0) {
-      fkResult(card, [{ badge: 'Type the ohms from the meter. If the resistor is still on the pair, type its ohms too. Type 0 if you took it off.', bad: true }]);
+      fkResult(card, [{ badge: 'Type the ohms from the meter. When the resistor stays on the pair, type its ohms too. Type 0 when the resistor is off and the far end is twisted.', bad: true }]);
       return;
     }
     var copper = ohms - eol;
     if (copper <= 0) {
-      fkResult(card, [{ badge: 'That reading is basically the resistor. Take the resistor off the pair and meter the wire again.', bad: true }]);
+      fkResult(card, [{ badge: 'That reading is basically the resistor. Take it off, twist the two wires at the far end, and read the ohms at this end.', bad: true }]);
       return;
     }
     var feet = copper * 1000 / (2 * kft);
@@ -1416,8 +1416,8 @@
     card.querySelectorAll('label').forEach(function (lab) {
       var name = (lab.firstChild && lab.firstChild.textContent || '').trim();
       if (name === 'Device count') countEl = lab.querySelector('input');
-      if (name === 'mA per device') maEl = lab.querySelector('input');
-      if (name === 'AWG') awgEl = lab.querySelector('select');
+      if (name === 'mA per device' || name === 'Milliamps each') maEl = lab.querySelector('input');
+      if (name === 'AWG' || name === 'Wire size') awgEl = lab.querySelector('select');
       if (name === 'One-way feet') feetEl = lab.querySelector('input');
     });
     var box = card.querySelector('input[type="checkbox"]');
@@ -1426,13 +1426,13 @@
     var ma = id === 'custom' ? (maEl ? fkNum(maEl.value) : null) : NAC_MA[id];
     stack.textContent = '';
     if (count == null || count <= 0 || ma == null || ma < 0) {
-      stack.appendChild(el('p', 'muted small', 'Point-to-point shows once the device class and count are filled.'));
+      stack.appendChild(el('p', 'muted small', 'Even spacing shows once the device type and the count are filled in.'));
       return;
     }
-    var head = el('p', 'muted small', 'Point-to-point: same devices spaced evenly along the one-way feet. The lump above stays the conservative check (every device at the far end).');
+    var head = el('p', 'muted small', 'Even spacing: the same devices spread along the one-way feet. The number above still treats every device as if it sits at the far end, which reads high on purpose.');
     stack.appendChild(head);
     if (!box || !box.checked || !awgEl || !feetEl) {
-      stack.appendChild(el('p', 'muted small', 'Turn on the voltage-drop note to see the even-spacing drop.'));
+      stack.appendChild(el('p', 'muted small', 'Turn on the voltage-drop check to see the even-spacing number.'));
       return;
     }
     var kft = OHM_KFT[Number(awgEl.value)];
@@ -1442,7 +1442,7 @@
     var drop = (kft / 1000) * feet * each * (count + 1);
     var at = 24 - drop;
     var rows = [
-      { label: 'Point-to-point drop', value: fkFixed(drop, 2) + ' V', warn: drop / 24 > 0.1 },
+      { label: 'Even-spacing drop', value: fkFixed(drop, 2) + ' V', warn: drop / 24 > 0.1 },
       { label: 'About at the last device', value: at < 0 ? 'below 0 V' : fkFixed(at, 2) + ' V', warn: at < 20.4 }
     ];
     rows.forEach(function (r) {
@@ -1456,7 +1456,7 @@
   function buildWatts() {
     var saved = fkLoad('watts', { volts: '24', amps: '0.5', pf: '1' });
     var sec = fkCard('watts', 'Watts and VA',
-      'Watts = volts × amps × power factor. VA = volts × amps. A maglock or a strike on DC is power factor 1, so both numbers match. A plug-in supply can draw more VA than watts. Check the device sheet before you size the supply.');
+      'Watts are volts times amps times a power factor. VA is volts times amps, with no factor. On DC, a maglock or a strike has a power factor of 1, so the two numbers match. A plug-in supply can draw more VA than watts. Check the device sheet before you size the supply.');
     fkPresets(sec, [
       { label: 'Maglock 0.5 A @ 12 V', values: { volts: '12', amps: '0.5', pf: '1' } },
       { label: 'Strike 0.35 A @ 24 V', values: { volts: '24', amps: '0.35', pf: '1' } },
@@ -1471,7 +1471,7 @@
   function buildDay() {
     var saved = fkLoad('poeday', { cams: '8', day: '6', night: '12', hours: '10', budget: '123', pse: false });
     var sec = fkCard('poeday', 'Day / night camera power',
-      'Cameras pull more when the infrared comes on. Type the day watts, the night watts, and how many hours the infrared runs. This averages that and lines it up against the switch budget. The watts here are what the camera uses. The switch often holds some extra back. The PoE card is the class table.');
+      'Cameras pull more when the infrared lights come on. Type the day watts, the night watts, and how many hours those lights run. This averages that and lines it up against the switch budget. The watts here are what the camera uses. The switch often holds some extra back. The PoE card lists the class watts.');
     fkPresets(sec, [
       { label: '8 domes, IR at night', values: { cams: '8', day: '6', night: '12', hours: '10', budget: '123' } },
       { label: '16 bullets, 370 W switch', values: { cams: '16', day: '8', night: '15', hours: '12', budget: '370' } }
@@ -1488,7 +1488,7 @@
   function buildRetain() {
     var saved = fkLoad('retain', { cams: '16', mbps: '4', days: '30', hours: '24', over: '10' });
     var sec = fkCard('retain', 'Disk for these cameras',
-      'How much drive for this many cameras, recording the whole time at one bitrate. Motion recording uses less. One camera at 4 Mbps, day and night, is about 40 GB a day before spare room. The TB number matches a drive label.');
+      'How much drive for this many cameras, recording the whole time at one speed. Motion-only recording uses less. One camera at 4 Mbps, day and night, is about 40 GB a day before spare room. The TB number matches a drive label.');
     fkPresets(sec, [
       { label: '16 cams · 4 Mbps · 30 days', values: { cams: '16', mbps: '4', days: '30', hours: '24', over: '10' } },
       { label: '32 cams · 2 Mbps · 14 days', values: { cams: '32', mbps: '2', days: '14', hours: '24', over: '10' } },
@@ -1496,7 +1496,7 @@
     ], paintRetain);
     var g = fkGrid(sec);
     fkField(g, 'Cameras', 'cams', saved.cams || '16', 'numeric');
-    fkField(g, 'Bitrate each (Mbps)', 'mbps', saved.mbps || '4');
+    fkField(g, 'Speed each (Mbps)', 'mbps', saved.mbps || '4');
     fkField(g, 'Days', 'days', saved.days || '30', 'numeric');
     fkField(g, 'Hours recorded per day', 'hours', saved.hours || '24');
     fkField(g, 'Spare room %', 'over', saved.over || '10');
@@ -1505,12 +1505,12 @@
   function buildLoop() {
     var saved = fkLoad('loopft', { awg: '18', ohms: '10', eol: '0' });
     var sec = fkCard('loopft', 'How far is this wire?',
-      'Meter the pair and pick the wire size. This turns that ohms reading into a one-way footage guess. Same copper numbers as voltage drop, at room temperature. A splice, a cold morning, or steel in the path will move it. Take the end-of-line resistor off the pair before you meter. If it is still on there, type its ohms in the last box: 2200, 4700, or 10000. Type 0 if the resistor is off the pair.');
+      'Take the end-of-line resistor off the pair. At the far end, twist the two wires together. At this end, read the ohms. Type that reading and the wire size. This guesses the one-way footage. The copper numbers match the voltage-drop card, at about 68°F. A splice, a cold morning, or steel in the path will move the number. When the resistor stays on the pair, it already joins the two wires. Type its ohms in the last box (2200, 4700, or 10000) and leave the far end as it is. Type 0 when the resistor is off and the far end is twisted.');
     var awgs = [10, 12, 14, 16, 18, 20, 22, 24].map(function (n) {
-      return [n, n + ' AWG — ' + OHM_KFT[n] + ' ohms per 1000 ft'];
+      return [n, n + ' AWG — ' + OHM_KFT[n] + ' ohms per 1,000 ft'];
     });
     fkPresets(sec, [
-      { label: '18 AWG, resistor off', values: { awg: '18', eol: '0' } },
+      { label: '18 AWG, far end twisted', values: { awg: '18', eol: '0' } },
       { label: '22 AWG fire pair', values: { awg: '22', eol: '0' } },
       { label: 'Resistor was 2.2k', values: { eol: '2200' } },
       { label: 'Resistor was 4.7k', values: { eol: '4700' } },
@@ -1519,13 +1519,13 @@
     var g = fkGrid(sec);
     fkSelect(g, 'Wire size', 'awg', saved.awg || '18', awgs);
     fkField(g, 'Ohms on the meter', 'ohms', saved.ohms || '10');
-    fkField(g, 'Resistor still on the pair (ohms)', 'eol', saved.eol || '0');
+    fkField(g, 'Resistor ohms, if it is still on the pair', 'eol', saved.eol || '0');
     return sec;
   }
   function buildGf() {
     var saved = fkLoad('gfvolt', { panel: '24' });
     var sec = fkCard('gfvolt', 'What a ground fault looks like',
-      'On a normal 24 volt fire circuit, each wire to ground sits at about half. That is about 12 volts. If one wire is shorted to ground, that wire falls toward 0 and the other rises toward the full 24. This is the picture to expect. It is not a test you run on a live alarm, and it is not a reason to jumper a life-safety circuit.');
+      'On a normal fire circuit, each wire to ground sits at about half the panel voltage. On 24 volts that is about 12 volts. When one wire is shorted to ground, that wire falls toward 0 and the other rises toward the full panel voltage. This is the picture to expect. It is not a test you run on a live alarm, and it is not a reason to jumper a life-safety circuit.');
     fkPresets(sec, [
       { label: '24 V fire / NAC', values: { panel: '24' } },
       { label: '12 V', values: { panel: '12' } }
@@ -1533,6 +1533,266 @@
     var g = fkGrid(sec);
     fkField(g, 'Panel volts', 'panel', saved.panel || '24');
     return sec;
+  }
+
+  var PLAIN_NOTE = {
+    ohm: 'Volts equal amps times ohms. Pick the one you want to find, then type the other two.',
+    vd: 'Copper wire, counted both ways (out and back). The ohms per 1,000 feet are for room temperature, about 68°F. One-way feet is the length of the run, not the round trip. This is a teaching estimate. Check the device sheet before you treat the drop as good.',
+    wire: 'Type the amps, the one-way feet, and how much drop you can live with. This picks the smallest copper size from the same table as voltage drop, at about 68°F. Teaching estimate. Check the device sheet.',
+    fill: 'A rough check of how full the pipe is. One cable can use about 53 percent of the pipe. Two cables can use about 31 percent. Three or more can use about 40 percent. Sizes are in inches, and the areas are in square inches. This is a teaching estimate. Check the cable sheet and the local rules.',
+    poe: 'The switch sets aside watts for each port by class. That reserved number is what the switch holds. The camera can use less than that after the cable eats some. Each class in the list shows both numbers. Switches do not all keep the same spare. Teaching estimate. Check the switch sheet.',
+    battery: 'Standby amps times the standby hours, plus alarm amps times the alarm hours, then times a spare factor. 1.25 means 25 percent extra, and that is the teaching default. A lot of panel sheets use 1.2, which is 20 percent extra. Use the factor on that panel\'s own battery sheet. The result rounds up to a common sealed-battery size. This is a teaching estimate, not a code-stamped battery calc.',
+    eol: 'Common end-of-line resistors, including the Vista 2,200 ohm, plus pairs for panels that want two resistors. Where the resistor sits, and what the panel expects, changes by panel. Read that panel\'s book for the zone. Teaching estimate.',
+    nac: 'Device count times the current for that horn or strobe. The voltage drop treats every device as if it sits at the far end of the one-way feet, which reads high on purpose. These currents are rough teaching numbers. They are not the device listing, not a light-coverage calc, and not a fire-circuit design.',
+    lock: 'Holding amps times the number of doors. A motor latch pulls extra for a moment when it moves. Size the power supply for that short hit, not just the holding number printed on the lock. Teaching estimate. Check the lock sheet.',
+    rs485: 'A teaching length limit for this speed, on decent twisted pair, in feet. Run the cable as one chain, from device to device. Ground the shield at one end only. Put a 120 ohm resistor at each of the two ends of the wire. This is a teaching estimate, not a standards worksheet.'
+  };
+  var PLAIN_RESULT = {
+    'Voltage drop': 'Volts lost on the wire',
+    'Round-trip R': 'Ohms, out and back',
+    '% of system': 'Percent of the supply',
+    'Approx at device': 'About at the device',
+    'Min copper AWG': 'Smallest wire',
+    'Rough VD': 'Rough volts lost',
+    'Rough VD %': 'Rough percent lost',
+    'Approx at last device': 'About at the last device',
+    'Holding load': 'Holding amps',
+    'Inrush load': 'Startup amps',
+    'Spare (holding)': 'Spare while holding',
+    'Teaching max': 'Length limit (feet)',
+    'Derated for nodes': 'Shorter limit for this many devices',
+    'Standby AH': 'Standby amp-hours',
+    'Alarm AH': 'Alarm amp-hours',
+    'Raw AH': 'Amp-hours before the spare factor',
+    'Suggested size': 'Suggested battery',
+    'Est. fill': 'About this full',
+    'Spare %': 'Spare percent'
+  };
+  var PLAIN_EXACT = {
+    'LV conduit fill': 'Conduit fill',
+    'PoE switch budget (PSE)': 'PoE switch budget',
+    'Battery AH standby': 'Battery size',
+    'EOL / supervision helper': 'End-of-line resistor',
+    'NAC / notification load': 'Horn and strobe load',
+    'Lock power / inrush': 'Lock power',
+    'RS-485 / OSDP length': 'RS-485 wire length',
+    'DC voltage drop': 'Voltage drop',
+    'Wire size picker': 'Wire size',
+    'AWG': 'Wire size',
+    'Load (A)': 'Load (amps)',
+    'System (V)': 'Supply (volts)',
+    'Voltage (V)': 'Volts',
+    'Current (A)': 'Amps',
+    'Resistance (ohms)': 'Ohms',
+    'Target drop (%)': 'Drop you can allow (%)',
+    'Supply (V)': 'Supply (volts)',
+    'Conduit (approx)': 'Conduit size (inches)',
+    'Cable type (approx)': 'Cable type',
+    'Switch PoE budget, PSE (W)': 'Switch budget (watts)',
+    'Standby (mA)': 'Standby (milliamps)',
+    'Alarm (mA)': 'Alarm (milliamps)',
+    'Alarm hours (~5 min = 0.0833)': 'Alarm hours (5 minutes is 0.083)',
+    'Derating factor (1.25 teaching; many sheets 1.2)': 'Spare factor (1.25 teaching, many sheets use 1.2)',
+    'Common EOL / DEOL preset': 'Resistor preset',
+    'R1 (ohms)': 'Top resistor (ohms)',
+    'R2 (ohms) - lower leg': 'Bottom resistor (ohms)',
+    'Device class': 'Horn or strobe',
+    'mA per device': 'Milliamps each',
+    'Include rough DC voltage-drop note (24 V system)': 'Also estimate the voltage drop on a 24 volt run',
+    'Holding (A each)': 'Holding amps, each door',
+    'Inrush multiplier': 'Startup multiplier',
+    'Supply / ACM (A)': 'Power supply (amps)',
+    'Baud': 'Speed (baud)',
+    'Nodes on the bus': 'Devices on the wire',
+    '120 Ω at both physical ends': '120 ohm resistor at both ends of the wire',
+    '5 min alarm': '5 minute alarm',
+    '24 h standby': '24 hour standby',
+    '4 h standby': '4 hour standby',
+    'x1.25 teaching derate': '25 percent spare',
+    'x1.2 (20%)': '20 percent spare',
+    '8x horn-strobe 75': '8 horn-strobes, 75 candela',
+    '4x strobe 110': '4 strobes, 110 candela',
+    '12x horn': '12 horns',
+    '1 A lock': '1 amp lock',
+    '3% drop': '3 percent drop',
+    '5% drop': '5 percent drop',
+    '10% drop': '10 percent drop',
+    '8x af Class 3': '8 devices, PoE class 3',
+    '4x at Class 4': '4 devices, PoE class 4',
+    '2x bt Class 6': '2 devices, PoE class 6',
+    'Class preset': 'PoE class',
+    'PSE W each': 'Switch watts each',
+    'Within switch budget (PSE)': 'Inside the switch budget.',
+    'Over switch budget (PSE) - reduce load': 'Over the switch budget. Lower the load.',
+    'wire size picker': 'wire size',
+    'Voltage-divider check notes': 'Voltage in the middle',
+    'Series vs parallel vs DEOL': 'How the resistor is wired',
+    'Series EOL': 'In line at the last device',
+    'Parallel EOL': 'Across the contact',
+    'DEOL': 'Two resistors',
+    'DEOL (double EOL)': 'Two resistors',
+    'Vista-style 2.2k ohms series': 'Vista 2,200 ohms, in line',
+    '2.2k ohms series EOL': '2,200 ohms, in line',
+    '3.3k ohms series EOL': '3,300 ohms, in line',
+    '4.7k ohms series EOL': '4,700 ohms, in line',
+    '5.6k ohms series EOL': '5,600 ohms, in line',
+    '10k ohms parallel EOL': '10,000 ohms, across the contact',
+    '4.7k ohms parallel EOL': '4,700 ohms, across the contact',
+    'DEOL 2.2k / 2.2k (common)': 'Two resistors, 2,200 and 2,200',
+    'DEOL 1k / 1k': 'Two resistors, 1,000 and 1,000',
+    'DEOL 3.3k / 6.8k': 'Two resistors, 3,300 and 6,800',
+    'DEOL 4.7k / 2.2k': 'Two resistors, 4,700 and 2,200',
+    'Horn / sounder (~75 mA)': 'Horn (about 75 milliamps)',
+    'Strobe 15 cd (~60 mA)': 'Strobe, 15 candela (about 60 milliamps)',
+    'Strobe 75 cd (~140 mA)': 'Strobe, 75 candela (about 140 milliamps)',
+    'Strobe 110 cd (~180 mA)': 'Strobe, 110 candela (about 180 milliamps)',
+    'Horn-strobe 75 cd (~200 mA)': 'Horn and strobe, 75 candela (about 200 milliamps)',
+    'Horn-strobe 110 cd (~250 mA)': 'Horn and strobe, 110 candela (about 250 milliamps)',
+    'Custom mA / device': 'Custom milliamps',
+    'QEL / motor latch ~1 A hold, 4x inrush': 'Motor latch, about 1 amp holding, 4 times at startup',
+    'Maglock light ~0.25 A @ 12 V': 'Light maglock, about 0.25 amp at 12 volts',
+    'Maglock 1200 lb class ~0.5 A @ 12 V': '1,200 lb maglock, about 0.5 amp at 12 volts',
+    'Strike ~0.35 A @ 24 V': 'Strike, about 0.35 amp at 24 volts',
+    'Honeywell Vista-family teaching value. Series EOL at the last device; confirm zone type (EOL / DEOL) in panel programming.': 'A Honeywell Vista teaching value. The resistor sits in line at the last device. Check the panel programming for one resistor or two.',
+    'Common burglar zone teaching value. Series EOL usually sits at the last device.': 'A common burglar-zone teaching value. The resistor usually sits in line at the last device.',
+    'Seen on some FA / intrusion panels. Confirm exact value in the panel manual.': 'Seen on some fire and burglar panels. Check the exact value in the panel book.',
+    'Very common intrusion EOL. Measure loop at panel with zone normal.': 'A very common burglar resistor. Read the ohms at the panel with the zone closed and normal.',
+    'Used by some manufacturers - do not swap brands blindly.': 'Used by some brands. Match the panel book before you change the resistor.',
+    'Parallel EOL often across N/C contacts so open contact still shows supervision.': 'Often wired across a closed contact, so an open contact still leaves a resistance the panel can see.',
+    'Parallel style for some FA initiating circuits - verify listing & panel.': 'Used across the contact on some fire initiating circuits. Check the listing and the panel book.',
+    'Double-EOL teaching pair: one resistor for normal supervision, one for alarm window. Panel must be programmed DEOL - values vary by brand.': 'Two resistors: one for the normal reading, one for the alarm window. The panel has to be set for two resistors. The values change by brand.',
+    'Matched 1k ohms DEOL teaching pair. Measure loop resistance at the panel with zone normal vs alarm.': 'A matched pair of 1,000 ohm resistors. Read the zone at the panel both normal and in alarm.',
+    'Asymmetric DEOL teaching pair (fills R1=3.3k, R2=6.8k for divider notes). Always match the exact pair in the panel / FACP manual.': 'An uneven pair, 3,300 ohms and 6,800 ohms. The boxes below use those for the middle-voltage check. Match the pair in the panel book.',
+    'Mixed DEOL teaching pair seen in some intrusion docs. Series vs shunt placement differs - verify topology before cutting resistors.': 'A mixed pair seen in some burglar notes. Which resistor is in line, and which sits across the contact, changes by panel. Check that before you land the resistors.',
+    'Typical teaching mid-range horn; use device datasheet.': 'A middle-of-the-road horn for teaching. Use the number on the device sheet.',
+    'Low candela strobe order-of-magnitude only.': 'A small strobe. The current is a rough teaching number.',
+    'Mid candela teaching value.': 'A mid-size strobe. The current is a rough teaching number.',
+    'Higher candela teaching value.': 'A brighter strobe. The current is a rough teaching number.',
+    'Combined unit rough estimate.': 'A horn and strobe together. The current is a rough teaching number.',
+    'Higher combined teaching value.': 'A brighter horn and strobe. The current is a rough teaching number.',
+    'Enter datasheet current.': 'Type the milliamps from the device sheet.',
+    'Holding current is what the supply must sustain. Inrush is the first half-second on QEL / motor latches — size the ACM output for that, not the nameplate hold.': 'The power supply has to hold the lock\'s running amps. A motor latch pulls extra for about half a second when it moves. Size the supply for that short hit, not the holding number on the lock.',
+    'Daisy-chain only. Stars and T-taps are intermittent ghosts.': 'Run one chain, device to device. A star or a T in the middle will act up.',
+    'Shield single-end. 120 Ω termination at the two physical ends — not on every MR52 in the middle.': 'Ground the shield at one end only. Put 120 ohms at the two ends of the wire, not on a reader in the middle.',
+    'No termination: expect retries on longer runs. Land 120 Ω at both physical ends of the bus (first and last device), not in the middle.': 'With no end resistors, a long run will retry. Put 120 ohms at the first device and the last device.',
+    'Node count is getting busy. Confirm the controller’s device limit, not just the copper.': 'That is a lot of devices. Check how many the controller allows. The wire length is only half of that check.',
+    'Over the teaching length. Slow the baud, shorten the run, or add a repeater / second bus.': 'Longer than this teaching limit. Slow the speed, shorten the run, or split the devices onto a second wire.',
+    'Within teaching length. ': 'Inside the teaching length. ',
+    ' - resistor at the ': ' sits at the ',
+    ' device. Closed N/C path shows ~EOL at the panel; open = trouble.': ' device. With the contact closed, the panel reads about the resistor value. An open wire reads as trouble.',
+    ' - across contacts so an open device still leaves a supervised resistance on the loop.': ' sits across the contacts, so an open contact still leaves a resistance on the pair.',
+    ' - two resistors create distinct normal / alarm / short / open windows. Panel must be set to DEOL; topology varies by brand.': ' gives the panel a different reading for normal, alarm, a short, and an open wire. The panel has to be set for two resistors. The wiring changes by brand.',
+    'Always match the exact value and topology in the panel / FACP manual.': 'Match the ohms and the wiring in that panel\'s book.',
+    'Selecting a preset fills R1 and R2 for the divider teaching check below.': 'A preset fills the two resistor boxes for the voltage check below.',
+    'Over-drop: calculated drop exceeds system voltage - at-device V would be negative. Upsize wire, shorten the run, or reduce load.': 'The lost volts are bigger than the supply, so the device would come out below zero. Use thicker wire, a shorter run, or less load.',
+    'Drop is over ~10% of system voltage - verify with manufacturer limits before treating this as acceptable.': 'The lost volts are over about 10 percent of the supply. Check the device sheet before you call it good.',
+    'Over-drop on this teaching estimate - at-device voltage would be negative. Do not use these numbers; upsize conductors, shorten the run, or reduce NAC load.': 'On this teaching estimate the lost volts are bigger than 24, so the last device would come out below zero. Use thicker wire, a shorter run, or fewer devices.',
+    'Rough VD is over ~10% of 24 V - verify with manufacturer NAC worksheets before treating as acceptable.': 'The rough drop is over about 10 percent of 24 volts. Check the horn and strobe worksheet before you call it good.',
+    'End-of-line lump: the whole load is treated as if it sits at the last device, which overstates the drop (conservative). Rough copper DC estimate only - not a substitute for manufacturer NAC voltage-drop worksheets or AHJ-approved design. See also': 'This drop treats the whole load as if it sits at the last device, so the number reads high on purpose. It is a rough copper estimate. Check the manufacturer worksheet and the approved fire design. See also',
+    'Need a size? Try the': 'Need a wire size? Use the',
+    'Cross-check with': 'Check it again on',
+    ' once you pick a gauge.': ' once you pick a size.',
+    'No AWG data available.': 'No wire size on this table fits that drop.'
+  };
+
+  function fkInSvg(node) {
+    var p = node.parentNode;
+    while (p && p !== document) {
+      if (p.namespaceURI === 'http://www.w3.org/2000/svg') return true;
+      p = p.parentNode;
+    }
+    return false;
+  }
+  function fkSetText(el, text) {
+    if (!el || el.textContent === text) return;
+    el.textContent = text;
+  }
+  function fkRewriteNode(node) {
+    var value = node.nodeValue;
+    if (!value) return;
+    var parent = node.parentNode;
+    var inResult = parent && parent.closest && parent.closest('.result-box');
+    if (inResult && PLAIN_RESULT[value] != null && value !== PLAIN_RESULT[value]) {
+      node.nodeValue = PLAIN_RESULT[value];
+      return;
+    }
+    var exact = PLAIN_EXACT[value];
+    if (exact != null) {
+      if (value !== exact) node.nodeValue = exact;
+      return;
+    }
+    var next = value;
+    next = next.replace(/ohms\/kft/g, 'ohms per 1,000 ft');
+    next = next.replace(/~20 deg C/g, 'about 68°F');
+    next = next.replace(/\bkft\b/g, '1,000 ft');
+    next = next.replace(/\(teach ~/g, '(about ');
+    next = next.replace(/^Used ~$/, 'Used about ');
+    next = next.replace(/ in\^2 of ~$/, ' sq in of about ');
+    next = next.replace(/ sq in of ~$/, ' sq in of about ');
+    next = next.replace(/in\^2/g, 'sq in');
+    next = next.replace(/\(~([^()]*?) W PSE \/ ([^()]*?) W PD\)/g, '(switch holds $1 W, camera can use about $2 W)');
+    next = next.replace(/ - R1 ([\d,]+) \/ R2 ([\d,]+)/g, ' — top $1 ohms, bottom $2 ohms');
+    next = next.replace(/^Drop @ (\d+) AWG$/, 'Volts lost at $1 AWG');
+    next = next.replace(/^Drop % @ (\d+) AWG$/, 'Percent lost at $1 AWG');
+    next = next.replace(/^Next size up \((\d+) AWG\)$/, 'Next thicker wire ($1 AWG)');
+    next = next.replace(/^Required \(x([0-9.]+)\)$/, 'Amp-hours with spare factor $1');
+    next = next.replace(/^Even (\d+) AWG exceeds ~([^%]+)% drop on this teaching table - shorten the run, reduce load, raise supply V, or verify with manufacturer\.$/, 'Even $1 AWG loses more than about $2 percent on this table. Shorten the run, lower the load, or raise the supply, and check the device sheet.');
+    next = next.replace(/^(\d+) AWG is the thickest size in this table and meets the target\.$/, '$1 AWG is the thickest size on this table, and it meets the drop you allowed.');
+    next = next.replace(/^Minimum teaching size (\d+) AWG; next size up \(thicker\) is (\d+) AWG\.$/, 'Smallest size on this table is $1 AWG. The next thicker size is $2 AWG.');
+    next = next.replace(/^Required exceeds common single (\d+) AH - use parallel packs \/ verify manufacturer\.$/, 'This needs more than one $1 amp-hour battery. Use batteries side by side, and check the panel sheet.');
+    next = next.replace(/^Round up to a common (\d+) AH sealed battery \(or parallel packs\).$/, 'Round up to a common $1 amp-hour sealed battery, or use batteries side by side.');
+    next = next.replace(/^Holding fits, inrush does not: about (.+) A on unlock vs the (.+) A supply you entered\. That supply will brown out on unlock - use a supply \/ ACM output rated for the inrush, or stagger unlocks\.$/, 'Holding fits. Startup does not: about $1 amps when the lock moves, against the $2 amp supply you typed. That supply will sag. Use a supply rated for the startup hit, or unlock the doors one at a time.');
+    next = next.replace(/^Holding load exceeds the supply\. Add a listed power supply or split the doors\.$/, 'The holding amps are over the supply you typed. Add a listed power supply, or split the doors across supplies.');
+    next = next.replace(/ - verify properly$/, '. Check the real cable sheet.');
+    next = next.replace(/Within teaching length\. /g, 'Inside the teaching length. ');
+    if (next !== value) node.nodeValue = next;
+  }
+  function plainCalcCopy() {
+    var page = document.querySelector('.refs-page');
+    if (!page) return;
+    Object.keys(PLAIN_NOTE).forEach(function (id) {
+      var card = document.getElementById(id);
+      if (!card) return;
+      var notes = card.querySelectorAll('p.calc-note');
+      var i;
+      for (i = 0; i < notes.length; i++) {
+        if (notes[i].closest('.result-stack')) continue;
+        fkSetText(notes[i], PLAIN_NOTE[id]);
+        break;
+      }
+    });
+    var notes = document.querySelectorAll('#eol p.calc-note');
+    if (notes.length > 1 && notes[1].textContent.indexOf('R2') >= 0) {
+      fkSetText(notes[1], 'When two resistors share a zone, the voltage in the middle is the supply times the bottom resistor, divided by both resistors added together. That is the picture for an alarm window and a trouble window on the same pair.');
+    }
+    page.querySelectorAll('#poe .device-row > label').forEach(function (lab) {
+      if (lab.firstChild && lab.firstChild.nodeValue === 'Label') lab.firstChild.nodeValue = 'Name';
+    });
+    page.querySelectorAll('.calc-jump a').forEach(function (a) {
+      var pills = { 'VD': 'Drop', 'EOL': 'Resistor', 'NAC': 'Horns' };
+      if (pills[a.textContent]) a.textContent = pills[a.textContent];
+    });
+    page.querySelectorAll('#ohm .seg-btn').forEach(function (b) {
+      var now = b.textContent;
+      var next = now === 'Solve V' ? 'Find volts' : now === 'Solve I' ? 'Find amps' : now === 'Solve R' ? 'Find ohms' : now;
+      if (next !== now) b.textContent = next;
+    });
+    var walker = document.createTreeWalker(page, NodeFilter.SHOW_TEXT, null);
+    var node;
+    var batch = [];
+    while ((node = walker.nextNode())) batch.push(node);
+    batch.forEach(function (n) {
+      if (fkInSvg(n)) return;
+      if (n.parentNode && n.parentNode.closest && n.parentNode.closest('.fk-field-calc')) return;
+      fkRewriteNode(n);
+    });
+  }
+  function schedulePlainCalcs() {
+    if (window.__FK_PLAIN) return;
+    window.__FK_PLAIN = requestAnimationFrame(function () {
+      window.__FK_PLAIN = 0;
+      plainCalcCopy();
+    });
   }
 
   function polishRefs(page) {
@@ -1561,6 +1821,7 @@
     });
     syncJumpOffset();
     bindCalcJumps();
+    plainCalcCopy();
   }
 
   function syncJumpOffset() {
@@ -1768,6 +2029,15 @@
       window.__FK_FIELD_PASS = true;
       document.addEventListener('input', refreshFieldMath);
       document.addEventListener('change', refreshFieldMath);
+      document.addEventListener('input', function (ev) {
+        if (ev.target && ev.target.closest && ev.target.closest('.refs-page')) schedulePlainCalcs();
+      });
+      document.addEventListener('change', function (ev) {
+        if (ev.target && ev.target.closest && ev.target.closest('.refs-page')) schedulePlainCalcs();
+      });
+      document.addEventListener('click', function (ev) {
+        if (ev.target && ev.target.closest && ev.target.closest('.refs-page')) schedulePlainCalcs();
+      });
       document.addEventListener('click', function (ev) {
         var b = ev.target && ev.target.closest && ev.target.closest('.checklist-runner .reset-quiet');
         if (!b || b.dataset.fkResetOk) return;
