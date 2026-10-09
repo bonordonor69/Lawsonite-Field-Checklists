@@ -538,6 +538,7 @@ a.gd-chip {
   border-bottom: 1px solid var(--line);
   margin-bottom: 0.15rem;
 }
+.gd-sheet-page .gd-sheet-banner { display: none; }
 .gd-letterhead-with-qr {
   display: flex;
   align-items: center;
@@ -706,11 +707,14 @@ a.gd-chip {
   .gd-root { width: 100%; padding: 0.28in 0.32in; }
   .gd-page { gap: 0.45rem; }
   .gd-card, .gd-tile, .gd-product { box-shadow: none; break-inside: avoid; }
-  .gd-letterhead {
+  .gd-letterhead,
+  .gd-sheet-page .gd-sheet-banner {
+    display: block;
     padding: 0 0 0.28rem;
     margin: 0 0 0.3rem;
     border-bottom: 1.5px solid #111;
   }
+  .gd-sheet-page .gd-sheet-banner.gd-letterhead-with-qr { display: flex; }
   .gd-letterhead-sub { display: none !important; }
   .gd-letterhead-company { color: #111; font-size: 0.88rem; }
   .gd-letterhead-doc,

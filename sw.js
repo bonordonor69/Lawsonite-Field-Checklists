@@ -1,13 +1,13 @@
-/* Lawsonite service worker (generated 2026-10-09, revision r8 for footage, conduit jacket, and cleared voltage-drop boxes).
+/* Lawsonite service worker (generated 2026-10-09, revision r9 for conduit jacket scope, Company plan, unknown URLs, and sheet headers).
    Precache = exactly what index.html references + the overlay scripts the app injects.
    Old caches (incl. the previous Workbox precache) are deleted on activate. */
 'use strict';
-var VERSION = '2026-10-09-r8-a19d58f931';
+var VERSION = '2026-10-09-r9-49807760d0';
 var CACHE = 'lawsonite-precache-' + VERSION;
 var PRECACHE = [
  {
   "url": "/index.html",
-  "rev": "1fc0cb1a1c049522d26016d59df3e0af"
+  "rev": "2c08af1feb80abc492021d9685943e0c"
  },
  {
   "url": "/favicon.svg",
@@ -23,11 +23,11 @@ var PRECACHE = [
  },
  {
   "url": "/fieldkit.css",
-  "rev": "b1c3981b541f662a6371b4acceb6b4cc"
+  "rev": "c7d451b1d103166ab0f6558b6a3b801b"
  },
  {
   "url": "/guides.css",
-  "rev": "53dda7acf3fde90a221afc554129228b"
+  "rev": "4d51081dab4b84af698a43b4ece392b3"
  },
  {
   "url": "/assets/index-C4Buzm74.js",
@@ -51,15 +51,15 @@ var PRECACHE = [
  },
  {
   "url": "/guides.js",
-  "rev": "bab1e88d51eb55d72ab70cbcdf40ce59"
+  "rev": "897b4b65a9639b88a16350fe173949f5"
  },
  {
   "url": "/jobsheet.js",
-  "rev": "a3732e77f41cf7a1114bc083f4188218"
+  "rev": "5181bf4fdd168af602105e92ba4e8ac8"
  },
  {
   "url": "/fieldkit.js",
-  "rev": "a19d58f9313bc6e8ed4bfb000c61f15d"
+  "rev": "49807760d0df2d9745e0241f9aab2121"
  },
  {
   "url": "/qrcode.js",

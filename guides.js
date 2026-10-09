@@ -1380,11 +1380,13 @@
       : 'https://lawsonite.tomcatstudios.com';
     var qUrl = pack.ids.length ? packQrUrl(pack.ids, pack.title) : (origin + '/guides/' + kind);
     var jobName = pack.title && pack.title !== 'Job pack' ? pack.title : '';
-    page.appendChild(printLetterhead(spec.title, {
+    var banner = printLetterhead(spec.title, {
       qrUrl: qUrl,
       qrCap: pack.ids.length ? 'Scan to open this pack' : 'Open sheet',
       jobName: jobName
-    }));
+    });
+    banner.classList.add('gd-sheet-banner');
+    page.appendChild(banner);
     var head = el('header', 'gd-hero no-print');
     head.appendChild(el('p', 'gd-kicker', 'Leave-behind'));
     head.appendChild(el('h1', null, spec.title));
@@ -1486,7 +1488,9 @@
     });
     paintRows();
     page.appendChild(el('p', 'gd-foot',
-      'Field notes only — not as-built drawings or programming. Confirm the panel, the lock, and the official sheet.'));
+      kind === 'cameras'
+        ? 'Field notes only — not as-built drawings or programming. Confirm the name, the channel, and the switch port.'
+        : 'Field notes only — not as-built drawings or programming. Confirm the panel, the lock, and the official sheet.'));
     var sign = el('div', 'gd-pack-sign only-print');
     sign.appendChild(el('p', null, 'Installed by ________________    Date ______________    Tech ______________'));
     page.appendChild(sign);
@@ -1748,7 +1752,7 @@
         host.appendChild(el('p', 'gd-empty',
           sel.substrate && findHw(H.substrates, sel.substrate).flange && !sel.flange
             ? 'Pick the flange thickness — hammer-on clips are sized to the beam.'
-            : 'Walk the four steps. The spec card fills in as you go.'));
+            : 'Pick cable and substrate. Flange shows up when the clip needs it.'));
         return;
       }
       var card = el('article', 'gd-spec');
@@ -2223,6 +2227,7 @@
   }
 
   function route() {
+    if (!document.body) return;
     var path = pathOf();
     if (!isGuidesPath(path)) {
       document.body.classList.remove('fk-guides');

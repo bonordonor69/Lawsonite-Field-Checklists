@@ -19,6 +19,31 @@
     <script src="/search-core.js"></script>
     <link rel="stylesheet" href="/fieldkit.css" />
     <link rel="stylesheet" href="/guides.css" />
+    <script>
+      (function () {
+        function known(p) {
+          p = String(p || '/').split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
+          if (p === '/' || p === '/library' || p === '/refs' || p === '/portal' || p === '/guides' || p === '/field' || p === '/jobsheets') return true;
+          return /^\/(category|checklist|guides|portal|jobsheets)\/[^/]+$/.test(p);
+        }
+        window.__FK_KNOWN = known;
+        var orig = history.replaceState;
+        history.replaceState = function (state, title, url) {
+          if (url != null && url !== '') {
+            try {
+              var next = new URL(String(url), location.href);
+              var nextPath = next.pathname.replace(/\/+$/, '') || '/';
+              var cur = location.pathname.replace(/\/+$/, '') || '/';
+              if (nextPath === '/' && cur !== '/' && !known(cur)) {
+                window.__FK_MISSED = cur;
+                return;
+              }
+            } catch (e) {}
+          }
+          return orig.apply(history, arguments);
+        };
+      })();
+    </script>
     <script type="module" crossorigin src="/assets/index-C4Buzm74.js"></script>
     <link rel="stylesheet" crossorigin href="/assets/index-d2IG0WUH.css">
   <link rel="manifest" href="/manifest.webmanifest"><script id="vite-plugin-pwa:register-sw" src="/registerSW.js"></script></head>

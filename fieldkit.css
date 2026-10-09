@@ -887,6 +887,26 @@ details.fk-decides li { margin: 0.25rem 0; line-height: 1.4; }
 /* Field header stays a tool. Plan choice lives on Company. */
 .app-header .plan-switch { display: none !important; }
 
+.plan-toggle-row { position: relative; z-index: 2; }
+.portal-page { scroll-padding-bottom: calc(6.5rem + env(safe-area-inset-bottom, 0px)); }
+
+body.fk-miss-on #root { display: none !important; }
+.fk-miss { padding: 1.35rem 0.15rem 2rem; }
+.fk-miss h1 { margin: 0 0 0.85rem; font-size: 1.45rem; line-height: 1.25; }
+.fk-miss-links { display: flex; flex-wrap: wrap; gap: 0.55rem; margin: 0; }
+.fk-miss-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.3rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--line, #cfc6bc);
+  background: var(--card, #fff);
+  color: inherit;
+  font-weight: 800;
+  text-decoration: none;
+}
+
 /* Checklist: primary actions wrap on their own row. Filters, calcs, and section jumps wrap under them. */
 .checklist-runner .runner-extras {
   display: flex;

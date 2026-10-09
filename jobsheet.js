@@ -217,6 +217,7 @@
   }
 
   function route() {
+    if (!document.body) return;
     var path = location.pathname.replace(/\/+$/, '') || '/';
     var app = document.getElementById('root');
     if (path === '/jobsheets' || path === '/jobsheets/new' || path.indexOf('/jobsheets/') === 0) {

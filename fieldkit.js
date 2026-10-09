@@ -423,6 +423,7 @@
     }
 
     host.appendChild(dash);
+    syncLibraryCalcCount();
   }
 
   function renderHomeHits(host, query) {
@@ -494,6 +495,20 @@
     });
 
     renderDash();
+    syncLibraryCalcCount();
+  }
+
+  function syncLibraryCalcCount() {
+    var page = document.querySelector('.home-page');
+    if (!page) return;
+    var n = page.querySelectorAll('.fk-calc-chip').length;
+    if (!n) n = CALCS.length;
+    var label = n + ' field calc' + (n === 1 ? '' : 's');
+    page.querySelectorAll('.meta-chip').forEach(function (chip) {
+      if ((chip.textContent || '').indexOf('field calc') >= 0 && chip.textContent !== label) {
+        chip.textContent = label;
+      }
+    });
   }
 
   function landingDashSig() {
@@ -882,6 +897,7 @@
   }
 
   function ensureTabbar() {
+    if (!document.body) return;
     if (document.querySelector('.fk-tabbar')) {
       markTabs();
       return;
@@ -1968,12 +1984,36 @@
     }
     var at22 = pct(0.22);
     var at25 = pct(0.25);
-    var noun = count === 1 ? '1 cable is' : count + ' cables are';
-    var text = 'The fill percent above is a thin jacket, about 0.20 in across. At 0.22 in, ' +
-      noun + ' about ' + at22.toFixed(0) + '% full. At 0.25 in, about ' +
+    var text = 'The fill percent above is a thin jacket, about 0.20 in across. At 0.22 in, this count is about ' +
+      at22.toFixed(0) + '% full. At 0.25 in, about ' +
       at25.toFixed(0) + '% full. The limit for this count is ' + limitWords +
       '. Check the cable sheet before you pick the pipe.';
     fkKeep(stack, 'fk-fillwarn', text, false);
+  }
+  function watchFillCard() {
+    var card = document.getElementById('fill');
+    if (!card || card.dataset.fkFillWatch || !window.MutationObserver) return;
+    card.dataset.fkFillWatch = '1';
+    var timer = 0;
+    new MutationObserver(function (muts) {
+      var i, t, matters = false;
+      for (i = 0; i < muts.length; i++) {
+        t = muts[i].target;
+        if (!t || !t.closest || !t.closest('.fk-keep')) { matters = true; break; }
+      }
+      if (!matters) return;
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        var c = document.getElementById('fill');
+        if (c) paintFillGuard(c);
+      }, 40);
+    }).observe(card, {
+      subtree: true,
+      childList: true,
+      characterData: true,
+      attributes: true,
+      attributeFilter: ['value']
+    });
   }
   function paintCalcGuards(page) {
     var wire = document.getElementById('wire');
@@ -1981,7 +2021,10 @@
     var fill = document.getElementById('fill');
     if (wire) paintWireGuard(wire);
     if (vd) paintDropGuard(vd);
-    if (fill) paintFillGuard(fill);
+    if (fill) {
+      watchFillCard();
+      paintFillGuard(fill);
+    }
   }
   function schedulePlainCalcs() {
     if (!window.__FK_PLAIN) {
@@ -1991,12 +2034,12 @@
       });
     }
     // React restores a controlled box to the previous value until it commits.
-    // A second pass after that commit corrects a cleared box or a cable change.
+    // A later pass reads the cable and the count after that commit.
     clearTimeout(window.__FK_PLAIN_LATE);
     window.__FK_PLAIN_LATE = setTimeout(function () {
       window.__FK_PLAIN_LATE = 0;
       plainCalcCopy();
-    }, 0);
+    }, 60);
   }
 
   function polishRefs(page) {
@@ -2101,8 +2144,136 @@
     polishRefs(page);
   }
 
+  function chipPlan(btn) {
+    var lab = btn.querySelector('.plan-chip-label');
+    var t = lab ? lab.textContent : (btn.textContent || '');
+    return t.indexOf('Pro') >= 0 ? 'shop' : 'open';
+  }
+  function storedPlan() {
+    try {
+      var raw = JSON.parse(localStorage.getItem('lawsonite-pro-v0') || '{}');
+      if (raw.plan === 'shop' || raw.plan === 'pro') return 'shop';
+    } catch (e) {}
+    return 'open';
+  }
+  function writePlan(plan) {
+    var cur = {};
+    try { cur = JSON.parse(localStorage.getItem('lawsonite-pro-v0') || '{}') || {}; } catch (e) {}
+    var seats = plan === 'shop'
+      ? Math.min(10, Math.max(2, Math.round(Number(cur.seatCount) || 2)))
+      : 1;
+    try {
+      localStorage.setItem('lawsonite-pro-v0', JSON.stringify({
+        plan: plan,
+        seatCount: seats,
+        companyName: String(cur.companyName || '')
+      }));
+    } catch (e) {}
+  }
+  function pressPlan(plan) {
+    var buttons = document.querySelectorAll('button.plan-chip');
+    var i, btn, keys, k, props;
+    for (i = 0; i < buttons.length; i++) {
+      btn = buttons[i];
+      if (chipPlan(btn) !== plan) continue;
+      keys = Object.keys(btn);
+      props = null;
+      for (k = 0; k < keys.length; k++) {
+        if (keys[k].indexOf('__reactProps') === 0) props = btn[keys[k]];
+      }
+      if (props && typeof props.onClick === 'function') {
+        try {
+          props.onClick({ type: 'click', preventDefault: function () {}, stopPropagation: function () {} });
+        } catch (e) {}
+      }
+      return;
+    }
+  }
+  function paintPlanFallback(plan) {
+    var shop = plan === 'shop';
+    document.querySelectorAll('button.plan-chip').forEach(function (b) {
+      var on = chipPlan(b) === plan;
+      b.classList.toggle('active', on);
+      b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+    var line = document.querySelector('.plan-summary-line');
+    var summary = shop ? 'Pro · $129 / mo' : 'Free · $0';
+    if (line && line.textContent !== summary) line.textContent = summary;
+    document.querySelectorAll('button').forEach(function (b) {
+      var t = b.textContent || '';
+      if (t.indexOf('Add doc') >= 0 || t.indexOf('Restore') >= 0 || t.indexOf('Clear all') >= 0) {
+        b.disabled = !shop;
+        if (shop) b.removeAttribute('aria-disabled');
+        else b.setAttribute('aria-disabled', 'true');
+      }
+    });
+    document.querySelectorAll('.seat-stepper button').forEach(function (b) {
+      b.disabled = !shop;
+    });
+    var branding = document.getElementById('branding');
+    if (!branding) return;
+    branding.querySelectorAll('.soft-upgrade').forEach(function (n) {
+      if ((n.textContent || '').indexOf('letterhead') >= 0) n.hidden = !shop ? false : true;
+    });
+    var note = branding.querySelector('.fk-letter-note');
+    if (shop) {
+      if (!note) {
+        note = el('p', 'muted small fk-letter-note', 'Pro letterhead applies on Print / PDF leave-behinds.');
+        var head = branding.querySelector('.section-head');
+        if (head && head.nextSibling) branding.insertBefore(note, head.nextSibling);
+        else branding.appendChild(note);
+      }
+    } else if (note) note.remove();
+  }
+  function syncPlanChips() {
+    if (pathOf() !== '/portal') return;
+    var plan = storedPlan();
+    var active = document.querySelector('button.plan-chip.active');
+    if (active && chipPlan(active) === plan) return;
+    if (window.__FK_PLAN_SYNC) return;
+    window.__FK_PLAN_SYNC = true;
+    pressPlan(plan);
+    setTimeout(function () {
+      window.__FK_PLAN_SYNC = false;
+      if (pathOf() !== '/portal') return;
+      var now = document.querySelector('button.plan-chip.active');
+      if (!now || chipPlan(now) !== plan) paintPlanFallback(plan);
+    }, 80);
+  }
+
+  function knownRoute(p) {
+    if (window.__FK_KNOWN) return window.__FK_KNOWN(p);
+    p = String(p || '/').split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
+    if (p === '/' || p === '/library' || p === '/refs' || p === '/portal' || p === '/guides' || p === '/field' || p === '/jobsheets') return true;
+    return /^\/(category|checklist|guides|portal|jobsheets)\/[^/]+$/.test(p);
+  }
+  function paintMiss() {
+    if (!document.body) return;
+    var missed = !knownRoute(pathOf());
+    document.body.classList.toggle('fk-miss-on', missed);
+    var box = document.querySelector('body > .fk-miss');
+    if (!missed) {
+      if (box) box.remove();
+      return;
+    }
+    if (box) return;
+    box = el('div', 'fk-miss');
+    box.appendChild(el('h1', null, 'That page is not on the truck.'));
+    var nav = el('p', 'fk-miss-links');
+    [['/', 'Home'], ['/library', 'Library'], ['/refs', 'Quick Refs']].forEach(function (pair) {
+      var a = el('a', 'fk-link', pair[1]);
+      a.href = pair[0];
+      nav.appendChild(a);
+    });
+    box.appendChild(nav);
+    var root = document.getElementById('root');
+    if (root && root.parentNode) root.parentNode.insertBefore(box, root);
+    else document.body.appendChild(box);
+  }
+
   function plainPortal() {
     if (pathOf() !== '/portal') return;
+    syncPlanChips();
     document.querySelectorAll('p, li').forEach(function (p) {
       var t = p.textContent || '';
       if (t.indexOf('localStorage') >= 0 || t.indexOf('seeds three sample') >= 0) {
@@ -2143,6 +2314,7 @@
   /* ---------------- enhance cycle ---------------- */
   function enhance() {
     redirectDeadChecklist();
+    paintMiss();
     syncHeaderHeight();
     ensureHeaderSearch();
     ensureFieldNav();
@@ -2242,6 +2414,18 @@
       document.addEventListener('click', function (ev) {
         if (ev.target && ev.target.closest && ev.target.closest('.refs-page')) schedulePlainCalcs();
       });
+      document.addEventListener('click', function (ev) {
+        var btn = ev.target && ev.target.closest && ev.target.closest('button.plan-chip');
+        if (!btn || ev.button !== 0 || ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+        var plan = chipPlan(btn);
+        writePlan(plan);
+        pressPlan(plan);
+        setTimeout(function () {
+          if (pathOf() !== '/portal') return;
+          var now = document.querySelector('button.plan-chip.active');
+          if (!now || chipPlan(now) !== plan) paintPlanFallback(plan);
+        }, 80);
+      }, true);
       document.addEventListener('click', function (ev) {
         var b = ev.target && ev.target.closest && ev.target.closest('#wire .preset-chip');
         if (!b) return;
