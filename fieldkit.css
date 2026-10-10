@@ -1038,14 +1038,25 @@ body.fk-miss-on #root { display: none !important; }
 }
 .start-page .fk-dash { gap: 0.75rem; }
 .fk-quiet-note { display: none !important; }
-.refs-page .calc-card > p.calc-note.warn {
+.refs-page p.calc-note.warn {
   color: var(--muted, #6b6258) !important;
   background: transparent !important;
   border: 0 !important;
   border-left: 0 !important;
   border-radius: 0 !important;
+  box-shadow: none !important;
   font-weight: 450 !important;
   padding: 0 !important;
+}
+.refs-page .result-stack p.calc-note.warn {
+  color: var(--warn-text, #6a4b00) !important;
+  background: var(--warn-bg, #fff7e8) !important;
+  border: 1px solid var(--warn-line, #f0d9a0) !important;
+  border-left: 4px solid var(--warn, #8a5a00) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  font-weight: 650 !important;
+  padding: 0.65rem 0.75rem !important;
 }
 .refs-page .result-stack p.fk-hot,
 .refs-page .result-stack p.fk-fillwarn,
@@ -1174,4 +1185,50 @@ body.fk-miss-on #root { display: none !important; }
   .page-header h1 {
     color: var(--ink, #fafafa);
   }
+}
+
+/* Fire lists that already have the decision block open on those lines. */
+.fk-meter-first {
+  margin: 0 0 0.35rem;
+  color: var(--ink, #1a100c);
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.4;
+}
+.fk-meter-first a { color: var(--brand-deep, #c4320a); font-weight: 800; }
+.fk-rest-call {
+  min-height: 44px;
+  margin: 0.15rem 0 0.85rem;
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid var(--line, #d9d0c7);
+  background: var(--card, #fff);
+  color: var(--brand-deep, #c4320a);
+  font-weight: 800;
+  cursor: pointer;
+}
+.checklist-runner.fk-fire-fold:not(.fk-fire-open) > .checklist-section { display: none; }
+@media (max-width: 640px) {
+  .checklist-runner.fk-fire-fold .fk-decides-chip { display: none !important; }
+  .checklist-runner.fk-fire-fold .fk-decides-more { display: none !important; }
+  .checklist-runner.fk-fire-fold details.fk-decides,
+  .checklist-runner.fk-fire-fold details.fk-decides[open] {
+    display: block;
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    z-index: auto;
+    max-height: none;
+    overflow: visible;
+    margin: 0.35rem 0 0.45rem;
+    box-shadow: none;
+  }
+  .checklist-runner.fk-fire-fold details.fk-decides[open] > summary { display: flex; }
+  .checklist-runner.fk-fire-fold details.fk-decides li { display: list-item; }
+  body:has(.checklist-runner.fk-fire-fold) .fk-decides-scrim { display: none !important; }
+}
+@media print {
+  .checklist-runner.fk-fire-fold > .checklist-section { display: block !important; }
+  .fk-rest-call, .fk-meter-first { display: none !important; }
 }

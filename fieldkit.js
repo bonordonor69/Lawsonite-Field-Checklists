@@ -2,7 +2,7 @@
    Offline, localStorage only. Replaces the leftover favorites/pro overlay. */
 (function () {
   'use strict';
-  window.__FK_REV = '2026-10-10-r12';
+  window.__FK_REV = '2026-10-10-r13';
 
   var FAV_KEY = 'lawsonite-favorites-v1';
   var RECENT_KEY = 'lawsonite-recents-v1';
@@ -450,7 +450,7 @@
       t.appendChild(el('strong', null, r.title));
       if (r.sub) t.appendChild(el('span', null, r.sub));
       a.appendChild(t);
-      a.appendChild(el('em', 'fk-hit-kind', kindLabel[r.kind] || r.kind));
+      a.appendChild(el('em', 'fk-hit-kind', r.mark || kindLabel[r.kind] || r.kind));
       list.appendChild(a);
     });
     box.appendChild(list);
@@ -730,6 +730,17 @@
 
     var toolbar = page.querySelector('.runner-toolbar');
     var extras = page.querySelector('.runner-extras');
+    if (m && m[1] === 'multimeter-basics' && !page.querySelector('.fk-meter-first')) {
+      var meterLine = el('p', 'fk-meter-first');
+      meterLine.appendChild(document.createTextNode('Never held a meter? Open the '));
+      var meterLink = el('a', 'fk-link', 'voltmeter crash course');
+      meterLink.href = '/guides/meter';
+      meterLine.appendChild(meterLink);
+      meterLine.appendChild(document.createTextNode(' first.'));
+      var meterHost = extras || toolbar;
+      if (meterHost.firstChild) meterHost.insertBefore(meterLine, meterHost.firstChild);
+      else meterHost.appendChild(meterLine);
+    }
     if ((extras || toolbar) && !page.querySelector('.fk-how')) {
       var how = el('p', 'fk-how', 'Tap Done as you work the steps.');
       (extras || toolbar).appendChild(how);
@@ -811,6 +822,7 @@
     labelCategoryDone(page);
     shapeChecklistRows(page);
     clampDecides(page.querySelector('details.fk-decides'));
+    foldFireCall(page);
     ensureDecidesScrim();
 
     page.querySelectorAll('.page-header .lede, .page-header .inline-disclaimer').forEach(function (p) {
@@ -999,8 +1011,52 @@
     return s;
   }
 
+  function meterLessonQuery(q) {
+    var n = String(q || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+    return n === 'meter' || n === 'voltmeter' || n === 'multimeter' || n === 'dial' || n === 'leads' || n === 'how do i measure';
+  }
+  function pinMeterLesson(q, rows) {
+    if (!meterLessonQuery(q) || !rows) return rows;
+    function take(href, kind) {
+      var pools = [rows, pal.index || []];
+      var p, i, r;
+      for (p = 0; p < pools.length; p++) {
+        for (i = 0; i < pools[p].length; i++) {
+          r = pools[p][i];
+          if (r.href === href && r.kind === kind) return r;
+        }
+      }
+      return null;
+    }
+    var course = take('/guides/meter', 'guide');
+    var list = take('/checklist/multimeter-basics', 'list');
+    var next = [];
+    if (course) next.push(course);
+    if (list) {
+      next.push({
+        kind: list.kind,
+        title: list.title,
+        sub: list.sub,
+        href: list.href,
+        hay: list.hay,
+        mark: 'Reminder'
+      });
+    }
+    rows.forEach(function (r) {
+      if (course && r.href === '/guides/meter' && r.kind === 'guide') return;
+      if (list && r.href === '/checklist/multimeter-basics' && r.kind === 'list') return;
+      next.push(r);
+    });
+    if (rows.partial) next.partial = rows.partial;
+    return next;
+  }
+
   function searchIndex(q, cardsOnly) {
     if (!pal.index) buildIndex();
+    if (meterLessonQuery(q) && pal.index && !pal.index.some(function (r) { return r.href === '/guides/meter' && r.kind === 'guide'; })) {
+      pal.index = null;
+      buildIndex();
+    }
     var core = window.__LAWSONITE_SEARCH__;
     if (core && String(q || '').trim()) {
       var pool = cardsOnly ? pal.index.filter(function (r) { return r.kind !== 'step' && r.kind !== 'tip'; }) : pal.index;
@@ -1031,7 +1087,7 @@
       }
       outR.forEach(function (r, i) { r._ord = i; });
       outR.sort(function (a, b) { return tier(a) - tier(b) || (a._ord - b._ord); });
-      return outR;
+      return pinMeterLesson(q, outR);
     }
     var tokens = q.toLowerCase().split(/[^a-z0-9+/]+/).filter(function (t) { return t.length > 0; });
     if (!tokens.length) {
@@ -1063,7 +1119,7 @@
       seen[k] = 1;
       out.push(r);
     }
-    return out;
+    return pinMeterLesson(q, out);
   }
 
   function ensurePalette() {
@@ -1106,7 +1162,7 @@
       b.type = 'button';
       b.dataset.idx = String(idx);
       var shortKind = { list: 'Checklist', calc: 'Calc', tip: 'Tip', step: 'Step', guide: 'Guide', call: 'Guide', doc: 'Manual' };
-      b.innerHTML = '<span class="fk-pal-kind">' + (shortKind[r.kind] || r.kind) + '</span><span><strong></strong><span></span></span>';
+      b.innerHTML = '<span class="fk-pal-kind">' + (r.mark || shortKind[r.kind] || r.kind) + '</span><span><strong></strong><span></span></span>';
       b.querySelector('strong').textContent = r.title;
       b.querySelector('span span').textContent = r.sub;
       b.addEventListener('click', function () { go(r.href); });
@@ -1184,7 +1240,7 @@
       var primary = node.classList.contains('runner-jobsheet') ||
         node.classList.contains('fk-decides-chip') ||
         node.classList.contains('reset-quiet');
-      if (node.classList.contains('fk-how')) lead.appendChild(node);
+      if (node.classList.contains('fk-how') || node.classList.contains('fk-meter-first')) lead.appendChild(node);
       else if (primary) actions.appendChild(node);
       else if (node.classList.contains('fk-toc')) sections.appendChild(node);
       else tools.appendChild(node);
@@ -1193,6 +1249,44 @@
     xrow.appendChild(actions);
     xrow.appendChild(tools);
     if (sections.childNodes.length) xrow.appendChild(sections);
+  }
+
+  function foldFireCall(page) {
+    var dec = page.querySelector('details.fk-decides');
+    if (!dec) return;
+    var back = page.querySelector('a.runner-done');
+    var backHref = back ? (back.getAttribute('href') || '') : '';
+    var fire = backHref.indexOf('/category/fire') >= 0;
+    var idMatch = location.pathname.match(/^\/checklist\/([a-z0-9-]+)/i);
+    var id = idMatch ? idMatch[1] : '';
+    if (!fire && id) {
+      var rec = checklist(id);
+      fire = !!(rec && rec.category === 'fire');
+    }
+    if (!fire) return;
+    var extra = dec.querySelector('.fk-decides-more');
+    if (extra) extra.remove();
+    dec.classList.add('is-full');
+    if (!dec.open) dec.open = true;
+    page.classList.add('fk-fire-fold');
+    if (document.body.getAttribute('data-fk-fire-open') === id) page.classList.add('fk-fire-open');
+    var btn = page.querySelector('.fk-rest-call');
+    if (!btn) {
+      btn = el('button', 'fk-rest-call', 'Rest of the call');
+      btn.type = 'button';
+      if (dec.nextSibling) dec.parentNode.insertBefore(btn, dec.nextSibling);
+      else dec.parentNode.appendChild(btn);
+      btn.addEventListener('click', function (ev) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var open = !page.classList.contains('fk-fire-open');
+        page.classList.toggle('fk-fire-open', open);
+        if (open) document.body.setAttribute('data-fk-fire-open', id);
+        else document.body.removeAttribute('data-fk-fire-open');
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    }
+    btn.setAttribute('aria-expanded', page.classList.contains('fk-fire-open') ? 'true' : 'false');
   }
 
   function clampDecides(dec) {
@@ -2154,7 +2248,8 @@
   }
   function stripIntroWarn(page) {
     if (!page) return;
-    page.querySelectorAll('.calc-card > p.calc-note').forEach(function (note) {
+    page.querySelectorAll('p.calc-note.warn').forEach(function (note) {
+      if (note.closest('.result-stack')) return;
       note.classList.remove('warn');
     });
   }

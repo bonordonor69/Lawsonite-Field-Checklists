@@ -454,10 +454,27 @@ body.fk-guides .disclaimer-banner { display: none !important; }
   min-height: 40px;
   display: flex;
   align-items: center;
+  gap: 0.65rem;
   cursor: pointer;
   font-weight: 750;
   font-size: 0.82rem;
   color: var(--brand-deep);
+  list-style: none;
+}
+.gd-more summary::-webkit-details-marker { display: none; }
+.gd-more summary::marker { content: none; }
+.gd-more summary::after {
+  content: "";
+  width: 0.45rem;
+  height: 0.45rem;
+  margin-left: auto;
+  border-right: 2.5px solid currentColor;
+  border-bottom: 2.5px solid currentColor;
+  transform: rotate(-45deg);
+  flex: none;
+}
+.gd-more[open] summary::after {
+  transform: rotate(45deg) translateY(-2px);
 }
 .gd-more .gd-steps { margin: 0.2rem 0 0.4rem; padding-left: 1.1rem; }
 .gd-product-tags {
@@ -731,6 +748,7 @@ a.gd-chip {
   .gd-lmark { display: grid !important; }
   .gd-pin { display: none !important; }
   .gd-more summary { display: none; }
+  .gd-more:not([open]) > :not(summary) { display: none !important; }
   .gd-more { border: 0; padding-top: 0; }
   .gd-qr-head { padding: 0; }
   .gd-qr-head svg,

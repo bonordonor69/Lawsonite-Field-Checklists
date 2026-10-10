@@ -1,8 +1,8 @@
-/* Lawsonite service worker (generated 2026-10-10, revision r12 for checklist controls a tech can read, and a way off the list).
+/* Lawsonite service worker (generated 2026-10-10, revision r13 for product-card chevrons, the meter lesson first, fire lists that open on the decision, and plain calc intros).
    Precache = exactly what index.html references + the overlay scripts the app injects.
    Old caches (incl. the previous Workbox precache) are deleted on activate. */
 'use strict';
-var VERSION = '2026-10-10-r12-2e7e398ddc';
+var VERSION = '2026-10-10-r13-ec898e2f0a';
 var CACHE = 'lawsonite-precache-' + VERSION;
 var PRECACHE = [
  {
@@ -23,11 +23,11 @@ var PRECACHE = [
  },
  {
   "url": "/fieldkit.css",
-  "rev": "d77eaacadee302040aa4e5d9125d4087"
+  "rev": "1eaf2e224f088487db1c831d1d02cc11"
  },
  {
   "url": "/guides.css",
-  "rev": "065f69b3428e3053b1ff3b1dc8a9f819"
+  "rev": "bcca29a9c683a7075b94dc7bde72c992"
  },
  {
   "url": "/assets/index-C4Buzm74.js",
@@ -59,7 +59,7 @@ var PRECACHE = [
  },
  {
   "url": "/fieldkit.js",
-  "rev": "2e7e398ddcb04a62e2f944ba93a21002"
+  "rev": "ec898e2f0a7848b8ff7a1a19100031da"
  },
  {
   "url": "/qrcode.js",
