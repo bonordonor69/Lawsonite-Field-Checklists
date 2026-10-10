@@ -2,7 +2,7 @@
    Offline, localStorage only. Replaces the leftover favorites/pro overlay. */
 (function () {
   'use strict';
-  window.__FK_REV = '2026-10-09-r11';
+  window.__FK_REV = '2026-10-10-r12';
 
   var FAV_KEY = 'lawsonite-favorites-v1';
   var RECENT_KEY = 'lawsonite-recents-v1';
@@ -711,7 +711,10 @@
   /* ---------------- checklist page ---------------- */
   function enhanceChecklist() {
     var page = document.querySelector('.checklist-runner');
-    if (!page) return;
+    if (!page) {
+      document.body.classList.remove('fk-filter-open', 'fk-filter-tips');
+      return;
+    }
 
     var m = location.pathname.match(/^\/checklist\/([a-z0-9-]+)/i);
 
@@ -726,32 +729,42 @@
     }
 
     var toolbar = page.querySelector('.runner-toolbar');
-    if (toolbar && !toolbar.querySelector('.fk-filters')) {
+    var extras = page.querySelector('.runner-extras');
+    if ((extras || toolbar) && !page.querySelector('.fk-how')) {
+      var how = el('p', 'fk-how', 'Tap Done as you work the steps.');
+      (extras || toolbar).appendChild(how);
+    }
+    if ((extras || toolbar) && !page.querySelector('.fk-filters')) {
       var filters = el('div', 'fk-filters no-print');
-      function mk(label, key) {
-        var b = el('button', null, label);
+      function mk(offLabel, onLabel, key, title) {
+        var b = el('button', null, document.body.classList.contains(key) ? onLabel : offLabel);
         b.type = 'button';
+        b.title = title;
+        b.setAttribute('aria-pressed', document.body.classList.contains(key) ? 'true' : 'false');
         if (document.body.classList.contains(key)) b.classList.add('is-on');
         b.addEventListener('click', function () {
           document.body.classList.toggle(key);
-          b.classList.toggle('is-on', document.body.classList.contains(key));
+          var on = document.body.classList.contains(key);
+          b.classList.toggle('is-on', on);
+          b.setAttribute('aria-pressed', on ? 'true' : 'false');
+          b.textContent = on ? onLabel : offLabel;
         });
         return b;
       }
-      filters.appendChild(mk('Open items', 'fk-filter-open'));
-      filters.appendChild(mk('Tips only', 'fk-filter-tips'));
+      filters.appendChild(mk('Hide finished', 'Finished hidden', 'fk-filter-open', 'Hides steps marked done or N/A.'));
+      filters.appendChild(mk('Steps with a tip', 'Showing tips', 'fk-filter-tips', 'Hides steps that have no field tip.'));
       if (m) {
-        var star = el('button', 'fk-star-list', favIndex(m[1]) >= 0 ? '★' : '☆');
+        var star = el('button', 'fk-star-list', pinLabel(favIndex(m[1]) >= 0));
         star.type = 'button';
-        star.setAttribute('aria-label', 'Star this checklist');
+        star.title = 'Keeps this list on the home screen.';
+        paintListStar(star, m[1]);
         star.addEventListener('click', function () { toggleFav(m[1]); });
         filters.appendChild(star);
       }
-      var extras = page.querySelector('.runner-extras');
       (extras || toolbar).appendChild(filters);
-    } else if (toolbar) {
+    } else if (m) {
       var starBtn = page.querySelector('.fk-star-list');
-      if (starBtn && m) starBtn.textContent = favIndex(m[1]) >= 0 ? '★' : '☆';
+      if (starBtn) paintListStar(starBtn, m[1]);
     }
 
     var sections = page.querySelectorAll('.checklist-section');
@@ -765,27 +778,14 @@
         if (!sec.id) sec.id = 'fk-sec-' + idx;
         var a = el('a', null, h.textContent.replace(/^Branch [A-Z]\s+[—-]\s+/, '').replace(/^Start\s+[—-]\s+/, ''));
         a.href = '#' + sec.id;
+        a.title = 'Jumps to this part of the list';
         toc.appendChild(a);
       });
       if (tocAnchor !== toolbar) tocAnchor.appendChild(toc); /* section chips share the scroll-away row */
       else tocAnchor.after(toc);
     }
 
-    /* Phone: related Quick Refs chips ride in the same scroll-away row (originals stay for desktop). */
     var xrow = page.querySelector('.runner-extras');
-    var rel = page.querySelector('.related-calcs');
-    if (xrow && rel && !xrow.querySelector('.fk-calc-clone')) {
-      var firstToc = xrow.querySelector('.fk-toc');
-      rel.querySelectorAll('a.related-calc-chip').forEach(function (a) {
-        var c = el('a', 'related-calc-chip fk-link fk-calc-clone', a.textContent);
-        c.href = a.getAttribute('href');
-        c.title = 'Quick Ref: ' + a.textContent;
-        if (firstToc) xrow.insertBefore(c, firstToc);
-        else xrow.appendChild(c);
-      });
-      xrow.classList.add('fk-has-calcs');
-    }
-
     var dec = page.querySelector('details.fk-decides');
     var dchip = xrow && xrow.querySelector('.fk-decides-chip');
     if (dchip && (!dec || dchip._dec !== dec)) { dchip.remove(); dchip = null; }
@@ -846,8 +846,19 @@
     var m = href.match(/\/category\/([a-z0-9-]+)/i);
     var names = { fire: 'Fire', access: 'Access', cameras: 'Cameras', network: 'Network', troubleshoot: 'Troubleshoot' };
     var name = m ? (names[m[1]] || m[1]) : '';
-    a.textContent = name ? (name + ' list') : 'Back to list';
-    a.setAttribute('title', 'Leaves this checklist. Does not mark a step.');
+    a.textContent = name ? ('Back to ' + name) : 'Back';
+    a.setAttribute('title', 'Leaves this checklist.');
+  }
+
+  function pinLabel(on) {
+    return on ? 'Pinned' : 'Pin this list';
+  }
+  function paintListStar(btn, id) {
+    var on = favIndex(id) >= 0;
+    btn.textContent = pinLabel(on);
+    btn.classList.toggle('is-on', on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.setAttribute('aria-label', on ? 'Pinned on the home screen' : 'Pin this list on the home screen');
   }
 
   function ensureDecidesScrim() {
@@ -873,9 +884,10 @@
       b.textContent = faved ? '\u2605' : '\u2606';
       b.classList.toggle('is-fav', faved);
     }
-    var listStar = document.querySelector('.fk-star-list');
     var m = location.pathname.match(/^\/checklist\/([a-z0-9-]+)/i);
-    if (listStar && m) listStar.textContent = favIndex(m[1]) >= 0 ? '★' : '☆';
+    if (m) {
+      document.querySelectorAll('.fk-star-list').forEach(function (btn) { paintListStar(btn, m[1]); });
+    }
   }
 
   /* ---------------- header search + tab bar ---------------- */
@@ -1167,14 +1179,17 @@
     var actions = el('div', 'fk-row-actions');
     var tools = el('div', 'fk-row-tools');
     var sections = el('div', 'fk-row-sections');
+    var lead = el('div', 'fk-row-lead');
     Array.prototype.slice.call(xrow.children).forEach(function (node) {
       var primary = node.classList.contains('runner-jobsheet') ||
         node.classList.contains('fk-decides-chip') ||
         node.classList.contains('reset-quiet');
-      if (primary) actions.appendChild(node);
+      if (node.classList.contains('fk-how')) lead.appendChild(node);
+      else if (primary) actions.appendChild(node);
       else if (node.classList.contains('fk-toc')) sections.appendChild(node);
       else tools.appendChild(node);
     });
+    if (lead.childNodes.length) xrow.appendChild(lead);
     xrow.appendChild(actions);
     xrow.appendChild(tools);
     if (sections.childNodes.length) xrow.appendChild(sections);

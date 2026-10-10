@@ -524,22 +524,16 @@ body {
 
 body.fk-filter-open .item-row.status-checked,
 body.fk-filter-open .item-row.status-na { display: none; }
+body.fk-filter-open .checklist-section:not(:has(.item-row:not(.status-checked):not(.status-na))) { display: none; }
 body.fk-filter-tips .item-row:not(:has(.item-tip)) { display: none; }
+body.fk-filter-tips .checklist-section:not(:has(.item-tip)) { display: none; }
 
 .checklist-section { scroll-margin-top: 8.5rem; }
 .runner-toolbar { top: calc(4.35rem + env(safe-area-inset-top, 0px)); }
 
 .fk-star-list {
-  appearance: none;
-  border: 1px solid var(--line);
-  background: var(--btn-bg);
-  color: var(--brand);
   min-width: 44px;
-  min-height: 44px;
-  border-radius: 999px;
-  font-size: 1.15rem;
-  cursor: pointer;
-  font-weight: 800;
+  white-space: nowrap;
 }
 
 /* ---- Calcs ---- */
@@ -943,15 +937,34 @@ body.fk-miss-on #root { display: none !important; }
   flex-wrap: wrap;
   gap: 0.4rem;
 }
+.checklist-runner .runner-extras > .fk-row-lead {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.checklist-runner .fk-how {
+  margin: 0;
+  color: var(--ink, #1a100c);
+  font-size: 0.98rem;
+  font-weight: 650;
+  line-height: 1.35;
+}
+.checklist-runner .related-calcs { order: 2; }
+
+@media (min-width: 861px) {
+  .page.checklist-runner { gap: 0.55rem; }
+  .checklist-runner .runner-extras > .fk-row-actions,
+  .checklist-runner .runner-extras > .fk-row-tools {
+    flex: 0 1 auto;
+  }
+}
+
 @media (max-width: 860px) {
   .checklist-runner .runner-extras .pro-badge { display: none; }
-  /* Beats the unlayered flex:1 1 100% / flex-wrap:wrap rules above (same element, later, and a direct-child selector). */
+  /* Three labeled controls wrap. Section jumps stay one sideways row. */
   .checklist-runner .runner-extras > .fk-row-tools {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: thin;
-    padding-bottom: 0.35rem;
+    flex-wrap: wrap;
+    overflow: visible;
+    padding-bottom: 0.15rem;
   }
   .checklist-runner .runner-extras > .fk-row-tools::-webkit-scrollbar { height: 6px; }
   .checklist-runner .runner-extras > .fk-row-tools::-webkit-scrollbar-thumb {
@@ -959,7 +972,6 @@ body.fk-miss-on #root { display: none !important; }
     border-radius: 999px;
   }
   .checklist-runner .runner-extras > .fk-row-tools > .fk-toc,
-  .checklist-runner .runner-extras > .fk-row-tools > .fk-filters,
   .checklist-runner .runner-extras > .fk-row-tools > .fk-calc-clone,
   .checklist-runner .runner-extras > .fk-row-tools > .related-calc-chip {
     flex: 0 0 auto;
@@ -967,6 +979,11 @@ body.fk-miss-on #root { display: none !important; }
     overflow: visible;
     width: auto;
     max-width: none;
+  }
+  .checklist-runner .runner-extras > .fk-row-tools > .fk-filters {
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    max-width: 100%;
   }
   details.fk-decides { margin: 0.2rem 0 0.35rem; }
   details.fk-decides li { margin: 0.08rem 0; }
