@@ -1,8 +1,8 @@
-/* Lawsonite service worker (generated 2026-10-10, revision r14 for the hardware pack list print page and a mail draft on the first tap).
+/* Lawsonite service worker (generated 2026-10-10, revision r15 for the banana cable count, the zone sheet footer, and printing the job sheet).
    Precache = exactly what index.html references + the overlay scripts the app injects.
    Old caches (incl. the previous Workbox precache) are deleted on activate. */
 'use strict';
-var VERSION = '2026-10-10-r14-be350b97a4';
+var VERSION = '2026-10-10-r15-0c7a72e17a';
 var CACHE = 'lawsonite-precache-' + VERSION;
 var PRECACHE = [
  {
@@ -51,7 +51,7 @@ var PRECACHE = [
  },
  {
   "url": "/guides.js",
-  "rev": "48c060dc18908341a5b712e3cc50c288"
+  "rev": "ca593437eb639db7fbb8d441dc00504d"
  },
  {
   "url": "/jobsheet.js",
@@ -59,7 +59,7 @@ var PRECACHE = [
  },
  {
   "url": "/fieldkit.js",
-  "rev": "be350b97a4d5a2cbec3794380a06fe31"
+  "rev": "0c7a72e17a93227f24d0a43adc64d765"
  },
  {
   "url": "/qrcode.js",

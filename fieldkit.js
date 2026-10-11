@@ -2,7 +2,7 @@
    Offline, localStorage only. Replaces the leftover favorites/pro overlay. */
 (function () {
   'use strict';
-  window.__FK_REV = '2026-10-10-r14';
+  window.__FK_REV = '2026-10-10-r15';
 
   var FAV_KEY = 'lawsonite-favorites-v1';
   var RECENT_KEY = 'lawsonite-recents-v1';
@@ -2089,6 +2089,19 @@
     });
     return found;
   }
+  function fkSetControl(node, value) {
+    var proto = node.tagName === 'SELECT' ? window.HTMLSelectElement.prototype : window.HTMLInputElement.prototype;
+    var desc = Object.getOwnPropertyDescriptor(proto, 'value');
+    if (desc && desc.set) desc.set.call(node, value);
+    else node.value = value;
+    node.dispatchEvent(new Event('input', { bubbles: true }));
+    node.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+  function fkDoorCountOne(card) {
+    var countEl = fkControl(card, 'Cable count');
+    if (!countEl || String(countEl.value).trim() === '1') return;
+    fkSetControl(countEl, '1');
+  }
   var DOOR_CABLE = 'Access composite (banana / reverse twist)';
   var DOOR_AREA = 0.14;
   var DOOR_NOTE = 'Four legs: 18/4 lock, 22/6 OAS reader (overall shield), 22/4 REX, 22/2 DPS. A banana peel has no overall jacket, so once you split it the pipe sees four cables. Until then, fill it as one fat bundle. Check the cable sheet.';
@@ -2218,15 +2231,21 @@
         if (c) paintFillGuard(c);
       }, 40);
     }
+    function noteCable(ev) {
+      var sel = fkControl(card, 'Cable type');
+      if (!sel || ev.target !== sel) return;
+      sel.dataset.fkCable = sel.value;
+      if (isDoorCable(fillCableName(card))) fkDoorCountOne(card);
+    }
     card.addEventListener('change', function (ev) {
       card.dataset.fkFillReady = '1';
-      var sel = fkControl(card, 'Cable type');
-      if (sel && ev.target === sel) sel.dataset.fkCable = sel.value;
+      noteCable(ev);
       paintFillGuard(card);
       later();
     });
-    card.addEventListener('input', function () {
+    card.addEventListener('input', function (ev) {
       card.dataset.fkFillReady = '1';
+      noteCable(ev);
       paintFillGuard(card);
       later();
     });

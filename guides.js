@@ -1363,9 +1363,13 @@
       a.href = '/guides/' + id;
       nav.appendChild(a);
     });
-    var pack = el('a', 'gd-chip fk-link', 'Share pack (QR)');
-    pack.href = '/guides/pack';
-    nav.appendChild(pack);
+    var printSheet = el('button', 'gd-chip', 'Print sheet');
+    printSheet.type = 'button';
+    printSheet.addEventListener('click', function () {
+      document.body.classList.remove('gd-sticker-print');
+      window.print();
+    });
+    nav.appendChild(printSheet);
     return nav;
   }
   function renderJobSheet(kind) {
@@ -1491,7 +1495,9 @@
     page.appendChild(el('p', 'gd-foot',
       kind === 'cameras'
         ? 'Field notes only — not as-built drawings or programming. Confirm the name, the channel, and the switch port.'
-        : 'Field notes only — not as-built drawings or programming. Confirm the panel, the lock, and the official sheet.'));
+        : kind === 'doors'
+          ? 'Field notes only — not as-built drawings or programming. Confirm the panel, the lock, and the official sheet.'
+          : 'Confirm the panel, the zone, and the device. This is not the program.'));
     var sign = el('div', 'gd-pack-sign only-print');
     sign.appendChild(el('p', null, 'Installed by ________________    Date ______________    Tech ______________'));
     page.appendChild(sign);
