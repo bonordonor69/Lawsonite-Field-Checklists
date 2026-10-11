@@ -2,7 +2,7 @@
    Offline, localStorage only. Replaces the leftover favorites/pro overlay. */
 (function () {
   'use strict';
-  window.__FK_REV = '2026-10-10-r13';
+  window.__FK_REV = '2026-10-10-r14';
 
   var FAV_KEY = 'lawsonite-favorites-v1';
   var RECENT_KEY = 'lawsonite-recents-v1';

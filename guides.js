@@ -1656,6 +1656,10 @@
     paint();
     box.appendChild(list);
     var tools = el('div', 'gd-pack-tools no-print');
+    var pre = el('pre', 'gd-bom-preview only-print');
+    var status = el('p', 'gd-bom-status no-print');
+    status.setAttribute('role', 'status');
+    status.hidden = true;
     function currentText() {
       var b = loadBom();
       if (jobInput.value.trim()) {
@@ -1664,13 +1668,46 @@
       }
       return bomText();
     }
+    function syncPreview() {
+      var live = document.querySelector('.gd-bom-preview');
+      if (live !== pre) {
+        window.removeEventListener('beforeprint', syncPreview);
+        return;
+      }
+      pre.textContent = currentText();
+    }
+    window.addEventListener('beforeprint', syncPreview);
+    var printBtn = el('button', 'gd-chip is-on', 'Print list');
+    printBtn.type = 'button';
+    printBtn.addEventListener('click', function () {
+      pre.textContent = currentText();
+      document.body.classList.add('gd-print-list');
+      window.addEventListener('afterprint', function () {
+        document.body.classList.remove('gd-print-list');
+      }, { once: true });
+      window.print();
+    });
     var copyBtn = el('button', 'gd-chip is-on', 'Copy list');
     copyBtn.type = 'button';
     copyBtn.addEventListener('click', function () {
       var t = currentText();
+      function markCopied() {
+        var buttons = document.querySelectorAll('.gd-bom .gd-pack-tools button');
+        var i;
+        for (i = 0; i < buttons.length; i++) {
+          if (buttons[i].textContent === 'Copy list') {
+            buttons[i].textContent = 'Copied';
+            return;
+          }
+        }
+      }
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(t).then(function () { copyBtn.textContent = 'Copied'; });
-      } else window.prompt('Copy pack list', t);
+        navigator.clipboard.writeText(t).then(markCopied, function () {
+          window.prompt('Copy pack list', t);
+        });
+      } else {
+        window.prompt('Copy pack list', t);
+      }
     });
     var dlBtn = el('button', 'gd-chip', 'Download .txt');
     dlBtn.type = 'button';
@@ -1681,25 +1718,34 @@
       a.download = 'lawsonite-pack-list.txt';
       a.click();
     });
-    var mailBtn = el('a', 'gd-chip fk-link', 'Email list');
-    mailBtn.addEventListener('click', function (ev) {
-      var t = currentText();
-      mailBtn.href = 'mailto:?subject=' + encodeURIComponent('Hardware pack list') +
-        '&body=' + encodeURIComponent(t);
-      if (!t) ev.preventDefault();
+    var mailBtn = el('button', 'gd-chip', 'Email list');
+    mailBtn.type = 'button';
+    mailBtn.addEventListener('click', function () {
+      if (!loadBom().items.length) {
+        status.hidden = false;
+        status.textContent = 'The list is empty.';
+        return;
+      }
+      status.hidden = true;
+      status.textContent = '';
+      var href = 'mailto:?subject=' + encodeURIComponent('Hardware pack list') +
+        '&body=' + encodeURIComponent(currentText());
+      window.location.assign(href);
     });
     var clearBtn = el('button', 'gd-chip', 'Clear list');
     clearBtn.type = 'button';
     clearBtn.addEventListener('click', function () {
+      if (!window.confirm('Clear the pack list on this phone?')) return;
       saveBom({ job: jobInput.value.trim(), items: [] });
       paint();
     });
+    tools.appendChild(printBtn);
     tools.appendChild(copyBtn);
     tools.appendChild(dlBtn);
     tools.appendChild(mailBtn);
     tools.appendChild(clearBtn);
     box.appendChild(tools);
-    var pre = el('pre', 'gd-bom-preview only-print');
+    box.appendChild(status);
     pre.textContent = bomText();
     box.appendChild(pre);
     return box;
